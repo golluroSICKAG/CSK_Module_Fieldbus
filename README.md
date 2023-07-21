@@ -1,4 +1,6 @@
-# CSK_Module_[ModuleName]
+# CSK_Module_Fieldbus
+
+## INFO: Draft version. Not further developed / tested so far! Check for available GitHub forks of this repository to see latest updates.
 
 Module / Application to provide [...] functionality.
 
