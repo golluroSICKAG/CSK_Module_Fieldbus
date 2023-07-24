@@ -15,6 +15,28 @@ ToDo +
 {empty} + 
 **2) Something else...** +
 </desc>
+            <enum name="Protocol" trait="released">
+                <desc>Fieldbus protocol.</desc>
+                <item desc="PROFINET" name="PROFINET">PROFINET</item>
+                <item desc="EtherNet/IP" name="EtherNet_IP">EtherNet_IP</item>
+                <item desc="EtherCAT" name="EtherCAT">EtherCAT</item>
+            </enum>
+            <enum name="CreateMode" trait="released">
+                <desc>Mode for calling Fieldbus 'create' function.</desc>
+                <item desc="Only create the handle, but do not automatically open communication. Communication must be started explicitly using the function 'open'." name="EXPLICIT_OPEN">EXPLICIT_OPEN</item>
+                <item desc="Create the handle and automatically open the communication." name="AUTOMATIC_OPEN">AUTOMATIC_OPEN</item>
+            </enum>
+            <enum name="TransmissionMode" trait="released">
+                <desc>Fieldbus TransmissionMode</desc>
+                <item desc="Transmission mode without any protocol." name="RAW">RAW</item>
+                <item desc="Transmission mode using the SICK Confirmed Messaging protocol to transfer and fragment process data." name="CONFIRMED_MESSAGING">CONFIRMED_MESSAGING</item>
+            </enum>
+            <enum name="AddressingMode" trait="released">
+                <desc>Addressing mode for the IP address assignment.</desc>
+                <item desc="Get IP-address via DHCP." name="DHCP">DHCP</item>
+                <item desc="Get IP-address via BOOTP." name="BOOTP">BOOTP</item>
+                <item desc="Statically set the IP-address." name="STATIC">STATIC</item>
+            </enum>
             <serves>
                 <event name="OnNewStatusLoadParameterOnReboot">
                     <desc>Notify status if parameters should be loaded on app/device boot up.</desc>
@@ -47,6 +69,138 @@ ToDo +
                     <desc>Status of Admin userlevel. Used internally in combination with the CSK_UserManagement module if available.</desc>
                     <param desc="Status" multiplicity="1" name="status" type="bool"/>
                 </event>
+                <event name="OnNewStatusProtocol">
+                    <desc>Notify current selected fieldbus protocol.</desc>
+                    <param desc="Fieldbus protocol." multiplicity="1" name="protocol" type="string"/>
+                </event>
+                <event name="OnNewStatusFieldbusFeatureActive">
+                    <desc>Notify if Fieldbus features should be used.</desc>
+                    <param desc="Status" multiplicity="1" name="status" type="bool"/>
+                </event>
+                <event name="OnNewStatusCreateMode">
+                    <desc>Notify fieldbus create mode.</desc>
+                    <param desc="Create mode." multiplicity="1" name="mode" type="string"/>
+                </event>
+                <event name="OnNewStatusTransmissionMode">
+                    <desc>Notify fieldbus transmission mode.</desc>
+                    <param desc="Transmission mode." multiplicity="1" name="mode" type="string"/>
+                </event>
+                <event name="OnNewStatusDataToTransmit">
+                    <desc>Notify preset data to be transmitted.</desc>
+                    <param desc="Data to transmit." multiplicity="1" name="data" type="string"/>
+                </event>
+                <event name="OnNewStatusControlBitsInToWrite">
+                    <desc>Notify preset control bits to write.</desc>
+                    <param desc="Control bits." multiplicity="1" name="controlBits" type="int"/>
+                </event>
+                <event name="OnNewStatusBitMask">
+                    <desc>Notify bit mask to use for preset control bits to write.</desc>
+                    <param desc="Bit mask." multiplicity="1" name="bitMask" type="int"/>
+                </event>
+                <event name="OnNewStatusControlBitsOut">
+                    <desc>Notify latest control bits receivedc from the PLC.</desc>
+                    <param desc="Control bits." multiplicity="1" name="controlBits" type="int"/>
+                </event>
+                <event name="OnNewStatusFieldbusStatus">
+                    <desc>Notify status of the fieldbus communication.</desc>
+                    <param desc="Status" multiplicity="1" name="status" type="string"/>
+                </event>
+                <event name="OnNewStatusFieldbusActive">
+                    <desc>Notify if fieldbus communication is acive.</desc>
+                    <param desc="Status" multiplicity="1" name="status" type="bool"/>
+                </event>
+                <event name="OnNewStatusFieldbusInfo">
+                    <desc>Notify info of fieldbus communication.</desc>
+                    <param desc="Fieldbus Info." multiplicity="1" name="fieldbusInfo" type="string"/>
+                </event>
+                <event name="OnNewStatusControlBitsIn">
+                    <desc>Notify current value of the control bits transmitted to the PLC.</desc>
+                    <param desc="Control bits." multiplicity="1" name="controlbitsIn" type="int"/>
+                </event>
+                <event name="OnNewStatusEtherNetIPAddressingMode">
+                    <desc>Notify addressing mode for EtherNet/IP IP assignment.</desc>
+                    <param desc="Mode" multiplicity="1" name="mode" type="string"/>
+                </event>
+                <event name="OnNewStatusEtherNetIPIPAddress">
+                    <desc>Notify IP address of EtherNet/IP network.</desc>
+                    <param desc="IP" multiplicity="1" name="ip" type="string"/>
+                </event>
+                <event name="OnNewStatusEtherNetIPSubnetMask">
+                    <desc>Notfify subnet mask of EtherNet/IP network.</desc>
+                    <param desc="Subnet mask." multiplicity="1" name="subnet" type="string"/>
+                </event>
+                <event name="OnNewStatusEtherNetIPGateway">
+                    <desc>Notfify gateway of EtherNet/IP network.</desc>
+                    <param desc="Gateway" multiplicity="1" name="gateway" type="string"/>
+                </event>
+                <event name="OnNewStatusEtherNetIPNameServer">
+                    <desc>Notfify primary name server of EtherNet/IP network.</desc>
+                    <param desc="Name server" multiplicity="1" name="nameserver" type="string"/>
+                </event>
+                <event name="OnNewStatusEtherNetIPNameServer2">
+                    <desc>Notfify secondary name server of EtherNet/IP network.</desc>
+                    <param desc="Secondary Name server." multiplicity="1" name="nameServer" type="string"/>
+                </event>
+                <event name="OnNewStatusEtherNetIPDomainName">
+                    <desc>Notfify domain name of EtherNet/IP network.</desc>
+                    <param desc="Domain name." multiplicity="1" name="domainName" type="string"/>
+                </event>
+                <event name="OnNewStatusEtherNetIPMACAddress">
+                    <desc>Notfify MAC address of specified interface of EtherNet/IP network.</desc>
+                    <param desc="MAC address of specified interface." multiplicity="1" name="macAddress" type="string"/>
+                </event>
+                <event name="OnNewStatusProfinetIODeviceName">
+                    <desc>Notify name of the device in the Profinet network.</desc>
+                    <param desc="Mode" multiplicity="1" name="mode" type="string"/>
+                </event>
+                <event name="OnNewStatusProfinetIOIPAddress">
+                    <desc>Notify IP address of ProfinetIO network.</desc>
+                    <param desc="IP" multiplicity="1" name="ip" type="string"/>
+                </event>
+                <event name="OnNewStatusProfinetIOSubnetMask">
+                    <desc>Notfify subnet mask of ProfinetIO network.</desc>
+                    <param desc="Subnet mask." multiplicity="1" name="subnet" type="string"/>
+                </event>
+                <event name="OnNewStatusProfinetIOGateway">
+                    <desc>Notfify gateway of ProfinetIO network.</desc>
+                    <param desc="Gateway" multiplicity="1" name="gateway" type="string"/>
+                </event>
+                <event name="OnNewStatusProfinetIORemanent">
+                    <desc>Notfify if the ProfinetIO network configuration tool set the IP address settings permanently.</desc>
+                    <param desc="Domain name." multiplicity="1" name="domainName" type="bool"/>
+                </event>
+                <event name="OnNewStatusProfinetIOMACAddress">
+                    <desc>Notfify MAC address of specified interface of ProfinetIO network.</desc>
+                    <param desc="MAC address of specified interface." multiplicity="1" name="macAddress" type="string"/>
+                </event>
+                <event name="OnNewStatusDAPIMDescriptor">
+                    <desc>Notify descriptor as used for the ProfinetIO DAP’s I&amp;M3 data.</desc>
+                    <param desc="Descriptor" multiplicity="1" name="descriptor" type="string"/>
+                </event>
+                <event name="OnNewStatusDAPIMHardwareRev">
+                    <desc>Notify hardware revision as used for the DAP used in the I&amp;M0 data.</desc>
+                    <param desc="Hardware revision." multiplicity="1" name="hardwareRev" type="int"/>
+                </event>
+                <event name="OnNewStatusDAPIMInstallationDate">
+                    <desc>Notify installation date as used for the DAP’s I&amp;M2 data.</desc>
+                    <param desc="Installation date." multiplicity="1" name="date" type="string"/>
+                </event>
+                <event name="OnNewStatusDAPIMSoftwareRev">
+                    <desc>Notify software revision for the DAP (device access point) used in the I&amp;M0 data.</desc>
+                    <param desc="Software revision." multiplicity="1" name="softwareRev" type="string"/>
+                </event>
+                <event name="OnNewStatusDAPIMTagFunction">
+                    <desc>Notify function tag as used for the DAP’s I&amp;M1 data.</desc>
+                    <param desc="Function tag." multiplicity="1" name="tagFunction" type="string"/>
+                </event>
+                <event name="OnNewStatusDAPIMTagLocation">
+                    <desc>Notify location tag as used for the DAP’s I&amp;M1 data.</desc>
+                    <param desc="Location tag." multiplicity="1" name="tagLocation" type="string"/>
+                </event>
+                <event name="OnNewStatusActiveProtocol">
+                    <desc>Notify currently active fieldbus protocol.</desc>
+                    <param desc="Fieldbus protocol." multiplicity="1" name="protocol" type="string"/>
+                </event>
                 <function name="setParameterName">
                     <desc>Function to set the name of the parameters if saved/loaded via the CSK_PersistentData module.</desc>
                     <param desc="Name of the parameter." multiplicity="1" name="name" type="string"/>
@@ -65,6 +219,132 @@ ToDo +
                     <desc>Function to register "OnResume" of the module UI (only as helper function).</desc>
                     <return desc="Empty string (only needed to simplify binding)." multiplicity="1" name="empty" type="string"/>
                 </function>
+                <function name="setProtocol">
+                    <desc>Function to set fiedlbus protocol to use.</desc>
+                    <param desc="fieldbus protocol." multiplicity="1" name="protocol" type="string"/>
+                </function>
+                <function name="openCommunication">
+                    <desc>Function to open fieldbus communication.</desc>
+                </function>
+                <function name="closeCommunication">
+                    <desc>Function to close fieldbus communication.</desc>
+                </function>
+                <function name="refreshControlBits">
+                    <desc>Function to refresh data of ControlBitsIn/Out</desc>
+                </function>
+                <function name="setDataToTransmit">
+                    <desc>Function to preset data to transmit.</desc>
+                    <param desc="Binary data string." multiplicity="1" name="data" type="string"/>
+                </function>
+                <function name="transmitViaUI">
+                    <desc>Function to transmit preset data.</desc>
+                </function>
+                <function name="setControlBits">
+                    <desc>Function to preset controlBits to write.</desc>
+                    <param desc="Control bits to write." multiplicity="1" name="controlBits" type="int"/>
+                </function>
+                <function name="setBitMask">
+                    <desc>Function to preset bitmask to use for preset controlBits to write.</desc>
+                    <param desc="Bitmask to use for control bits." multiplicity="1" name="bitMask" type="int"/>
+                </function>
+                <function name="writeControlBitsInViaUI">
+                    <desc>Function to write preset control bits to the PLC.</desc>
+                </function>
+                <function name="setCreateMode">
+                    <desc>Function to set create mode of fieldbus communication.</desc>
+                    <param desc="Create mode." multiplicity="1" name="mode" type="string"/>
+                </function>
+                <function name="setTransmissionMode">
+                    <desc>Function to set transmission mode.</desc>
+                    <param desc="Transmission mode." multiplicity="1" name="mode" type="string"/>
+                </function>
+                <function name="submitProtocol">
+                    <desc>Function to set preset fieldbus protocol (see 'setProtocol') and restart device.</desc>
+                </function>
+                <function name="getEtherNetIPConfig">
+                    <desc>Function to get EtherNetIP configuration.</desc>
+                </function>
+                <function name="setEtherNetIPConfig">
+                    <desc>Function to setup preconfigured EtherNetIP config.</desc>
+                </function>
+                <function name="setAddressingMode">
+                    <desc>Function to set addressing mode of EtherNetIP communication.</desc>
+                    <param desc="Mode" multiplicity="1" name="mode" type="string"/>
+                </function>
+                <function name="setEtherNetIPIP">
+                    <desc>Function to preset IP for EtherNetIP communication.</desc>
+                    <param desc="IP" multiplicity="1" name="ip" type="string"/>
+                </function>
+                <function name="setEtherNetIPSubnetMask">
+                    <desc>Function to preset subnet mask for EtherNetIP communication.</desc>
+                    <param desc="Subnet mask." multiplicity="1" name="netmask" type="string"/>
+                </function>
+                <function name="setEtherNetIPGateway">
+                    <desc>Function to preset gateway for EtherNetIP communication.</desc>
+                    <param desc="Gateway" multiplicity="1" name="gateway" type="string"/>
+                </function>
+                <function name="setEtherNetIPNameServer">
+                    <desc>Function to preset primary name server for EtherNetIP communication.</desc>
+                    <param desc="Primary name server." multiplicity="1" name="nameServer" type="string"/>
+                </function>
+                <function name="setEtherNetIPNameServer2">
+                    <desc>Function to preset secondary name server for EtherNetIP communication.</desc>
+                    <param desc="Secondary name server." multiplicity="1" name="nameServer" type="string"/>
+                </function>
+                <function name="setEtherNetIPDomainName">
+                    <desc>Function to preset domain name for EtherNetIP communication.</desc>
+                    <param desc="Domain name." multiplicity="1" name="domainName" type="string"/>
+                </function>
+                <function name="setProfinetIODeviceName">
+                    <desc>Function to preset ProfinetIO device name.</desc>
+                    <param desc="Device name." multiplicity="1" name="name" type="string"/>
+                </function>
+                <function name="setProfinetIOIP">
+                    <desc>Function to preset IP for ProfinetIO communication.</desc>
+                    <param desc="IP" multiplicity="1" name="ip" type="string"/>
+                </function>
+                <function name="setProfinetIOSubnetMask">
+                    <desc>Function to preset subnet mask for ProfinetIO communication.</desc>
+                    <param desc="Subnet mask." multiplicity="1" name="netmask" type="string"/>
+                </function>
+                <function name="setProfinetIOGateway">
+                    <desc>Function to preset gateway for ProfinetIO communication.</desc>
+                    <param desc="Gateway" multiplicity="1" name="gateway" type="string"/>
+                </function>
+                <function name="getProfinetIOConfig">
+                    <desc>Function to get ProfinetIO configuration.</desc>
+                </function>
+                <function name="applyProfinetIOConfig">
+                    <desc>Function apply ProfinetIO configuration.</desc>
+                </function>
+                <function name="storeProfinetIOConfig">
+                    <desc>Function to store ProfinetIO configuration.</desc>
+                </function>
+                <function name="setDAPIMConfig">
+                    <desc>Function to set ProfinetIO DAP IM configuration.</desc>
+                </function>
+                <function name="getDAPIMConfig">
+                    <desc>Function to get ProfinetIO DAP IM data.</desc>
+                </function>
+                <function name="storeDAPIMData">
+                    <desc>Function to store ProfinetIO DAP I&amp;M data.</desc>
+                </function>
+                <function name="setDAPIMDescriptor">
+                    <desc>Function to set descriptor for the DAPs I&amp;M3 data.</desc>
+                    <param desc="Descriptor to use for this I&amp;M3 data." multiplicity="1" name="descriptor" type="string"/>
+                </function>
+                <function name="setDAPIMInstallationDate">
+                    <desc>Function to set the installation date for the DAPs I&amp;M2 data.</desc>
+                    <param desc="tring encoding the date and time (optional) in accordance with ISO 8601" multiplicity="1" name="date" type="string"/>
+                </function>
+                <function name="setDAPIMTagFunction">
+                    <desc>Function to set the function tag for the DAPs I&amp;M1 data.</desc>
+                    <param desc="String with 32 visible characters. Will be filled with blanks automatically if shorter." multiplicity="1" name="tag" type="string"/>
+                </function>
+                <function name="setDAPIMTagLocation">
+                    <desc>Function to set location tag for the DAPs I&amp;M1 data.</desc>
+                    <param desc="Location tag (check device API reference)." multiplicity="1" name="location" type="string"/>
+                </function>
             </serves>
         </crown>
         <meta key="author">SICK AG</meta>
@@ -73,7 +353,7 @@ ToDo +
         <meta key="copy-protected">false</meta>
         <meta key="read-protected">false</meta>
         <meta key="crown2-flow-engine">false</meta>
-        <meta key="LuaLoadAllEngineAPI">true</meta>
+        <meta key="LuaLoadAllEngineAPI">false</meta>
         <entry default="CSK_Module_Fieldbus.lua" path="scripts"/>
     </application>
 </manifest>
