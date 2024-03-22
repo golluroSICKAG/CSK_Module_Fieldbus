@@ -62,17 +62,51 @@ local function main()
   -- Can be used e.g. like this
   ----------------------------------------------------------------------------------------
 
-  -- _G.fieldbus_Model.doSomething() -- if you want to start a function
   -- ...
   CSK_Fieldbus.pageCalled() -- Update UI
 
+  --[[
+  CSK_Fieldbus.setDataNameReceive('Data1')
+  CSK_Fieldbus.setDataTypeReceive('U_INT2')
+  CSK_Fieldbus.addDataToReceiveViaUI()
+
+  CSK_Fieldbus.setDataNameReceive('Data2')
+  CSK_Fieldbus.setDataTypeReceive('U_INT4')
+  CSK_Fieldbus.addDataToReceiveViaUI()
+  
+  CSK_Fieldbus.setDataType('U_BYTE')
+  for i=1, 6 do
+    CSK_Fieldbus.setDataNameTransmit('Data' ..tostring(i))
+    CSK_Fieldbus.addDataToTransmitViaUI()
+  end
+
+  CSK_Fieldbus.setDataType('S_INT2')
+  for i=7, 10 do
+    CSK_Fieldbus.setDataNameTransmit('Data' ..tostring(i))
+    CSK_Fieldbus.addDataToTransmitViaUI()
+  end
+
+  CSK_Fieldbus.setDataType('U_BYTE')
+  for i=11, 18 do
+    CSK_Fieldbus.setDataName('Data' ..tostring(i))
+    CSK_Fieldbus.addDataToTransmitViaUI()
+  end
+
+  CSK_Fieldbus.setDataType('U_INT8')
+  for i=19, 31 do
+    CSK_Fieldbus.setDataName('Data' ..tostring(i))
+    CSK_Fieldbus.addDataToTransmitViaUI()
+  end
+
+  CSK_Fieldbus.setDataType('U_BYTE')
+  for i=32, 33 do
+    CSK_Fieldbus.setDataName('Data' ..tostring(i))
+    CSK_Fieldbus.addDataToTransmitViaUI()
+  end
+]]
+  
 end
 Script.register("Engine.OnStarted", main)
-
---OR
-
--- Call function after persistent data was loaded
---Script.register("CSK_Fieldbus.OnDataLoadedOnReboot", main)
 
 --**************************************************************************
 --**********************End Function Scope *********************************

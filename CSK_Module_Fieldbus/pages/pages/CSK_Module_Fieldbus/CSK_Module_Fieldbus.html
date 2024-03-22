@@ -4,43 +4,38 @@
 			<stacked-pane id="SP_LoginOK" value="true">
 				<layout-row id="RowLayout5">
 					<layout-column id="ColumnLayout7" style="align-items: stretch">
+						<h4 id="Heading4_Fieldbus">Fieldbus</h4>
 						<layout-row id="RowLayout6">
 							<layout-column id="ColumnLayout8" style="align-items: stretch">
-								<davinci-value-display id="VD_General" label="Fieldbus">
-								</davinci-value-display>
-								<davinci-value-display id="ValueDisplay1"
-									label="Currently active fieldbus protocol:">
-									<crown-edpws-binding property="value"
-										name="CSK_Fieldbus/OnNewStatusActiveProtocol" update-on-resume>
-									</crown-edpws-binding>
-								</davinci-value-display>
-								<layout-row id="RowLayout16">
-									<davinci-value-display id="VD_FB_Status_Label"
-										label="Current status:">
-									</davinci-value-display>
-									<davinci-value-display id="VD_FB_Status">
-										<crown-edpws-binding property="value"
-											name="CSK_Fieldbus/OnNewStatusFieldbusStatus" update-on-resume>
-										</crown-edpws-binding>
-									</davinci-value-display>
+								<layout-row id="RowLayout34" style="justify-content: space-between">
+									<layout-column id="ColumnLayout110" style="align-items: stretch">
+										<davinci-value-display id="VD_ActiveFieldbusProtocol"
+											label="Currently active fieldbus protocol">
+											<crown-edpws-binding property="value"
+												name="CSK_Fieldbus/OnNewStatusActiveProtocol" update-on-resume>
+											</crown-edpws-binding>
+										</davinci-value-display>
+									</layout-column>
+									<layout-column id="ColumnLayout111" style="align-items: stretch">
+										<davinci-value-display id="VD_FB_Status" label="Current status">
+											<crown-edpws-binding property="value"
+												name="CSK_Fieldbus/OnNewStatusFieldbusStatus" update-on-resume>
+											</crown-edpws-binding>
+										</davinci-value-display>
+									</layout-column>
 								</layout-row>
-								<davinci-text-area id="TA_FB_Info"
-									class="myCustomMinHeight100p_CSK_Module_Fieldbus"
-									label="Fieldbus Info:" multiline>
-									<crown-edpws-binding property="value"
-										name="CSK_Fieldbus/OnNewStatusFieldbusInfo" update-on-resume>
-									</crown-edpws-binding>
-								</davinci-text-area>
 								<layout-row id="RowLayout8">
 									<layout-column id="ColumnLayout16" style="align-items: stretch">
-										<davinci-drop-down id="DD_Protocol">
+										<davinci-drop-down id="DD_Protocol"
+											title="If you set a new protocol, a device restart is necessary to activate the new protocol."
+											label="Change protocol">
 											<davinci-option id="Option1" value="DISABLED">
 												<span>DISABLED</span>
 											</davinci-option>
 											<davinci-option id="Option2" value="ProfinetIO">
 												<span>ProfinetIO</span>
 											</davinci-option>
-                                            <davinci-option id="Option3" value="EtherNetIP">
+											<davinci-option id="Option3" value="EtherNetIP">
 												<span>EtherNet/IP</span>
 											</davinci-option>
 											<crown-edpws-binding property="value"
@@ -54,7 +49,7 @@
 									<layout-column id="ColumnLayout19" style="align-items: stretch">
 										<davinci-button id="Button_SetProtocol" type="primary"
 											icon-position="append"
-											title="This will trigger a restart to setup the selected protocol.">
+											title="If you set a new protocol, a device restart is necessary to activate the new protocol.">
 											<span>Set / Restart</span>
 											<crown-binding event="submit" name="CSK_Fieldbus/submitProtocol"
 												auto-commit>
@@ -62,6 +57,12 @@
 										</davinci-button>
 									</layout-column>
 								</layout-row>
+								<davinci-value-display id="VD_RestartInfo"
+									class="myCustomRedText_CSK_Module_Fieldbus">
+									<crown-edpws-binding property="value"
+										name="CSK_Fieldbus/OnNewStatusRestartInfo" update-on-resume>
+									</crown-edpws-binding>
+								</davinci-value-display>
 								<stacked-view id="SV_FieldbusFeatures">
 									<stacked-pane id="SP_FB_Active" value="true">
 										<layout-row id="RowLayout9">
@@ -82,6 +83,9 @@
 												<crown-binding event="change" name="CSK_Fieldbus/setCreateMode"
 													path="param/args/mode" auto-commit>
 												</crown-binding>
+												<crown-edpws-binding property="disabled"
+													name="CSK_Fieldbus/OnNewStatusFieldbusActive" update-on-resume>
+												</crown-edpws-binding>
 												</davinci-drop-down>
 												<davinci-button id="Button_Open" type="primary"
 													icon-position="append">
@@ -89,14 +93,21 @@
 												<crown-binding event="submit" name="CSK_Fieldbus/openCommunication"
 													auto-commit>
 												</crown-binding>
+												<crown-edpws-binding property="disabled"
+													name="CSK_Fieldbus/OnNewStatusFieldbusActive" update-on-resume>
+												</crown-edpws-binding>
 												</davinci-button>
 												</layout-column>
 												<layout-column id="ColumnLayout18" style="align-items: stretch">
-												<davinci-drop-down id="DD_TransmissionMode" label="TransmissionMode">
-												<davinci-option id="Option4" value="CONFIRMED_MESSAGING">
+												<davinci-drop-down id="DD_TransmissionMode"
+													label="TransmissionMode for 'EXPLICIT_MODE'"
+													title="Only available in 'EXPLICIT_MODE'.">
+												<davinci-option id="Option4" value="CONFIRMED_MESSAGING"
+													title="Only available in 'EXPLICIT_MODE'.">
 												<span>CONFIRMED_MESSAGING</span>
 												</davinci-option>
-												<davinci-option id="Option5" value="RAW">
+												<davinci-option id="Option5" value="RAW"
+													title="Only available in 'EXPLICIT_MODE'.">
 												<span>RAW</span>
 												</davinci-option>
 												<crown-edpws-binding property="value"
@@ -105,109 +116,15 @@
 												<crown-binding event="change" name="CSK_Fieldbus/setTransmissionMode"
 													path="param/args/mode" auto-commit>
 												</crown-binding>
+												<crown-edpws-binding property="disabled"
+													name="CSK_Fieldbus/OnNewStatusExplicitModeActive" update-on-resume
+													converter="function(value) {return !value;}">
+												</crown-edpws-binding>
 												</davinci-drop-down>
 												<davinci-button id="Button_Close" type="primary"
 													icon-position="append">
 												<span>Close</span>
 												<crown-binding event="submit" name="CSK_Fieldbus/closeCommunication"
-													auto-commit>
-												</crown-binding>
-												</davinci-button>
-												</layout-column>
-												</layout-row>
-												<layout-row id="RowLayout13"
-													class="myCustomFrame_CSK_Module_Fieldbus">
-												<layout-column id="ColumnLayout10" style="align-items: stretch">
-												<davinci-value-display id="VD_ControlBitsReceived"
-													label="Read ControlBits In/Out">
-												</davinci-value-display>
-												<layout-row id="RowLayout10" style="justify-content: space-between">
-												<layout-column id="ColumnLayout20" style="align-items: stretch">
-												<davinci-numeric-field id="NF_ControlBitsIn" type="bare"
-													min="-9007199254740991" max="9007199254740991" ticks="1"
-													group-separator="," decimal-separator="." format-pattern="0"
-													title="Current value of the control bits transmitted to the PLC."
-													disabled>
-												<crown-edpws-binding property="value"
-													name="CSK_Fieldbus/OnNewStatusControlBitsIn" update-on-resume>
-												</crown-edpws-binding>
-												</davinci-numeric-field>
-												</layout-column>
-												<layout-column id="ColumnLayout21" style="align-items: stretch">
-												<davinci-numeric-field id="NF_ControlBitsOut" type="bare"
-													min="-9007199254740991" max="9007199254740991" ticks="1"
-													group-separator="," decimal-separator="." format-pattern="0"
-													title="Current value of the control bits received from the PLC."
-													disabled>
-												<crown-edpws-binding property="value"
-													name="CSK_Fieldbus/OnNewStatusControlBitsOut" update-on-resume>
-												</crown-edpws-binding>
-												</davinci-numeric-field>
-												</layout-column>
-												</layout-row>
-												<davinci-button id="Button_UpdateControlBits" type="outline-neutral"
-													icon-position="append">
-												<span>Refresh ControlBits</span>
-												<crown-binding event="submit" name="CSK_Fieldbus/refreshControlBits"
-													auto-commit>
-												</crown-binding>
-												</davinci-button>
-												<layout-row id="RowLayout14">
-												<layout-column id="ColumnLayout13" style="align-items: stretch">
-												<davinci-value-display id="VD_ControlBits" value="ControlBits:">
-												</davinci-value-display>
-												<davinci-numeric-field id="NF_ControlBitsToSend" type="outline"
-													min="-9007199254740991" max="9007199254740991" ticks="1"
-													group-separator="," decimal-separator="." format-pattern="0">
-												<crown-edpws-binding property="value"
-													name="CSK_Fieldbus/OnNewStatusControlBitsInToWrite"
-													update-on-resume>
-												</crown-edpws-binding>
-												<crown-binding event="change" name="CSK_Fieldbus/setControlBits"
-													path="param/args/controlBits" auto-commit>
-												</crown-binding>
-												</davinci-numeric-field>
-												</layout-column>
-												<layout-column id="ColumnLayout14" style="align-items: stretch">
-												<davinci-value-display id="VD_BitMask" value="BitMask:">
-												</davinci-value-display>
-												<davinci-numeric-field id="NF_BitMask" type="outline"
-													min="-9007199254740991" max="9007199254740991" ticks="1"
-													group-separator="," decimal-separator="." format-pattern="0">
-												<crown-edpws-binding property="value"
-													name="CSK_Fieldbus/OnNewStatusBitMask" update-on-resume>
-												</crown-edpws-binding>
-												<crown-binding event="change" name="CSK_Fieldbus/setBitMask"
-													path="param/args/bitMask" auto-commit>
-												</crown-binding>
-												</davinci-numeric-field>
-												</layout-column>
-												</layout-row>
-												<davinci-button id="Button_WriteCtrlBits" type="neutral"
-													icon-position="append">
-												<span>WriteCtrlBits</span>
-												<crown-binding event="submit"
-													name="CSK_Fieldbus/writeControlBitsInViaUI" auto-commit>
-												</crown-binding>
-												</davinci-button>
-												</layout-column>
-												</layout-row>
-												<layout-row id="RowLayout15"
-													class="myCustomFrame_CSK_Module_Fieldbus">
-												<layout-column id="ColumnLayout15" style="align-items: stretch">
-												<davinci-text-field id="TF_TransmitData" type="text"
-													label="TransmitData">
-												<crown-edpws-binding property="value"
-													name="CSK_Fieldbus/OnNewStatusDataToTransmit" update-on-resume>
-												</crown-edpws-binding>
-												<crown-binding event="change" name="CSK_Fieldbus/setDataToTransmit"
-													path="param/args/data" auto-commit>
-												</crown-binding>
-												</davinci-text-field>
-												<davinci-button id="Button_Transmit" type="neutral"
-													icon-position="append">
-												<span>Transmit</span>
-												<crown-binding event="submit" name="CSK_Fieldbus/transmitViaUI"
 													auto-commit>
 												</crown-binding>
 												</davinci-button>
@@ -343,7 +260,7 @@
 												<layout-row id="RowLayout20">
 												<layout-column id="ColumnLayout36" style="align-items: stretch">
 												<davinci-text-field id="TF_ProfinetIO_DeviceName" type="text"
-													label="Device name">
+													label="Device name" readonly>
 												<crown-edpws-binding property="value"
 													name="CSK_Fieldbus/OnNewStatusProfinetIODeviceName"
 													update-on-resume>
@@ -355,7 +272,8 @@
 												</davinci-text-field>
 												</layout-column>
 												<layout-column id="ColumnLayout35" style="align-items: stretch">
-												<davinci-text-field id="TF_ProfinetIO_IP" type="text" label="IP">
+												<davinci-text-field id="TF_ProfinetIO_IP" type="text" label="IP"
+													readonly>
 												<crown-binding event="change" name="CSK_Fieldbus/setProfinetIOIP"
 													path="param/args/ip" auto-commit>
 												</crown-binding>
@@ -365,7 +283,7 @@
 												</crown-edpws-binding>
 												</davinci-text-field>
 												<davinci-text-field id="TF_ProfinetIO_Subnet" type="text"
-													label="Subnet mask">
+													label="Subnet mask" readonly>
 												<crown-edpws-binding property="value"
 													name="CSK_Fieldbus/OnNewStatusProfinetIOSubnetMask"
 													update-on-resume>
@@ -378,7 +296,7 @@
 												</layout-column>
 												<layout-column id="ColumnLayout34" style="align-items: stretch">
 												<davinci-text-field id="TF_ProfinetIO_Gateway" type="text"
-													label="Gateway">
+													label="Gateway" readonly>
 												<crown-edpws-binding property="value"
 													name="CSK_Fieldbus/OnNewStatusProfinetIOGateway" update-on-resume>
 												</crown-edpws-binding>
@@ -395,37 +313,15 @@
 												</davinci-text-field>
 												</layout-column>
 												<layout-column id="ColumnLayout30" style="align-items: stretch">
-												<davinci-value-display id="VD_Remanent" value="Remanent">
-												</davinci-value-display>
-												<davinci-toggle-switch id="TS_Remanent" disabled>
+												<davinci-checkbox id="CB_Remanent" disabled>
+												<span>Remanent</span>
 												<crown-edpws-binding property="checked"
 													name="CSK_Fieldbus/OnNewStatusProfinetIORemanent"
 													update-on-resume>
 												</crown-edpws-binding>
-												</davinci-toggle-switch>
+												</davinci-checkbox>
 												</layout-column>
 												</layout-row>
-												<davinci-button id="Button_GetConfig" type="primary"
-													icon-position="append">
-												<span>Get config</span>
-												<crown-binding event="submit" name="CSK_Fieldbus/getProfinetIOConfig"
-													auto-commit>
-												</crown-binding>
-												</davinci-button>
-												<davinci-button id="Button_Applyconfig" type="primary"
-													icon-position="append">
-												<span>Apply config</span>
-												<crown-binding event="submit"
-													name="CSK_Fieldbus/applyProfinetIOConfig" auto-commit>
-												</crown-binding>
-												</davinci-button>
-												<davinci-button id="Button_Storeconfig" type="primary"
-													icon-position="append">
-												<span>Store config</span>
-												<crown-binding event="submit"
-													name="CSK_Fieldbus/storeProfinetIOConfig" auto-commit>
-												</crown-binding>
-												</davinci-button>
 												</layout-column>
 												</layout-row>
 												<layout-row id="RowLayout21"
@@ -535,87 +431,1156 @@
 										converter="function(value) {return value.toString();}">
 									</crown-edpws-binding>
 								</stacked-view>
+								<layout-row id="RowLayout7">
+									<layout-column id="Column_PersistentData"
+										class="myCustomFrame_CSK_Module_Fieldbus"
+										style="align-items: stretch">
+										<layout-row id="RowLayout4"
+											style="justify-content: space-between; align-items: center">
+											<layout-column id="ColumnLayout5" style="align-items: stretch">
+												<davinci-value-display id="VD_ParameterName" value="Parameter name:"
+													title="Name of the parameters within the CSK_PersistentData module to be uses for this module.">
+												</davinci-value-display>
+											</layout-column>
+											<layout-column id="ColumnLayout6" style="align-items: stretch">
+												<davinci-text-field id="TF_ParameterName" type="text"
+													title="Name of the parameters within the CSK_PersistentData module to be uses for this module.">
+												<crown-edpws-binding property="value"
+													name="CSK_Fieldbus/OnNewParameterName" update-on-resume>
+												</crown-edpws-binding>
+												<crown-binding event="change" name="CSK_Fieldbus/setParameterName"
+													path="param/args/name" auto-commit>
+												</crown-binding>
+												<crown-edpws-binding property="disabled"
+													name="CSK_Fieldbus/OnPersistentDataModuleAvailable"
+													update-on-resume converter="function(value) {return !value;}">
+												</crown-edpws-binding>
+												</davinci-text-field>
+											</layout-column>
+										</layout-row>
+										<layout-row id="RowLayout2"
+											style="justify-content: space-between; align-items: center">
+											<davinci-value-display id="VD_LoadConfig"
+												value="Load config on app start:"
+												title="Load configured parameters from CSK_PersistentData on app start.">
+											</davinci-value-display>
+											<davinci-checkbox id="CB_LoadConfig"
+												title="Load configured parameters from CSK_PersistentData on app start.">
+												<span></span>
+												<crown-edpws-binding property="checked"
+													name="CSK_Fieldbus/OnNewStatusLoadParameterOnReboot"
+													update-on-resume>
+												</crown-edpws-binding>
+												<crown-edpws-binding property="disabled"
+													name="CSK_Fieldbus/OnPersistentDataModuleAvailable"
+													update-on-resume converter="function(value) {return !value;}">
+												</crown-edpws-binding>
+												<crown-binding event="change" name="CSK_Fieldbus/setLoadOnReboot"
+													path="param/args/status" auto-commit>
+												</crown-binding>
+											</davinci-checkbox>
+										</layout-row>
+										<layout-row id="RowLayout3">
+											<layout-column id="ColumnLayout3" style="align-items: stretch">
+												<davinci-button id="B_LoadConfig" type="primary"
+													icon-position="append"
+													title="Load configured parameters from CSK_PersistentData module.">
+												<span>Load Config</span>
+												<crown-binding event="submit" name="CSK_Fieldbus/loadParameters"
+													auto-commit>
+												</crown-binding>
+												<crown-edpws-binding property="disabled"
+													name="CSK_Fieldbus/OnPersistentDataModuleAvailable"
+													update-on-resume converter="function(value) {return !value;}">
+												</crown-edpws-binding>
+												</davinci-button>
+											</layout-column>
+											<layout-column id="ColumnLayout4" style="align-items: stretch">
+												<davinci-button id="B_SaveConfig" type="primary"
+													icon-position="append"
+													title="Save current configured parameters of this module within CSK_PersistentData module.">
+												<span>Save Config</span>
+												<crown-binding event="submit" name="CSK_Fieldbus/sendParameters"
+													auto-commit>
+												</crown-binding>
+												<crown-edpws-binding property="disabled"
+													name="CSK_Fieldbus/OnPersistentDataModuleAvailable"
+													update-on-resume converter="function(value) {return !value;}">
+												</crown-edpws-binding>
+												</davinci-button>
+											</layout-column>
+										</layout-row>
+									</layout-column>
+								</layout-row>
 							</layout-column>
-						</layout-row>
-						<layout-row id="RowLayout7">
-							<layout-column id="Column_PersistentData"
-								class="myCustomFrame_CSK_Module_Fieldbus"
-								style="align-items: stretch">
-								<layout-row id="RowLayout4"
-									style="justify-content: space-between; align-items: center">
-									<layout-column id="ColumnLayout5" style="align-items: stretch">
-										<davinci-value-display id="VD_ParameterName" value="Parameter name:"
-											title="Name of the parameters within the CSK_PersistentData module to be uses for this module.">
-										</davinci-value-display>
-									</layout-column>
-									<layout-column id="ColumnLayout6" style="align-items: stretch">
-										<davinci-text-field id="TF_ParameterName" type="text"
-											title="Name of the parameters within the CSK_PersistentData module to be uses for this module.">
-											<crown-edpws-binding property="value"
-												name="CSK_Fieldbus/OnNewParameterName" update-on-resume>
-											</crown-edpws-binding>
-											<crown-binding event="change" name="CSK_Fieldbus/setParameterName"
-												path="param/args/name" auto-commit>
-											</crown-binding>
-											<crown-edpws-binding property="disabled"
-												name="CSK_Fieldbus/OnPersistentDataModuleAvailable"
-												update-on-resume converter="function(value) {return !value;}">
-											</crown-edpws-binding>
-										</davinci-text-field>
-									</layout-column>
-								</layout-row>
-								<layout-row id="RowLayout2"
-									style="justify-content: space-between; align-items: center">
-									<davinci-value-display id="VD_LoadConfig"
-										value="Load config on app start:"
-										title="Load configured parameters from CSK_PersistentData on app start.">
-									</davinci-value-display>
-									<davinci-checkbox id="CB_LoadConfig"
-										title="Load configured parameters from CSK_PersistentData on app start.">
-										<span></span>
-										<crown-edpws-binding property="checked"
-											name="CSK_Fieldbus/OnNewStatusLoadParameterOnReboot"
-											update-on-resume>
-										</crown-edpws-binding>
-										<crown-edpws-binding property="disabled"
-											name="CSK_Fieldbus/OnPersistentDataModuleAvailable"
-											update-on-resume converter="function(value) {return !value;}">
-										</crown-edpws-binding>
-										<crown-binding event="change" name="CSK_Fieldbus/setLoadOnReboot"
-											path="param/args/status" auto-commit>
-										</crown-binding>
-									</davinci-checkbox>
-								</layout-row>
-								<layout-row id="RowLayout3">
-									<layout-column id="ColumnLayout3" style="align-items: stretch">
-										<davinci-button id="B_LoadConfig" type="primary"
-											icon-position="append"
-											title="Load configured parameters from CSK_PersistentData module.">
-											<span>Load Config</span>
-											<crown-binding event="submit" name="CSK_Fieldbus/loadParameters"
-												auto-commit>
-											</crown-binding>
-											<crown-edpws-binding property="disabled"
-												name="CSK_Fieldbus/OnPersistentDataModuleAvailable"
-												update-on-resume converter="function(value) {return !value;}">
-											</crown-edpws-binding>
-										</davinci-button>
-									</layout-column>
-									<layout-column id="ColumnLayout4" style="align-items: stretch">
-										<davinci-button id="B_SaveConfig" type="primary"
-											icon-position="append"
-											title="Save current configured parameters of this module within CSK_PersistentData module.">
-											<span>Save Config</span>
-											<crown-binding event="submit" name="CSK_Fieldbus/sendParameters"
-												auto-commit>
-											</crown-binding>
-											<crown-edpws-binding property="disabled"
-												name="CSK_Fieldbus/OnPersistentDataModuleAvailable"
-												update-on-resume converter="function(value) {return !value;}">
-											</crown-edpws-binding>
-										</davinci-button>
-									</layout-column>
-								</layout-row>
+							<layout-column id="ColumnLayout2"
+								style="flex-grow: 2; align-items: stretch">
+								<davinci-tabs id="Tabs_InfoData" type="modern">
+									<davinci-tab id="Tab_Info" label="Info">
+										<layout-row id="RowLayout24">
+											<layout-column id="ColumnLayout43" style="align-items: stretch">
+												<davinci-text-area id="TA_FB_Info"
+													class="myCustomMinHeight100p_CSK_Module_Fieldbus"
+													label="Fieldbus Info:" multiline style="height: 500px">
+												<crown-edpws-binding property="value"
+													name="CSK_Fieldbus/OnNewStatusFieldbusInfo" update-on-resume>
+												</crown-edpws-binding>
+												</davinci-text-area>
+											</layout-column>
+										</layout-row>
+									</davinci-tab>
+									<davinci-tab id="Tab_ControlBits" label="ControlBits">
+										<layout-row id="RowLayout25">
+											<layout-column id="ColumnLayout46" style="align-items: stretch">
+												<layout-row id="RowLayout13"
+													class="myCustomFrame_CSK_Module_Fieldbus">
+												<layout-column id="ColumnLayout10" style="align-items: stretch">
+												<davinci-value-display id="VD_ControlBitsOut"
+													label="ControlBits Out (Read only, Transmitted from PLC)">
+												</davinci-value-display>
+												<layout-row id="RowLayout28" style="justify-content: space-between">
+												<davinci-value-display id="VD_CtrlBitOut_16" value="Bit 16">
+												</davinci-value-display>
+												<davinci-value-display id="VD_CtrlBitOut_1" value="Bit 1">
+												</davinci-value-display>
+												</layout-row>
+												<layout-row id="RowLayout27">
+												<layout-column id="ColumnLayout51" style="align-items: stretch">
+												<davinci-checkbox id="CB_Out16" disabled>
+												<span></span>
+												<crown-edpws-binding property="checked"
+													name="CSK_Fieldbus/OnNewStatusControlBitsOutTable"
+													update-on-resume converter="function(value) {return value[15];}">
+												</crown-edpws-binding>
+												</davinci-checkbox>
+												</layout-column>
+												<layout-column id="ColumnLayout63" style="align-items: stretch">
+												<davinci-checkbox id="CB_Out15" disabled>
+												<span></span>
+												<crown-edpws-binding property="checked"
+													name="CSK_Fieldbus/OnNewStatusControlBitsOutTable"
+													update-on-resume converter="function(value) {return value[14];}">
+												</crown-edpws-binding>
+												</davinci-checkbox>
+												</layout-column>
+												<layout-column id="ColumnLayout62" style="align-items: stretch">
+												<davinci-checkbox id="CB_Out14" disabled>
+												<span></span>
+												<crown-edpws-binding property="checked"
+													name="CSK_Fieldbus/OnNewStatusControlBitsOutTable"
+													update-on-resume converter="function(value) {return value[13];}">
+												</crown-edpws-binding>
+												</davinci-checkbox>
+												</layout-column>
+												<layout-column id="ColumnLayout61" style="align-items: stretch">
+												<davinci-checkbox id="CB_Out13" disabled>
+												<span></span>
+												<crown-edpws-binding property="checked"
+													name="CSK_Fieldbus/OnNewStatusControlBitsOutTable"
+													update-on-resume converter="function(value) {return value[12];}">
+												</crown-edpws-binding>
+												</davinci-checkbox>
+												</layout-column>
+												<layout-column id="ColumnLayout60" style="align-items: stretch">
+												<davinci-checkbox id="CB_Out12" disabled>
+												<span></span>
+												<crown-edpws-binding property="checked"
+													name="CSK_Fieldbus/OnNewStatusControlBitsOutTable"
+													update-on-resume converter="function(value) {return value[11];}">
+												</crown-edpws-binding>
+												</davinci-checkbox>
+												</layout-column>
+												<layout-column id="ColumnLayout59" style="align-items: stretch">
+												<davinci-checkbox id="CB_Out11" disabled>
+												<span></span>
+												<crown-edpws-binding property="checked"
+													name="CSK_Fieldbus/OnNewStatusControlBitsOutTable"
+													update-on-resume converter="function(value) {return value[10];}">
+												</crown-edpws-binding>
+												</davinci-checkbox>
+												</layout-column>
+												<layout-column id="ColumnLayout58" style="align-items: stretch">
+												<davinci-checkbox id="CB_Out10" disabled>
+												<span></span>
+												<crown-edpws-binding property="checked"
+													name="CSK_Fieldbus/OnNewStatusControlBitsOutTable"
+													update-on-resume converter="function(value) {return value[9];}">
+												</crown-edpws-binding>
+												</davinci-checkbox>
+												</layout-column>
+												<layout-column id="ColumnLayout57" style="align-items: stretch">
+												<davinci-checkbox id="CB_Out9" disabled>
+												<span></span>
+												<crown-edpws-binding property="checked"
+													name="CSK_Fieldbus/OnNewStatusControlBitsOutTable"
+													update-on-resume converter="function(value) {return value[8];}">
+												</crown-edpws-binding>
+												</davinci-checkbox>
+												</layout-column>
+												<layout-column id="ColumnLayout56" style="align-items: stretch">
+												<davinci-checkbox id="CB_Out8" disabled>
+												<span></span>
+												<crown-edpws-binding property="checked"
+													name="CSK_Fieldbus/OnNewStatusControlBitsOutTable"
+													update-on-resume converter="function(value) {return value[7];}">
+												</crown-edpws-binding>
+												</davinci-checkbox>
+												</layout-column>
+												<layout-column id="ColumnLayout55" style="align-items: stretch">
+												<davinci-checkbox id="CB_Out7" disabled>
+												<span></span>
+												<crown-edpws-binding property="checked"
+													name="CSK_Fieldbus/OnNewStatusControlBitsOutTable"
+													update-on-resume converter="function(value) {return value[6];}">
+												</crown-edpws-binding>
+												</davinci-checkbox>
+												</layout-column>
+												<layout-column id="ColumnLayout54" style="align-items: stretch">
+												<davinci-checkbox id="CB_Out6" disabled>
+												<span></span>
+												<crown-edpws-binding property="checked"
+													name="CSK_Fieldbus/OnNewStatusControlBitsOutTable"
+													update-on-resume converter="function(value) {return value[5];}">
+												</crown-edpws-binding>
+												</davinci-checkbox>
+												</layout-column>
+												<layout-column id="ColumnLayout53" style="align-items: stretch">
+												<davinci-checkbox id="CB_Out5" disabled>
+												<span></span>
+												<crown-edpws-binding property="checked"
+													name="CSK_Fieldbus/OnNewStatusControlBitsOutTable"
+													update-on-resume converter="function(value) {return value[4];}">
+												</crown-edpws-binding>
+												</davinci-checkbox>
+												</layout-column>
+												<layout-column id="ColumnLayout52" style="align-items: stretch">
+												<davinci-checkbox id="CB_Out4" disabled>
+												<span></span>
+												<crown-edpws-binding property="checked"
+													name="CSK_Fieldbus/OnNewStatusControlBitsOutTable"
+													update-on-resume converter="function(value) {return value[3];}">
+												</crown-edpws-binding>
+												</davinci-checkbox>
+												</layout-column>
+												<layout-column id="ColumnLayout66" style="align-items: stretch">
+												<davinci-checkbox id="CB_Out3" disabled>
+												<span></span>
+												<crown-edpws-binding property="checked"
+													name="CSK_Fieldbus/OnNewStatusControlBitsOutTable"
+													update-on-resume converter="function(value) {return value[2];}">
+												</crown-edpws-binding>
+												</davinci-checkbox>
+												</layout-column>
+												<layout-column id="ColumnLayout65" style="align-items: stretch">
+												<davinci-checkbox id="CB_Out2" disabled>
+												<span></span>
+												<crown-edpws-binding property="checked"
+													name="CSK_Fieldbus/OnNewStatusControlBitsOutTable"
+													update-on-resume converter="function(value) {return value[1];}">
+												</crown-edpws-binding>
+												</davinci-checkbox>
+												</layout-column>
+												<layout-column id="ColumnLayout64" style="align-items: stretch">
+												<davinci-checkbox id="CB_Out1" disabled>
+												<span></span>
+												<crown-edpws-binding property="checked"
+													name="CSK_Fieldbus/OnNewStatusControlBitsOutTable"
+													update-on-resume converter="function(value) {return value[0];}">
+												</crown-edpws-binding>
+												</davinci-checkbox>
+												</layout-column>
+											</layout-row>
+												<davinci-value-display id="VD_ControlBitsIn"
+													label="ControlBits In (Transmitted to PLC)">
+												</davinci-value-display>
+												<layout-row id="RowLayout31" style="justify-content: space-between">
+												<davinci-value-display id="VD_CtrlBitIn_16" value="Bit 16">
+												</davinci-value-display>
+												<davinci-value-display id="VD_CtrlBitIn_1" value="Bit 1">
+												</davinci-value-display>
+												</layout-row>
+												<layout-row id="RowLayout29">
+												<layout-column id="ColumnLayout67" style="align-items: stretch">
+												<davinci-checkbox id="CB_In16">
+												<span></span>
+												<crown-edpws-binding property="checked"
+													name="CSK_Fieldbus/OnNewStatusControlBitsInTable"
+													update-on-resume converter="function(value) {return value[15];}">
+												</crown-edpws-binding>
+												<crown-binding event="change"
+													name="CSK_Fieldbus/setSpecificControlBitIn" path="param/args/values"
+													auto-commit
+													converter="function(value) {return [value.toString(), String(16)];}">
+												</crown-binding>
+												</davinci-checkbox>
+												</layout-column>
+												<layout-column id="ColumnLayout68" style="align-items: stretch">
+												<davinci-checkbox id="CB_In15">
+												<span></span>
+												<crown-edpws-binding property="checked"
+													name="CSK_Fieldbus/OnNewStatusControlBitsInTable"
+													update-on-resume converter="function(value) {return value[14];}">
+												</crown-edpws-binding>
+												<crown-binding event="change"
+													name="CSK_Fieldbus/setSpecificControlBitIn" path="param/args/values"
+													auto-commit
+													converter="function(value) {return [value.toString(), String(15)];}">
+												</crown-binding>
+												</davinci-checkbox>
+												</layout-column>
+												<layout-column id="ColumnLayout69" style="align-items: stretch">
+												<davinci-checkbox id="CB_In14">
+												<span></span>
+												<crown-edpws-binding property="checked"
+													name="CSK_Fieldbus/OnNewStatusControlBitsInTable"
+													update-on-resume converter="function(value) {return value[13];}">
+												</crown-edpws-binding>
+												<crown-binding event="change"
+													name="CSK_Fieldbus/setSpecificControlBitIn" path="param/args/values"
+													auto-commit
+													converter="function(value) {return [value.toString(), String(14)];}">
+												</crown-binding>
+												</davinci-checkbox>
+												</layout-column>
+												<layout-column id="ColumnLayout70" style="align-items: stretch">
+												<davinci-checkbox id="CB_In13">
+												<span></span>
+												<crown-edpws-binding property="checked"
+													name="CSK_Fieldbus/OnNewStatusControlBitsInTable"
+													update-on-resume converter="function(value) {return value[12];}">
+												</crown-edpws-binding>
+												<crown-binding event="change"
+													name="CSK_Fieldbus/setSpecificControlBitIn" path="param/args/values"
+													auto-commit
+													converter="function(value) {return [value.toString(), String(13)];}">
+												</crown-binding>
+												</davinci-checkbox>
+												</layout-column>
+												<layout-column id="ColumnLayout71" style="align-items: stretch">
+												<davinci-checkbox id="CB_In12">
+												<span></span>
+												<crown-edpws-binding property="checked"
+													name="CSK_Fieldbus/OnNewStatusControlBitsInTable"
+													update-on-resume converter="function(value) {return value[11];}">
+												</crown-edpws-binding>
+												<crown-binding event="change"
+													name="CSK_Fieldbus/setSpecificControlBitIn" path="param/args/values"
+													auto-commit
+													converter="function(value) {return [value.toString(), String(12)];}">
+												</crown-binding>
+												</davinci-checkbox>
+												</layout-column>
+												<layout-column id="ColumnLayout72" style="align-items: stretch">
+												<davinci-checkbox id="CB_In11">
+												<span></span>
+												<crown-edpws-binding property="checked"
+													name="CSK_Fieldbus/OnNewStatusControlBitsInTable"
+													update-on-resume converter="function(value) {return value[10];}">
+												</crown-edpws-binding>
+												<crown-binding event="change"
+													name="CSK_Fieldbus/setSpecificControlBitIn" path="param/args/values"
+													auto-commit
+													converter="function(value) {return [value.toString(), String(11)];}">
+												</crown-binding>
+												</davinci-checkbox>
+												</layout-column>
+												<layout-column id="ColumnLayout73" style="align-items: stretch">
+												<davinci-checkbox id="CB_In10">
+												<span></span>
+												<crown-edpws-binding property="checked"
+													name="CSK_Fieldbus/OnNewStatusControlBitsInTable"
+													update-on-resume converter="function(value) {return value[9];}">
+												</crown-edpws-binding>
+												<crown-binding event="change"
+													name="CSK_Fieldbus/setSpecificControlBitIn" path="param/args/values"
+													auto-commit
+													converter="function(value) {return [value.toString(), String(10)];}">
+												</crown-binding>
+												</davinci-checkbox>
+												</layout-column>
+												<layout-column id="ColumnLayout74" style="align-items: stretch">
+												<davinci-checkbox id="CB_In9">
+												<span></span>
+												<crown-edpws-binding property="checked"
+													name="CSK_Fieldbus/OnNewStatusControlBitsInTable"
+													update-on-resume converter="function(value) {return value[8];}">
+												</crown-edpws-binding>
+												<crown-binding event="change"
+													name="CSK_Fieldbus/setSpecificControlBitIn" path="param/args/values"
+													auto-commit
+													converter="function(value) {return [value.toString(), String(9)];}">
+												</crown-binding>
+												</davinci-checkbox>
+												</layout-column>
+												<layout-column id="ColumnLayout75" style="align-items: stretch">
+												<davinci-checkbox id="CB_In8">
+												<span></span>
+												<crown-edpws-binding property="checked"
+													name="CSK_Fieldbus/OnNewStatusControlBitsInTable"
+													update-on-resume converter="function(value) {return value[7];}">
+												</crown-edpws-binding>
+												<crown-binding event="change"
+													name="CSK_Fieldbus/setSpecificControlBitIn" path="param/args/values"
+													auto-commit
+													converter="function(value) {return [value.toString(), String(8)];}">
+												</crown-binding>
+												</davinci-checkbox>
+												</layout-column>
+												<layout-column id="ColumnLayout76" style="align-items: stretch">
+												<davinci-checkbox id="CB_In7">
+												<span></span>
+												<crown-edpws-binding property="checked"
+													name="CSK_Fieldbus/OnNewStatusControlBitsInTable"
+													update-on-resume converter="function(value) {return value[6];}">
+												</crown-edpws-binding>
+												<crown-binding event="change"
+													name="CSK_Fieldbus/setSpecificControlBitIn" path="param/args/values"
+													auto-commit
+													converter="function(value) {return [value.toString(), String(7)];}">
+												</crown-binding>
+												</davinci-checkbox>
+												</layout-column>
+												<layout-column id="ColumnLayout77" style="align-items: stretch">
+												<davinci-checkbox id="CB_In6">
+												<span></span>
+												<crown-edpws-binding property="checked"
+													name="CSK_Fieldbus/OnNewStatusControlBitsInTable"
+													update-on-resume converter="function(value) {return value[5];}">
+												</crown-edpws-binding>
+												<crown-binding event="change"
+													name="CSK_Fieldbus/setSpecificControlBitIn" path="param/args/values"
+													auto-commit
+													converter="function(value) {return [value.toString(), String(6)];}">
+												</crown-binding>
+												</davinci-checkbox>
+												</layout-column>
+												<layout-column id="ColumnLayout78" style="align-items: stretch">
+												<davinci-checkbox id="CB_In5">
+												<span></span>
+												<crown-edpws-binding property="checked"
+													name="CSK_Fieldbus/OnNewStatusControlBitsInTable"
+													update-on-resume converter="function(value) {return value[4];}">
+												</crown-edpws-binding>
+												<crown-binding event="change"
+													name="CSK_Fieldbus/setSpecificControlBitIn" path="param/args/values"
+													auto-commit
+													converter="function(value) {return [value.toString(), String(5)];}">
+												</crown-binding>
+												</davinci-checkbox>
+												</layout-column>
+												<layout-column id="ColumnLayout79" style="align-items: stretch">
+												<davinci-checkbox id="CB_In4">
+												<span></span>
+												<crown-edpws-binding property="checked"
+													name="CSK_Fieldbus/OnNewStatusControlBitsInTable"
+													update-on-resume converter="function(value) {return value[3];}">
+												</crown-edpws-binding>
+												<crown-binding event="change"
+													name="CSK_Fieldbus/setSpecificControlBitIn" path="param/args/values"
+													auto-commit
+													converter="function(value) {return [value.toString(), String(4)];}">
+												</crown-binding>
+												</davinci-checkbox>
+												</layout-column>
+												<layout-column id="ColumnLayout80" style="align-items: stretch">
+												<davinci-checkbox id="CB_In3">
+												<span></span>
+												<crown-edpws-binding property="checked"
+													name="CSK_Fieldbus/OnNewStatusControlBitsInTable"
+													update-on-resume converter="function(value) {return value[2];}">
+												</crown-edpws-binding>
+												<crown-binding event="change"
+													name="CSK_Fieldbus/setSpecificControlBitIn" path="param/args/values"
+													auto-commit
+													converter="function(value) {return [value.toString(), String(3)];}">
+												</crown-binding>
+												</davinci-checkbox>
+												</layout-column>
+												<layout-column id="ColumnLayout81" style="align-items: stretch">
+												<davinci-checkbox id="CB_In2">
+												<span></span>
+												<crown-edpws-binding property="checked"
+													name="CSK_Fieldbus/OnNewStatusControlBitsInTable"
+													update-on-resume converter="function(value) {return value[1];}">
+												</crown-edpws-binding>
+												<crown-binding event="change"
+													name="CSK_Fieldbus/setSpecificControlBitIn" path="param/args/values"
+													auto-commit
+													converter="function(value) {return [value.toString(), String(2)];}">
+												</crown-binding>
+												</davinci-checkbox>
+												</layout-column>
+												<layout-column id="ColumnLayout82" style="align-items: stretch">
+												<davinci-checkbox id="CB_In1">
+												<span></span>
+												<crown-edpws-binding property="checked"
+													name="CSK_Fieldbus/OnNewStatusControlBitsInTable"
+													update-on-resume converter="function(value) {return value[0];}">
+												</crown-edpws-binding>
+												<crown-binding event="change"
+													name="CSK_Fieldbus/setSpecificControlBitIn" path="param/args/values"
+													auto-commit
+													converter="function(value) {return [value.toString(), String(1)];}">
+												</crown-binding>
+												</davinci-checkbox>
+												</layout-column>
+												</layout-row>
+												<davinci-value-display id="VD_BitMaskControlBitsIn" value="Bitmask">
+												</davinci-value-display>
+												<layout-row id="RowLayout30">
+												<layout-column id="ColumnLayout83" style="align-items: stretch">
+												<davinci-checkbox id="CB_MaskIn16">
+												<span></span>
+												<crown-edpws-binding property="checked"
+													name="CSK_Fieldbus/OnNewStatusControlBitsInBitMaskTable"
+													update-on-resume converter="function(value) {return value[15];}">
+												</crown-edpws-binding>
+												<crown-binding event="change"
+													name="CSK_Fieldbus/setSpecificBitMaskBit" path="param/args/values"
+													auto-commit
+													converter="function(value) {return [value.toString(), String(16)];}">
+												</crown-binding>
+												</davinci-checkbox>
+												</layout-column>
+												<layout-column id="ColumnLayout84" style="align-items: stretch">
+												<davinci-checkbox id="CB_MaskIn15">
+												<span></span>
+												<crown-edpws-binding property="checked"
+													name="CSK_Fieldbus/OnNewStatusControlBitsInBitMaskTable"
+													update-on-resume converter="function(value) {return value[14];}">
+												</crown-edpws-binding>
+												<crown-binding event="change"
+													name="CSK_Fieldbus/setSpecificBitMaskBit" path="param/args/values"
+													auto-commit
+													converter="function(value) {return [value.toString(), String(15)];}">
+												</crown-binding>
+												</davinci-checkbox>
+												</layout-column>
+												<layout-column id="ColumnLayout85" style="align-items: stretch">
+												<davinci-checkbox id="CB_MaskIn14">
+												<span></span>
+												<crown-edpws-binding property="checked"
+													name="CSK_Fieldbus/OnNewStatusControlBitsInBitMaskTable"
+													update-on-resume converter="function(value) {return value[13];}">
+												</crown-edpws-binding>
+												<crown-binding event="change"
+													name="CSK_Fieldbus/setSpecificBitMaskBit" path="param/args/values"
+													auto-commit
+													converter="function(value) {return [value.toString(), String(14)];}">
+												</crown-binding>
+												</davinci-checkbox>
+												</layout-column>
+												<layout-column id="ColumnLayout86" style="align-items: stretch">
+												<davinci-checkbox id="CB_MaskIn13">
+												<span></span>
+												<crown-edpws-binding property="checked"
+													name="CSK_Fieldbus/OnNewStatusControlBitsInBitMaskTable"
+													update-on-resume converter="function(value) {return value[12];}">
+												</crown-edpws-binding>
+												<crown-binding event="change"
+													name="CSK_Fieldbus/setSpecificBitMaskBit" path="param/args/values"
+													auto-commit
+													converter="function(value) {return [value.toString(), String(13)];}">
+												</crown-binding>
+												</davinci-checkbox>
+												</layout-column>
+												<layout-column id="ColumnLayout87" style="align-items: stretch">
+												<davinci-checkbox id="CB_MaskIn12">
+												<span></span>
+												<crown-edpws-binding property="checked"
+													name="CSK_Fieldbus/OnNewStatusControlBitsInBitMaskTable"
+													update-on-resume converter="function(value) {return value[11];}">
+												</crown-edpws-binding>
+												<crown-binding event="change"
+													name="CSK_Fieldbus/setSpecificBitMaskBit" path="param/args/values"
+													auto-commit
+													converter="function(value) {return [value.toString(), String(12)];}">
+												</crown-binding>
+												</davinci-checkbox>
+												</layout-column>
+												<layout-column id="ColumnLayout88" style="align-items: stretch">
+												<davinci-checkbox id="CB_MaskIn11">
+												<span></span>
+												<crown-edpws-binding property="checked"
+													name="CSK_Fieldbus/OnNewStatusControlBitsInBitMaskTable"
+													update-on-resume converter="function(value) {return value[10];}">
+												</crown-edpws-binding>
+												<crown-binding event="change"
+													name="CSK_Fieldbus/setSpecificBitMaskBit" path="param/args/values"
+													auto-commit
+													converter="function(value) {return [value.toString(), String(11)];}">
+												</crown-binding>
+												</davinci-checkbox>
+												</layout-column>
+												<layout-column id="ColumnLayout89" style="align-items: stretch">
+												<davinci-checkbox id="CB_MaskIn10">
+												<span></span>
+												<crown-edpws-binding property="checked"
+													name="CSK_Fieldbus/OnNewStatusControlBitsInBitMaskTable"
+													update-on-resume converter="function(value) {return value[9];}">
+												</crown-edpws-binding>
+												<crown-binding event="change"
+													name="CSK_Fieldbus/setSpecificBitMaskBit" path="param/args/values"
+													auto-commit
+													converter="function(value) {return [value.toString(), String(10)];}">
+												</crown-binding>
+												</davinci-checkbox>
+												</layout-column>
+												<layout-column id="ColumnLayout90" style="align-items: stretch">
+												<davinci-checkbox id="CB_MaskIn9">
+												<span></span>
+												<crown-edpws-binding property="checked"
+													name="CSK_Fieldbus/OnNewStatusControlBitsInBitMaskTable"
+													update-on-resume converter="function(value) {return value[8];}">
+												</crown-edpws-binding>
+												<crown-binding event="change"
+													name="CSK_Fieldbus/setSpecificBitMaskBit" path="param/args/values"
+													auto-commit
+													converter="function(value) {return [value.toString(), String(9)];}">
+												</crown-binding>
+												</davinci-checkbox>
+												</layout-column>
+												<layout-column id="ColumnLayout91" style="align-items: stretch">
+												<davinci-checkbox id="CB_MaskIn8">
+												<span></span>
+												<crown-edpws-binding property="checked"
+													name="CSK_Fieldbus/OnNewStatusControlBitsInBitMaskTable"
+													update-on-resume converter="function(value) {return value[7];}">
+												</crown-edpws-binding>
+												<crown-binding event="change"
+													name="CSK_Fieldbus/setSpecificBitMaskBit" path="param/args/values"
+													auto-commit
+													converter="function(value) {return [value.toString(), String(8)];}">
+												</crown-binding>
+												</davinci-checkbox>
+												</layout-column>
+												<layout-column id="ColumnLayout92" style="align-items: stretch">
+												<davinci-checkbox id="CB_MaskIn7">
+												<span></span>
+												<crown-edpws-binding property="checked"
+													name="CSK_Fieldbus/OnNewStatusControlBitsInBitMaskTable"
+													update-on-resume converter="function(value) {return value[6];}">
+												</crown-edpws-binding>
+												<crown-binding event="change"
+													name="CSK_Fieldbus/setSpecificBitMaskBit" path="param/args/values"
+													auto-commit
+													converter="function(value) {return [value.toString(), String(7)];}">
+												</crown-binding>
+												</davinci-checkbox>
+												</layout-column>
+												<layout-column id="ColumnLayout93" style="align-items: stretch">
+												<davinci-checkbox id="CB_MaskIn6">
+												<span></span>
+												<crown-edpws-binding property="checked"
+													name="CSK_Fieldbus/OnNewStatusControlBitsInBitMaskTable"
+													update-on-resume converter="function(value) {return value[5];}">
+												</crown-edpws-binding>
+												<crown-binding event="change"
+													name="CSK_Fieldbus/setSpecificBitMaskBit" path="param/args/values"
+													auto-commit
+													converter="function(value) {return [value.toString(), String(6)];}">
+												</crown-binding>
+												</davinci-checkbox>
+												</layout-column>
+												<layout-column id="ColumnLayout94" style="align-items: stretch">
+												<davinci-checkbox id="CB_MaskIn5">
+												<span></span>
+												<crown-edpws-binding property="checked"
+													name="CSK_Fieldbus/OnNewStatusControlBitsInBitMaskTable"
+													update-on-resume converter="function(value) {return value[4];}">
+												</crown-edpws-binding>
+												<crown-binding event="change"
+													name="CSK_Fieldbus/setSpecificBitMaskBit" path="param/args/values"
+													auto-commit
+													converter="function(value) {return [value.toString(), String(5)];}">
+												</crown-binding>
+												</davinci-checkbox>
+												</layout-column>
+												<layout-column id="ColumnLayout95" style="align-items: stretch">
+												<davinci-checkbox id="CB_MaskIn4">
+												<span></span>
+												<crown-edpws-binding property="checked"
+													name="CSK_Fieldbus/OnNewStatusControlBitsInBitMaskTable"
+													update-on-resume converter="function(value) {return value[3];}">
+												</crown-edpws-binding>
+												<crown-binding event="change"
+													name="CSK_Fieldbus/setSpecificBitMaskBit" path="param/args/values"
+													auto-commit
+													converter="function(value) {return [value.toString(), String(4)];}">
+												</crown-binding>
+												</davinci-checkbox>
+												</layout-column>
+												<layout-column id="ColumnLayout96" style="align-items: stretch">
+												<davinci-checkbox id="CB_MaskIn3">
+												<span></span>
+												<crown-edpws-binding property="checked"
+													name="CSK_Fieldbus/OnNewStatusControlBitsInBitMaskTable"
+													update-on-resume converter="function(value) {return value[2];}">
+												</crown-edpws-binding>
+												<crown-binding event="change"
+													name="CSK_Fieldbus/setSpecificBitMaskBit" path="param/args/values"
+													auto-commit
+													converter="function(value) {return [value.toString(), String(3)];}">
+												</crown-binding>
+												</davinci-checkbox>
+												</layout-column>
+												<layout-column id="ColumnLayout97" style="align-items: stretch">
+												<davinci-checkbox id="CB_MaskIn2">
+												<span></span>
+												<crown-edpws-binding property="checked"
+													name="CSK_Fieldbus/OnNewStatusControlBitsInBitMaskTable"
+													update-on-resume converter="function(value) {return value[1];}">
+												</crown-edpws-binding>
+												<crown-binding event="change"
+													name="CSK_Fieldbus/setSpecificBitMaskBit" path="param/args/values"
+													auto-commit
+													converter="function(value) {return [value.toString(), String(2)];}">
+												</crown-binding>
+												</davinci-checkbox>
+												</layout-column>
+												<layout-column id="ColumnLayout98" style="align-items: stretch">
+												<davinci-checkbox id="CB_MaskIn1">
+												<span></span>
+												<crown-edpws-binding property="checked"
+													name="CSK_Fieldbus/OnNewStatusControlBitsInBitMaskTable"
+													update-on-resume converter="function(value) {return value[0];}">
+												</crown-edpws-binding>
+												<crown-binding event="change"
+													name="CSK_Fieldbus/setSpecificBitMaskBit" path="param/args/values"
+													auto-commit
+													converter="function(value) {return [value.toString(), String(1)];}">
+												</crown-binding>
+												</davinci-checkbox>
+												</layout-column>
+												</layout-row>
+												<davinci-button id="Button_UpdateControlBits" type="outline-neutral"
+													icon-position="append" title="Get status from PLC">
+												<span>Refresh ControlBit Status</span>
+												<crown-binding event="submit" name="CSK_Fieldbus/refreshControlBits"
+													auto-commit>
+												</crown-binding>
+												</davinci-button>
+												<davinci-button id="Button_WriteCtrlBits" type="neutral"
+													icon-position="append"
+													title="Write CotrnolBits IN by transmitting to PLC">
+												<span>WriteCtrlBits</span>
+												<crown-binding event="submit"
+													name="CSK_Fieldbus/writeControlBitsInViaUI" auto-commit>
+												</crown-binding>
+												</davinci-button>
+												</layout-column>
+												</layout-row>
+											</layout-column>
+										</layout-row>
+									</davinci-tab>
+									<davinci-tab id="Tab_TransmitData" label="Transmit data">
+										<layout-row id="RowLayout22">
+											<layout-column id="ColumnLayout32" style="align-items: stretch">
+												<layout-row id="RowLayout15"
+													class="myCustomFrame_CSK_Module_Fieldbus">
+												<layout-column id="ColumnLayout44" style="align-items: stretch">
+												<davinci-value-display id="VD_TransmissionData" label="Transmit data">
+												</davinci-value-display>
+												<layout-row id="RowLayout23" style="align-items: center">
+												<layout-column id="ColumnLayout33" style="align-items: stretch">
+												<davinci-text-field id="TF_DataName" type="text" label="DataName">
+												<crown-edpws-binding property="value"
+													name="CSK_Fieldbus/OnNewStatusDataNameTransmit" update-on-resume>
+												</crown-edpws-binding>
+												<crown-binding event="change" name="CSK_Fieldbus/setDataNameTransmit"
+													path="param/args/name" auto-commit>
+												</crown-binding>
+												</davinci-text-field>
+												</layout-column>
+												<layout-column id="ColumnLayout37" style="align-items: stretch">
+												<davinci-text-field id="TF_RegisteredEvent" type="text"
+													label="Registered event">
+												<crown-edpws-binding property="value"
+													name="CSK_Fieldbus/OnNewStatusRegisteredEventTransmit" update-on-resume>
+												</crown-edpws-binding>
+												<crown-binding event="change" name="CSK_Fieldbus/setRegisteredEventTransmit"
+													path="param/args/eventName" auto-commit>
+												</crown-binding>
+												</davinci-text-field>
+												</layout-column>
+												<layout-column id="ColumnLayout38" style="align-items: stretch">
+												<davinci-checkbox id="CB_Convert">
+												<span>Convert data</span>
+												<crown-edpws-binding property="checked"
+													name="CSK_Fieldbus/OnNewStatusConvertDataTransmit" update-on-resume>
+												</crown-edpws-binding>
+												<crown-binding event="change" name="CSK_Fieldbus/setConvertDataTransmit"
+													path="param/args/status" auto-commit>
+												</crown-binding>
+												</davinci-checkbox>
+												</layout-column>
+												<layout-column id="ColumnLayout40" style="align-items: stretch">
+												<davinci-checkbox id="CB_Endianess" title="Little endian per default">
+												<span>Big Endian</span>
+												<crown-edpws-binding property="checked"
+													name="CSK_Fieldbus/OnNewStatusBigEndianTransmit" update-on-resume>
+												</crown-edpws-binding>
+												<crown-binding event="change" name="CSK_Fieldbus/setBigEndianTransmit"
+													path="param/args/status" auto-commit>
+												</crown-binding>
+												</davinci-checkbox>
+												</layout-column>
+												<layout-column id="ColumnLayout39" style="align-items: stretch">
+												<davinci-drop-down id="DD_DataType" label="Data type">
+												<davinci-option id="Option_DOUBLE" value="DOUBLE">
+												<span>DOUBLE</span>
+												</davinci-option>
+												<davinci-option id="Option_FLOAT" value="FLOAT">
+												<span>FLOAT</span>
+												</davinci-option>
+												<davinci-option id="Option_S_BYTE" value="S_BYTE">
+												<span>S_BYTE</span>
+												</davinci-option>
+												<davinci-option id="Option_S_INT1" value="S_INT1">
+												<span>S_INT1</span>
+												</davinci-option>
+												<davinci-option id="Option_S_INT2" value="S_INT2">
+												<span>S_INT2</span>
+												</davinci-option>
+												<davinci-option id="Option_S_INT4" value="S_INT4">
+												<span>S_INT4</span>
+												</davinci-option>
+												<davinci-option id="Option_S_INT8" value="S_INT8">
+												<span>S_INT8</span>
+												</davinci-option>
+												<davinci-option id="Option_S_LONG" value="S_LONG">
+												<span>S_LONG</span>
+												</davinci-option>
+												<davinci-option id="Option_S_SHORT" value="S_SHORT">
+												<span>S_SHORT</span>
+												</davinci-option>
+												<davinci-option id="Option_U_BYTE" value="U_BYTE">
+												<span>U_BYTE</span>
+												</davinci-option>
+												<davinci-option id="Option_U_INT1" value="U_INT1">
+												<span>U_INT1</span>
+												</davinci-option>
+												<davinci-option id="Option_U_INT2" value="U_INT2">
+												<span>U_INT2</span>
+												</davinci-option>
+												<davinci-option id="Option_U_INT4" value="U_INT4">
+												<span>U_INT4</span>
+												</davinci-option>
+												<davinci-option id="Option_U_INT8" value="U_INT8">
+												<span>U_INT8</span>
+												</davinci-option>
+												<davinci-option id="Option_U_LONG" value="U_LONG">
+												<span>U_LONG</span>
+												</davinci-option>
+												<davinci-option id="Option_U_SHORT" value="U_SHORT">
+												<span>U_SHORT</span>
+												</davinci-option>
+												<crown-edpws-binding property="value"
+													name="CSK_Fieldbus/OnNewStatusDataTypeTransmit" update-on-resume>
+												</crown-edpws-binding>
+												<crown-binding event="change" name="CSK_Fieldbus/setDataTypeTransmit"
+													path="param/args/dataType" auto-commit>
+												</crown-binding>
+												</davinci-drop-down>
+												</layout-column>
+												<layout-column id="ColumnLayout41" style="align-items: stretch">
+												<davinci-button id="Button_AddEdit"
+													class="myCustomMarginBottom4px_CSK_Module_Fieldbus" type="primary"
+													icon-position="append">
+												<span>Add / Edit</span>
+												<crown-binding event="submit"
+													name="CSK_Fieldbus/addDataToTransmitViaUI" auto-commit>
+												</crown-binding>
+												</davinci-button>
+												</layout-column>
+												<layout-column id="ColumnLayout42" style="align-items: stretch">
+												<davinci-button id="Button_Delete"
+													class="myCustomMarginBottom4px_CSK_Module_Fieldbus" type="primary"
+													icon-position="append">
+												<span>Delete</span>
+												<crown-binding event="submit"
+													name="CSK_Fieldbus/deleteDataToTransmitViaUI" auto-commit>
+												</crown-binding>
+												</davinci-button>
+												</layout-column>
+												</layout-row>
+												<curie-table id="DT_Data" selectable>
+												<curie-table-column id="DTC_IDTransmit" header="Position">
+												</curie-table-column>
+												<curie-table-column id="DTC_NameTransmit" header="Name">
+												</curie-table-column>
+												<curie-table-column id="DTC_EventTransmit" header="Event">
+												</curie-table-column>
+												<curie-table-column id="DTC_DataTypeTransmit" header="DataType">
+												</curie-table-column>
+												<curie-table-column id="DTC_ConvertTransmit" header="Convert">
+												</curie-table-column>
+												<curie-table-column id="DTC_BigEndianTransmit" header="Big Endian">
+												</curie-table-column>
+												<curie-table-column id="DTC_ValueTransmit" header="Value">
+												</curie-table-column>
+												<crown-edpws-binding property="data"
+													name="CSK_Fieldbus/OnNewStatusDataTransmissionList"
+													update-on-resume converter="convertToList">
+												</crown-edpws-binding>
+												<crown-binding event="row-selected"
+													name="CSK_Fieldbus/selectDataTransmitViaUI" path="param/args/selection"
+													auto-commit>
+												</crown-binding>
+												</curie-table>
+												<layout-row id="RowLayout26">
+												<layout-column id="ColumnLayout47" style="align-items: stretch">
+												<davinci-button id="Button_Up" type="outline" icon-position="append">
+												<span>Up</span>
+												<crown-binding event="submit" name="CSK_Fieldbus/dataTransmitPositionUp"
+													auto-commit>
+												</crown-binding>
+												</davinci-button>
+												</layout-column>
+												<layout-column id="ColumnLayout48" style="align-items: stretch">
+												<davinci-button id="Button_Down" type="outline"
+													icon-position="append">
+												<span>Down</span>
+												<crown-binding event="submit" name="CSK_Fieldbus/dataTransmitPositionDown"
+													auto-commit>
+												</crown-binding>
+												</davinci-button>
+												</layout-column>
+												<layout-column id="ColumnLayout49" style="align-items: stretch">
+												</layout-column>
+												<layout-column id="ColumnLayout50"
+													style="align-items: stretch; flex-grow: 2">
+												<davinci-text-field id="TF_TempValue" type="text"
+													placeholder="Temp data to set">
+												<crown-edpws-binding property="value"
+													name="CSK_Fieldbus/OnNewStatusTempDataTransmit" update-on-resume>
+												</crown-edpws-binding>
+												<crown-binding event="change" name="CSK_Fieldbus/setTempTransmitData"
+													path="param/args/data" auto-commit>
+												</crown-binding>
+												</davinci-text-field>
+												</layout-column>
+												<layout-column id="ColumnLayout45"
+													style="align-items: stretch; flex-shrink: 0">
+												<davinci-button id="Button_TestTrigger" type="primary"
+													icon-position="append">
+												<span>Set value</span>
+												<crown-binding event="submit" name="CSK_Fieldbus/triggerTempDataViaUI"
+													auto-commit>
+												</crown-binding>
+												</davinci-button>
+												</layout-column>
+												<layout-column id="ColumnLayout15" style="align-items: stretch">
+												<davinci-button id="Button_ResetTransmitData" type="primary"
+													icon-position="append">
+												<span>Reset All</span>
+												<crown-binding event="submit" name="CSK_Fieldbus/resetTransmitData"
+													auto-commit>
+												</crown-binding>
+												</davinci-button>
+												</layout-column>
+												</layout-row>
+												<davinci-value-display id="VD_LogMessageTransmit">
+												<crown-edpws-binding property="value"
+													name="CSK_Fieldbus/OnNewStatusLogMessage" update-on-resume>
+												</crown-edpws-binding>
+												</davinci-value-display>
+												</layout-column>
+												</layout-row>
+											</layout-column>
+										</layout-row>
+									</davinci-tab>
+									<davinci-tab id="Tab_ReceiveData" label="Receive data">
+										<layout-row id="RowLayout10">
+											<layout-column id="ColumnLayout13" style="align-items: stretch">
+												<layout-row id="RowLayout14"
+													class="myCustomFrame_CSK_Module_Fieldbus">
+												<layout-column id="ColumnLayout14" style="align-items: stretch">
+												<davinci-value-display id="VD_ReceiveData" label="Receive data">
+												</davinci-value-display>
+												<layout-row id="RowLayout32" style="align-items: center">
+												<layout-column id="ColumnLayout20" style="align-items: stretch">
+												<davinci-text-field id="TF_DataNameReceive" type="text"
+													placeholder="DataName" label="Data name">
+												<crown-edpws-binding property="value"
+													name="CSK_Fieldbus/OnNewStatusDataNameReceive" update-on-resume>
+												</crown-edpws-binding>
+												<crown-binding event="change" name="CSK_Fieldbus/setDataNameReceive"
+													path="param/args/name" auto-commit>
+												</crown-binding>
+												</davinci-text-field>
+												</layout-column>
+												<layout-column id="ColumnLayout21" style="align-items: stretch">
+												</layout-column>
+												<layout-column id="ColumnLayout99" style="align-items: stretch">
+												<davinci-checkbox id="Checkbox1">
+												<span>Convert data</span>
+												<crown-edpws-binding property="checked"
+													name="CSK_Fieldbus/OnNewStatusConvertDataReceive"
+													update-on-resume>
+												</crown-edpws-binding>
+												<crown-binding event="change"
+													name="CSK_Fieldbus/setConvertDataReceive" path="param/args/status"
+													auto-commit>
+												</crown-binding>
+												</davinci-checkbox>
+												</layout-column>
+												<layout-column id="ColumnLayout100" style="align-items: stretch">
+												<davinci-checkbox id="Checkbox2" title="Little endian per default">
+												<span>Big Endian</span>
+												<crown-edpws-binding property="checked"
+													name="CSK_Fieldbus/OnNewStatusBigEndianReceive" update-on-resume>
+												</crown-edpws-binding>
+												<crown-binding event="change" name="CSK_Fieldbus/setBigEndianReceive"
+													path="param/args/status" auto-commit>
+												</crown-binding>
+												</davinci-checkbox>
+												</layout-column>
+												<layout-column id="ColumnLayout101" style="align-items: stretch">
+												<davinci-drop-down id="DD_DataTypeReceive" label="Data type">
+												<davinci-option id="Option8" value="DOUBLE">
+												<span>DOUBLE</span>
+												</davinci-option>
+												<davinci-option id="Option9" value="FLOAT">
+												<span>FLOAT</span>
+												</davinci-option>
+												<davinci-option id="Option10" value="S_BYTE">
+												<span>S_BYTE</span>
+												</davinci-option>
+												<davinci-option id="Option11" value="S_INT1">
+												<span>S_INT1</span>
+												</davinci-option>
+												<davinci-option id="Option12" value="S_INT2">
+												<span>S_INT2</span>
+												</davinci-option>
+												<davinci-option id="Option13" value="S_INT4">
+												<span>S_INT4</span>
+												</davinci-option>
+												<davinci-option id="Option14" value="S_INT8">
+												<span>S_INT8</span>
+												</davinci-option>
+												<davinci-option id="Option15" value="S_LONG">
+												<span>S_LONG</span>
+												</davinci-option>
+												<davinci-option id="Option16" value="S_SHORT">
+												<span>S_SHORT</span>
+												</davinci-option>
+												<davinci-option id="Option17" value="U_BYTE">
+												<span>U_BYTE</span>
+												</davinci-option>
+												<davinci-option id="Option18" value="U_INT1">
+												<span>U_INT1</span>
+												</davinci-option>
+												<davinci-option id="Option19" value="U_INT2">
+												<span>U_INT2</span>
+												</davinci-option>
+												<davinci-option id="Option20" value="U_INT4">
+												<span>U_INT4</span>
+												</davinci-option>
+												<davinci-option id="Option21" value="U_INT8">
+												<span>U_INT8</span>
+												</davinci-option>
+												<davinci-option id="Option22" value="U_LONG">
+												<span>U_LONG</span>
+												</davinci-option>
+												<davinci-option id="Option23" value="U_SHORT">
+												<span>U_SHORT</span>
+												</davinci-option>
+												<crown-binding event="change" name="CSK_Fieldbus/setDataTypeReceive"
+													path="param/args/dataType" auto-commit>
+												</crown-binding>
+												<crown-edpws-binding property="value"
+													name="CSK_Fieldbus/OnNewStatusDataTypeReceive" update-on-resume>
+												</crown-edpws-binding>
+												</davinci-drop-down>
+												</layout-column>
+												<layout-column id="ColumnLayout102" style="align-items: stretch">
+												<davinci-button id="Button2"
+													class="myCustomMarginBottom4px_CSK_Module_Fieldbus" type="primary"
+													icon-position="append">
+												<span>Add / Edit</span>
+												<crown-binding event="submit"
+													name="CSK_Fieldbus/addDataToReceiveViaUI" auto-commit>
+												</crown-binding>
+												</davinci-button>
+												</layout-column>
+												<layout-column id="ColumnLayout103" style="align-items: stretch">
+												<davinci-button id="Button3"
+													class="myCustomMarginBottom4px_CSK_Module_Fieldbus" type="primary"
+													icon-position="append">
+												<span>Delete</span>
+												<crown-binding event="submit"
+													name="CSK_Fieldbus/deleteDataToReceiveViaUI" auto-commit>
+												</crown-binding>
+												</davinci-button>
+												</layout-column>
+												</layout-row>
+												<curie-table id="DT_ReceiveData" selectable>
+												<curie-table-column id="DTC_IDReceive" header="Position">
+												</curie-table-column>
+												<curie-table-column id="DTC_NameReceive" header="Name">
+												</curie-table-column>
+												<curie-table-column id="DTC_DataTypeReceive" header="DataType">
+												</curie-table-column>
+												<curie-table-column id="DTC_ConvertReceive" header="Convert">
+												</curie-table-column>
+												<curie-table-column id="DTC_BigEndianReceive" header="Big Endian">
+												</curie-table-column>
+												<curie-table-column id="DTC_ValueReceive" header="Value">
+												</curie-table-column>
+												<crown-edpws-binding property="data"
+													name="CSK_Fieldbus/OnNewStatusDataReceivingList" update-on-resume
+													converter="convertToList">
+												</crown-edpws-binding>
+												<crown-binding event="row-selected"
+													name="CSK_Fieldbus/selectDataReceiveViaUI"
+													path="param/args/selection" auto-commit>
+												</crown-binding>
+												</curie-table>
+												<layout-row id="RowLayout33">
+												<layout-column id="ColumnLayout104" style="align-items: stretch">
+												<davinci-button id="Button_UpReceive" type="outline"
+													icon-position="append">
+												<span>Up</span>
+												<crown-binding event="submit"
+													name="CSK_Fieldbus/dataReceivePositionUp" auto-commit>
+												</crown-binding>
+												</davinci-button>
+												</layout-column>
+												<layout-column id="ColumnLayout105" style="align-items: stretch">
+												<davinci-button id="Button_DownReceive" type="outline"
+													icon-position="append">
+												<span>Down</span>
+												<crown-binding event="submit"
+													name="CSK_Fieldbus/dataReceivePositionDown" auto-commit>
+												</crown-binding>
+												</davinci-button>
+												</layout-column>
+												<layout-column id="ColumnLayout106" style="align-items: stretch">
+												</layout-column>
+												<layout-column id="ColumnLayout107" style="align-items: stretch">
+												</layout-column>
+												<layout-column id="ColumnLayout108" style="align-items: stretch">
+												</layout-column>
+												<layout-column id="ColumnLayout109" style="align-items: stretch">
+												</layout-column>
+												</layout-row>
+												<davinci-callout id="Callout_ReceiveEventInfo" type="info">
+												<span>
+												Each data will be forwarded by a dynamically created event identified by its name like 'CSK_Fieldbus.OnNewData_[NAME]'
+												</span>
+												</davinci-callout>
+												<davinci-value-display id="VD_LogReceive">
+												<crown-edpws-binding property="value"
+													name="CSK_Fieldbus/OnNewStatusLogMessage" update-on-resume>
+												</crown-edpws-binding>
+												</davinci-value-display>
+												</layout-column>
+												</layout-row>
+											</layout-column>
+										</layout-row>
+									</davinci-tab>
+								</davinci-tabs>
 							</layout-column>
 						</layout-row>
 					</layout-column>
@@ -638,8 +1603,6 @@
 				path="result/data/empty" auto-update="0" update-on-resume>
 			</crown-binding>
 		</stacked-view>
-	</layout-column>
-	<layout-column id="ColumnLayout2" style="flex-grow: 2">
 	</layout-column>
   
 </layout-row>
