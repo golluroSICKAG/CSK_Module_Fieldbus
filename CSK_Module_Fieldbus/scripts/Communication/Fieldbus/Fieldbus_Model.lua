@@ -172,7 +172,7 @@ local function setEtherNetIPConfig()
   local suc = FieldBus.Config.EtherNetIP.setAddressingMode(fieldbus_Model.parameters.etherNetIP.addressingMode)
   if suc then
     if fieldbus_Model.parameters.etherNetIP.addressingMode == 'STATIC' then
-      suc = FieldBus.Config.EtherNetIP.setInterfaceConfig(fieldbus_Model.parameters.etherNetIP.ipAddress, fieldbus_Model.parameters.etherNetIP.netmask, fieldbus_Model.parameters.etherNetIP.gateway, fieldbus_Model.parameters.etherNetIP.nameServer, fieldbus_Model.parameters.etherNetIP.nameServer2, fieldbus_Model.parameters.etherNetIP.domainName)
+      suc = FieldBus.Config.EtherNetIP.setInterfaceConfig(fieldbus_Model.parameters.etherNetIP.ipAddress, fieldbus_Model.parameters.etherNetIP.netmask) --, fieldbus_Model.parameters.etherNetIP.gateway, fieldbus_Model.parameters.etherNetIP.nameServer, fieldbus_Model.parameters.etherNetIP.nameServer2, fieldbus_Model.parameters.etherNetIP.domainName)
     end
   end
   CSK_Fieldbus.pageCalled()
