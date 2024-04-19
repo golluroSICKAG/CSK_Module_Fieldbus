@@ -35,7 +35,7 @@ _G.availableAPIs = require('Communication/Fieldbus/helper/checkAPIs') -- can be 
 _G.logger = Log.SharedLogger.create('ModuleLogger')
 _G.logHandle = Log.Handler.create()
 _G.logHandle:attachToSharedLogger('ModuleLogger')
-_G.logHandle:setConsoleSinkEnabled(false) --> Set to TRUE if CSK_Logger module is not used
+_G.logHandle:setConsoleSinkEnabled(true) --> Set to TRUE if CSK_Logger module is not used
 _G.logHandle:setLevel("ALL")
 _G.logHandle:applyConfig()
 -----------------------------------------------------------
