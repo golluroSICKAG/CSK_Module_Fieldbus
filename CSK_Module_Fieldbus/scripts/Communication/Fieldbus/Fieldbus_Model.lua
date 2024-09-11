@@ -168,13 +168,27 @@ createFolder('/public/FieldBus/ProfinetIO')
 
 -- Function to set EtherNet/IP config
 local function setEtherNetIPConfig()
+  --TODO Check following content...
+  --print("Set mode = " .. fieldbus_Model.parameters.etherNetIP.addressingMode)
+  local suc = false
 
-  local suc = FieldBus.Config.EtherNetIP.setAddressingMode(fieldbus_Model.parameters.etherNetIP.addressingMode)
-  if suc then
-    if fieldbus_Model.parameters.etherNetIP.addressingMode == 'STATIC' then
-      suc = FieldBus.Config.EtherNetIP.setInterfaceConfig(fieldbus_Model.parameters.etherNetIP.ipAddress, fieldbus_Model.parameters.etherNetIP.netmask) --, fieldbus_Model.parameters.etherNetIP.gateway, fieldbus_Model.parameters.etherNetIP.nameServer, fieldbus_Model.parameters.etherNetIP.nameServer2, fieldbus_Model.parameters.etherNetIP.domainName)
-    end
+  suc = FieldBus.Config.EtherNetIP.setAddressingMode(fieldbus_Model.parameters.etherNetIP.addressingMode)
+  --print("Suc = " .. tostring(suc))
+
+  if fieldbus_Model.parameters.etherNetIP.addressingMode == 'STATIC' then
+    --print(fieldbus_Model.parameters.etherNetIP.ipAddress)
+    --print(fieldbus_Model.parameters.etherNetIP.netmask)
+    suc = FieldBus.Config.EtherNetIP.setInterfaceConfig(fieldbus_Model.parameters.etherNetIP.ipAddress, fieldbus_Model.parameters.etherNetIP.netmask)--, fieldbus_Model.parameters.etherNetIP.gateway, fieldbus_Model.parameters.etherNetIP.nameServer, fieldbus_Model.parameters.etherNetIP.nameServer2, fieldbus_Model.parameters.etherNetIP.domainName)
+    --print("Setting of static IP setup = " .. tostring(suc))
   end
+
+  --[[if suc then
+    if fieldbus_Model.parameters.etherNetIP.addressingMode == 'STATIC' then
+      suc = FieldBus.Config.EtherNetIP.setInterfaceConfig(fieldbus_Model.parameters.etherNetIP.ipAddress, fieldbus_Model.parameters.etherNetIP.netmask, fieldbus_Model.parameters.etherNetIP.gateway, fieldbus_Model.parameters.etherNetIP.nameServer, fieldbus_Model.parameters.etherNetIP.nameServer2, fieldbus_Model.parameters.etherNetIP.domainName)
+      print("Setting of static IP setup = " .. tostring(suc))
+    end
+  ]]
+  --end
   CSK_Fieldbus.pageCalled()
 end
 fieldbus_Model.setEtherNetIPConfig = setEtherNetIPConfig
@@ -280,6 +294,7 @@ local function handleOnEtherNetIPFieldbusStorageRequest(storageHandle)
     else
       FieldBus.StorageRequest.notifyResult(storageHandle, false)
     end
+    CSK_Fieldbus.pageCalled()
   end
 end
 
@@ -433,6 +448,7 @@ local function handleOnProfinetIOFieldbusStorageRequest(storageHandle)
     else
       FieldBus.StorageRequest.notifyResult(storageHandle, false)
     end
+    CSK_Fieldbus.pageCalled()
   end
 end
 
@@ -458,7 +474,9 @@ fieldbus_Model.setProtocolConfig = setProtocolConfig
 -- Function to react on received data of PLC.
 ---@param data binary Received data.
 local function handleOnNewData(data)
-  _G.logger:fine("Received data = " .. tostring(data))
+  local dataSize = #data
+  _G.logger:fine("Received " .. tostring(dataSize) .. " Bytes = " .. tostring(data))
+  Script.notifyEvent('Fieldbus_OnNewStatusLogMessage', "Received " .. tostring(dataSize) .. " Bytes")
   Script.notifyEvent("Fieldbus_OnNewStatusReceivedData", data)
 
   local startPos = 1
@@ -481,7 +499,6 @@ local function handleOnNewData(data)
   end
   Script.notifyEvent("Fieldbus_OnNewStatusDataReceivingList", fieldbus_Model.helperFuncs.createJsonListReceiveData(fieldbus_Model.parameters.dataNamesReceive, fieldbus_Model.parameters.dataTypesReceive, fieldbus_Model.parameters.convertDataTypesReceive, fieldbus_Model.parameters.bigEndiansReceive, fieldbus_Model.dataReceived, fieldbus_Model.selectedDataReceive))
 end
---Script.register('App.OnNewData', handleOnNewData) --TODO DEBUG
 
 --- Function to react on received ctrl bits of PLC.
 ---@param ctrlBits int ctrl bits out
@@ -496,7 +513,7 @@ end
 --- Function to get various information about the fieldbus, its componentes and internals.
 local function getInfo()
   fieldbus_Model.info = FieldBus.getInfo(fieldbus_Model.handle)
-  Script.notifyEvent("Fieldbus_OnNewStatusFieldbusInfo", fieldbus_Model.info)
+  Script.notifyEvent("Fieldbus_OnNewStatusFieldbusInfo", fieldbus_Model.helperFuncs.jsonLine2Table(fieldbus_Model.info))
 end
 fieldbus_Model.getInfo = getInfo
 
@@ -507,6 +524,21 @@ local function getStatus()
 end
 fieldbus_Model.getStatus = getStatus
 
+--TODO
+local function deregisterFieldbusEvents()
+  if fieldbus_Model.handle then
+    --FieldBus.deregister(fieldbus_Model.handle, 'OnStatusChanged', handleOnStatusChanged)
+    FieldBus.deregister(fieldbus_Model.handle, 'OnNewData', handleOnNewData)
+    FieldBus.deregister(fieldbus_Model.handle, 'OnControlBitsOutChanged', handleOnControlBitsOutChanged)
+  end
+  Script.deregister('FieldBus.Config.EtherNetIP.OnFieldbusStorageRequest', handleOnEtherNetIPFieldbusStorageRequest)
+  Script.deregister('FieldBus.Config.EtherNetIP.OnAddressingModeChanged', handleOnAddressingModeChanged)
+  Script.deregister('FieldBus.Config.EtherNetIP.OnInterfaceConfigChanged', handleOnEthernetIPInterfaceConfigChanged)
+  Script.deregister('FieldBus.Config.ProfinetIO.OnFieldbusStorageRequest', handleOnProfinetIOFieldbusStorageRequest)
+  Script.deregister('FieldBus.Config.ProfinetIO.OnDeviceNameChanged', handleOnDeviceNameChanged)
+  Script.deregister('FieldBus.Config.ProfinetIO.OnInterfaceConfigChanged', handleOnProfinetIOInterfaceConfigChanged)
+end
+
 -- Function to react on new state of the fieldbus communication.
 ---@param status FieldBus.Status New state of the fieldbus communication.
 local function handleOnStatusChanged(status)
@@ -516,16 +548,7 @@ local function handleOnStatusChanged(status)
   getInfo()
 
   if fieldbus_Model.currentStatus == 'CLOSED' then
-    FieldBus.deregister(fieldbus_Model.handle, 'OnStatusChanged', handleOnStatusChanged)
-    FieldBus.deregister(fieldbus_Model.handle, 'OnNewData', handleOnNewData)
-    FieldBus.deregister(fieldbus_Model.handle, 'OnControlBitsOutChanged', handleOnControlBitsOutChanged)
-    Script.deregister('FieldBus.Config.EtherNetIP.OnFieldbusStorageRequest', handleOnEtherNetIPFieldbusStorageRequest)
-    Script.deregister('FieldBus.Config.EtherNetIP.OnAddressingModeChanged', handleOnAddressingModeChanged)
-    Script.deregister('FieldBus.Config.EtherNetIP.OnInterfaceConfigChanged', handleOnEthernetIPInterfaceConfigChanged)
-    Script.deregister('FieldBus.Config.ProfinetIO.OnFieldbusStorageRequest', handleOnProfinetIOFieldbusStorageRequest)
-    Script.deregister('FieldBus.Config.ProfinetIO.OnDeviceNameChanged', handleOnDeviceNameChanged)
-    Script.deregister('FieldBus.Config.ProfinetIO.OnInterfaceConfigChanged', handleOnProfinetIOInterfaceConfigChanged)
-
+    deregisterFieldbusEvents()
     Script.releaseObject(fieldbus_Model.handle)
     fieldbus_Model.handle = nil
     collectgarbage()
@@ -533,7 +556,7 @@ local function handleOnStatusChanged(status)
 
   if status == 'OPENED' or status == 'ONLINE' then
     fieldbus_Model.opened = true
-  elseif status == 'OFFLINE' or status == 'ERROR' then
+  elseif status == 'OFFLINE' or status == 'ERROR' or status == 'CLOSED' then
     fieldbus_Model.opened = false
   end
   Script.notifyEvent("Fieldbus_OnNewStatusFieldbusActive", fieldbus_Model.opened)
@@ -549,6 +572,8 @@ local function create()
         _G.logger:fine("Successfully created Fieldbus handle.")
         getInfo()
         getStatus()
+
+        deregisterFieldbusEvents()
         FieldBus.register(fieldbus_Model.handle, 'OnStatusChanged', handleOnStatusChanged)
         FieldBus.register(fieldbus_Model.handle, 'OnNewData', handleOnNewData)
         FieldBus.register(fieldbus_Model.handle, 'OnControlBitsOutChanged', handleOnControlBitsOutChanged)
@@ -576,12 +601,19 @@ fieldbus_Model.create = create
 --- Function to set transmission mode
 ---@param mode string Mode to use
 local function setTransmissionMode(mode)
-  if fieldbus_Model.parameters.createMode == 'EXPLICIT_OPEN' then
-    fieldbus_Model.parameters.transmissionMode = mode
-    FieldBus.setMode(fieldbus_Model.handle, fieldbus_Model.parameters.transmissionMode)
+  if fieldbus_Model.opened == false then
+    if fieldbus_Model.parameters.createMode == 'EXPLICIT_OPEN' and fieldbus_Model.opened ~= true then
+      fieldbus_Model.parameters.transmissionMode = mode
+      if fieldbus_Model.handle then
+        FieldBus.setMode(fieldbus_Model.handle, fieldbus_Model.parameters.transmissionMode)
+      end
+    else
+      _G.logger:info("Transmission mode only selectable if create mode is 'EXPLICIT_OPEN'.")
+    end
   else
-    _G.logger:fine("Transmission mode only selectable if create mode is 'EXPLICIT_OPEN'.")
+    _G.logger:info("Cannot set mode of fieldbus, it is already open.")
   end
+  Script.notifyEvent("Fieldbus_OnNewStatusTransmissionMode", fieldbus_Model.parameters.transmissionMode)
 end
 fieldbus_Model.setTransmissionMode = setTransmissionMode
 
@@ -601,8 +633,10 @@ fieldbus_Model.openCommunication = openCommunication
 
 --- Function to close fieldbus communication
 local function closeCommunication()
-  fieldbus_Model.handle:close()
-  fieldbus_Model.parameters.active = false
+  if fieldbus_Model.handle then
+    fieldbus_Model.handle:close()
+    fieldbus_Model.parameters.active = false
+  end
 end
 fieldbus_Model.closeCommunication = closeCommunication
 
@@ -634,8 +668,8 @@ local function transmit(data)
   if fieldbus_Model.handle then
     local numberOfBytes = fieldbus_Model.handle:transmit(data)
     if numberOfBytes ~= 0 then
-      _G.logger:fine("Send data bytes = " .. tostring(numberOfBytes))
-      Script.notifyEvent('Fieldbus_OnNewStatusLogMessage', 'Send data bytes = ' .. tostring(numberOfBytes))
+      _G.logger:fine("Send " .. tostring(numberOfBytes) .. "data Bytes.")
+      Script.notifyEvent('Fieldbus_OnNewStatusLogMessage', "Send " .. tostring(numberOfBytes) .. "data Bytes.")
     else
       _G.logger:warning("Transmit error.")
       Script.notifyEvent('Fieldbus_OnNewStatusLogMessage', "Transmit error.")
@@ -688,6 +722,10 @@ local function updateTransmitData(pos, data)
   --Script.notifyEvent('Fieldbus_OnNewStatusLogMessage', tostring(fieldbus_Model.fullDataToTransmit) .. ', Send data bytes = ' .. tostring(#fieldbus_Model.fullDataToTransmit))
   --Script.notifyEvent("Fieldbus_OnNewStatusDataToTransmit", fieldbus_Model.dataToTransmit)
   ]]
+
+  --TODO
+  --print(fieldbus_Model.fullDataToTransmit)
+  --print(#fieldbus_Model.fullDataToTransmit)
 
   if fieldbus_Model.currentStatus == 'ONLINE' then
     transmit(fieldbus_Model.fullDataToTransmit)

@@ -24,45 +24,6 @@
 										</davinci-value-display>
 									</layout-column>
 								</layout-row>
-								<layout-row id="RowLayout8">
-									<layout-column id="ColumnLayout16" style="align-items: stretch">
-										<davinci-drop-down id="DD_Protocol"
-											title="If you set a new protocol, a device restart is necessary to activate the new protocol."
-											label="Change protocol">
-											<davinci-option id="Option1" value="DISABLED">
-												<span>DISABLED</span>
-											</davinci-option>
-											<davinci-option id="Option2" value="ProfinetIO">
-												<span>ProfinetIO</span>
-											</davinci-option>
-											<davinci-option id="Option3" value="EtherNetIP">
-												<span>EtherNet/IP</span>
-											</davinci-option>
-											<crown-edpws-binding property="value"
-												name="CSK_Fieldbus/OnNewStatusProtocol" update-on-resume>
-											</crown-edpws-binding>
-											<crown-binding event="change" name="CSK_Fieldbus/setProtocol"
-												path="param/args/protocol" auto-commit>
-											</crown-binding>
-										</davinci-drop-down>
-									</layout-column>
-									<layout-column id="ColumnLayout19" style="align-items: stretch">
-										<davinci-button id="Button_SetProtocol" type="primary"
-											icon-position="append"
-											title="If you set a new protocol, a device restart is necessary to activate the new protocol.">
-											<span>Set / Restart</span>
-											<crown-binding event="submit" name="CSK_Fieldbus/submitProtocol"
-												auto-commit>
-											</crown-binding>
-										</davinci-button>
-									</layout-column>
-								</layout-row>
-								<davinci-value-display id="VD_RestartInfo"
-									class="myCustomRedText_CSK_Module_Fieldbus">
-									<crown-edpws-binding property="value"
-										name="CSK_Fieldbus/OnNewStatusRestartInfo" update-on-resume>
-									</crown-edpws-binding>
-								</davinci-value-display>
 								<stacked-view id="SV_FieldbusFeatures">
 									<stacked-pane id="SP_FB_Active" value="true">
 										<layout-row id="RowLayout9">
@@ -117,11 +78,10 @@
 													path="param/args/mode" auto-commit>
 												</crown-binding>
 												<crown-edpws-binding property="disabled"
-													name="CSK_Fieldbus/OnNewStatusExplicitModeActive" update-on-resume
-													converter="function(value) {return !value;}">
+													name="CSK_Fieldbus/OnNewStatusFieldbusActive" update-on-resume>
 												</crown-edpws-binding>
 												</davinci-drop-down>
-												<davinci-button id="Button_Close" type="primary"
+												<davinci-button id="Button_Close" type="accent"
 													icon-position="append">
 												<span>Close</span>
 												<crown-binding event="submit" name="CSK_Fieldbus/closeCommunication"
@@ -132,7 +92,8 @@
 												</layout-row>
 												<stacked-view id="SV_FB_Config">
 												<stacked-pane id="SP_Config_EtherNetIP" value="EtherNetIP">
-												<layout-row id="RowLayout11">
+												<layout-row id="RowLayout11"
+													class="myCustomFrame_CSK_Module_Fieldbus">
 												<layout-column id="ColumnLayout11" style="align-items: stretch">
 												<davinci-value-display id="VD_EtherNetIP"
 													label="EtherNet/IP specific">
@@ -157,17 +118,6 @@
 													path="param/args/mode" auto-commit>
 												</crown-binding>
 												</davinci-drop-down>
-												<davinci-text-field id="TF_DomainName" type="text"
-													label="Domain Name">
-												<crown-edpws-binding property="value"
-													name="CSK_Fieldbus/OnNewStatusEtherNetIPDomainName"
-													update-on-resume>
-												</crown-edpws-binding>
-												<crown-binding event="change"
-													name="CSK_Fieldbus/setEtherNetIPDomainName"
-													path="param/args/domainName" auto-commit>
-												</crown-binding>
-												</davinci-text-field>
 												</layout-column>
 												<layout-column id="ColumnLayout26" style="align-items: stretch">
 												<davinci-text-field id="TF_EthernetIP_IP" type="text" label="IP">
@@ -179,6 +129,10 @@
 													path="param/args/ip" auto-commit>
 												</crown-binding>
 												</davinci-text-field>
+												</layout-column>
+												</layout-row>
+												<layout-row id="RowLayout35">
+												<layout-column id="ColumnLayout114" style="align-items: stretch">
 												<davinci-text-field id="TF_EthernetIP_Subnet" type="text"
 													label="Subnet mask">
 												<crown-edpws-binding property="value"
@@ -191,7 +145,7 @@
 												</crown-binding>
 												</davinci-text-field>
 												</layout-column>
-												<layout-column id="ColumnLayout25" style="align-items: stretch">
+												<layout-column id="ColumnLayout115" style="align-items: stretch">
 												<davinci-text-field id="TF_Gateway" type="text" label="Gateway">
 												<crown-edpws-binding property="value"
 													name="CSK_Fieldbus/OnNewStatusEtherNetIPGateway" update-on-resume>
@@ -200,14 +154,10 @@
 													path="param/args/gateway" auto-commit>
 												</crown-binding>
 												</davinci-text-field>
-												<davinci-text-field id="TF_MAC" type="text" readonly label="MAC">
-												<crown-edpws-binding property="value"
-													name="CSK_Fieldbus/OnNewStatusEtherNetIPMACAddress"
-													update-on-resume>
-												</crown-edpws-binding>
-												</davinci-text-field>
 												</layout-column>
-												<layout-column id="ColumnLayout24" style="align-items: stretch">
+											</layout-row>
+												<layout-row id="RowLayout36">
+												<layout-column id="ColumnLayout116" style="align-items: stretch">
 												<davinci-text-field id="TF_NameServer" type="text"
 													label="Name server">
 												<crown-edpws-binding property="value"
@@ -219,6 +169,8 @@
 													path="param/args/nameServer" auto-commit>
 												</crown-binding>
 												</davinci-text-field>
+												</layout-column>
+												<layout-column id="ColumnLayout117" style="align-items: stretch">
 												<davinci-text-field id="TF_NameServer2" type="text"
 													label="Name server 2">
 												<crown-edpws-binding property="value"
@@ -231,21 +183,55 @@
 												</crown-binding>
 												</davinci-text-field>
 												</layout-column>
-											</layout-row>
-												<davinci-button id="Button_GetEIP_Config" type="primary"
+												</layout-row>
+												<layout-row id="RowLayout37">
+												<layout-column id="ColumnLayout118" style="align-items: stretch">
+												<davinci-text-field id="TF_DomainName" type="text"
+													label="Domain Name">
+												<crown-edpws-binding property="value"
+													name="CSK_Fieldbus/OnNewStatusEtherNetIPDomainName"
+													update-on-resume>
+												</crown-edpws-binding>
+												<crown-binding event="change"
+													name="CSK_Fieldbus/setEtherNetIPDomainName"
+													path="param/args/domainName" auto-commit>
+												</crown-binding>
+												</davinci-text-field>
+												</layout-column>
+												<layout-column id="ColumnLayout119" style="align-items: stretch">
+												<davinci-text-field id="TF_MAC" type="text" readonly label="MAC">
+												<crown-edpws-binding property="value"
+													name="CSK_Fieldbus/OnNewStatusEtherNetIPMACAddress"
+													update-on-resume>
+												</crown-edpws-binding>
+												</davinci-text-field>
+												</layout-column>
+												</layout-row>
+												<layout-row id="RowLayout16">
+												<layout-column id="ColumnLayout112" style="align-items: stretch">
+												<davinci-button id="Button_GetEIP_Config" type="outline"
 													icon-position="append">
 												<span>Get config</span>
 												<crown-binding event="submit" name="CSK_Fieldbus/getEtherNetIPConfig"
 													auto-commit>
 												</crown-binding>
 												</davinci-button>
+												</layout-column>
+												<layout-column id="ColumnLayout113" style="align-items: stretch">
 												<davinci-button id="Button_SetEIP_Config" type="primary"
-													icon-position="append">
+													icon-position="append"
+													title="Setting config only available if connection is open">
 												<span>Set config</span>
 												<crown-binding event="submit" name="CSK_Fieldbus/setEtherNetIPConfig"
 													auto-commit>
 												</crown-binding>
+												<crown-edpws-binding property="disabled"
+													name="CSK_Fieldbus/OnNewStatusFieldbusActive" update-on-resume
+													converter="function(value) {return !value;}">
+												</crown-edpws-binding>
 												</davinci-button>
+												</layout-column>
+												</layout-row>
 												</layout-column>
 												</layout-row>
 												</stacked-pane>
@@ -431,6 +417,45 @@
 										converter="function(value) {return value.toString();}">
 									</crown-edpws-binding>
 								</stacked-view>
+								<layout-row id="RowLayout8">
+									<layout-column id="ColumnLayout16" style="align-items: stretch">
+										<davinci-drop-down id="DD_Protocol"
+											title="If you set a new protocol, a device restart is necessary to activate the new protocol."
+											label="Change protocol">
+											<davinci-option id="Option1" value="DISABLED">
+												<span>DISABLED</span>
+											</davinci-option>
+											<davinci-option id="Option2" value="ProfinetIO">
+												<span>ProfinetIO</span>
+											</davinci-option>
+											<davinci-option id="Option3" value="EtherNetIP">
+												<span>EtherNet/IP</span>
+											</davinci-option>
+											<crown-edpws-binding property="value"
+												name="CSK_Fieldbus/OnNewStatusProtocol" update-on-resume>
+											</crown-edpws-binding>
+											<crown-binding event="change" name="CSK_Fieldbus/setProtocol"
+												path="param/args/protocol" auto-commit>
+											</crown-binding>
+										</davinci-drop-down>
+									</layout-column>
+									<layout-column id="ColumnLayout19" style="align-items: stretch">
+										<davinci-button id="Button_SetProtocol" type="primary"
+											icon-position="append"
+											title="If you set a new protocol, a device restart is necessary to activate the new protocol.">
+											<span>Set / Restart</span>
+											<crown-binding event="submit" name="CSK_Fieldbus/submitProtocol"
+												auto-commit>
+											</crown-binding>
+										</davinci-button>
+									</layout-column>
+								</layout-row>
+								<davinci-value-display id="VD_RestartInfo"
+									class="myCustomRedText_CSK_Module_Fieldbus">
+									<crown-edpws-binding property="value"
+										name="CSK_Fieldbus/OnNewStatusRestartInfo" update-on-resume>
+									</crown-edpws-binding>
+								</davinci-value-display>
 								<layout-row id="RowLayout7">
 									<layout-column id="Column_PersistentData"
 										class="myCustomFrame_CSK_Module_Fieldbus"
@@ -539,14 +564,14 @@
 													label="ControlBits Out (Read only, Transmitted from PLC)">
 												</davinci-value-display>
 												<layout-row id="RowLayout28" style="justify-content: space-between">
-												<davinci-value-display id="VD_CtrlBitOut_16" value="Bit 16">
+												<davinci-value-display id="VD_CtrlBitOut_15" value="Bit 15">
 												</davinci-value-display>
-												<davinci-value-display id="VD_CtrlBitOut_1" value="Bit 1">
+												<davinci-value-display id="VD_CtrlBitOut_0" value="Bit 0">
 												</davinci-value-display>
 												</layout-row>
 												<layout-row id="RowLayout27">
 												<layout-column id="ColumnLayout51" style="align-items: stretch">
-												<davinci-checkbox id="CB_Out16" disabled>
+												<davinci-checkbox id="CB_Out15" disabled>
 												<span></span>
 												<crown-edpws-binding property="checked"
 													name="CSK_Fieldbus/OnNewStatusControlBitsOutTable"
@@ -555,7 +580,7 @@
 												</davinci-checkbox>
 												</layout-column>
 												<layout-column id="ColumnLayout63" style="align-items: stretch">
-												<davinci-checkbox id="CB_Out15" disabled>
+												<davinci-checkbox id="CB_Out14" disabled>
 												<span></span>
 												<crown-edpws-binding property="checked"
 													name="CSK_Fieldbus/OnNewStatusControlBitsOutTable"
@@ -564,7 +589,7 @@
 												</davinci-checkbox>
 												</layout-column>
 												<layout-column id="ColumnLayout62" style="align-items: stretch">
-												<davinci-checkbox id="CB_Out14" disabled>
+												<davinci-checkbox id="CB_Out13" disabled>
 												<span></span>
 												<crown-edpws-binding property="checked"
 													name="CSK_Fieldbus/OnNewStatusControlBitsOutTable"
@@ -573,7 +598,7 @@
 												</davinci-checkbox>
 												</layout-column>
 												<layout-column id="ColumnLayout61" style="align-items: stretch">
-												<davinci-checkbox id="CB_Out13" disabled>
+												<davinci-checkbox id="CB_Out12" disabled>
 												<span></span>
 												<crown-edpws-binding property="checked"
 													name="CSK_Fieldbus/OnNewStatusControlBitsOutTable"
@@ -582,7 +607,7 @@
 												</davinci-checkbox>
 												</layout-column>
 												<layout-column id="ColumnLayout60" style="align-items: stretch">
-												<davinci-checkbox id="CB_Out12" disabled>
+												<davinci-checkbox id="CB_Out11" disabled>
 												<span></span>
 												<crown-edpws-binding property="checked"
 													name="CSK_Fieldbus/OnNewStatusControlBitsOutTable"
@@ -591,7 +616,7 @@
 												</davinci-checkbox>
 												</layout-column>
 												<layout-column id="ColumnLayout59" style="align-items: stretch">
-												<davinci-checkbox id="CB_Out11" disabled>
+												<davinci-checkbox id="CB_Out10" disabled>
 												<span></span>
 												<crown-edpws-binding property="checked"
 													name="CSK_Fieldbus/OnNewStatusControlBitsOutTable"
@@ -600,7 +625,7 @@
 												</davinci-checkbox>
 												</layout-column>
 												<layout-column id="ColumnLayout58" style="align-items: stretch">
-												<davinci-checkbox id="CB_Out10" disabled>
+												<davinci-checkbox id="CB_Out9" disabled>
 												<span></span>
 												<crown-edpws-binding property="checked"
 													name="CSK_Fieldbus/OnNewStatusControlBitsOutTable"
@@ -609,7 +634,7 @@
 												</davinci-checkbox>
 												</layout-column>
 												<layout-column id="ColumnLayout57" style="align-items: stretch">
-												<davinci-checkbox id="CB_Out9" disabled>
+												<davinci-checkbox id="CB_Out8" disabled>
 												<span></span>
 												<crown-edpws-binding property="checked"
 													name="CSK_Fieldbus/OnNewStatusControlBitsOutTable"
@@ -618,7 +643,7 @@
 												</davinci-checkbox>
 												</layout-column>
 												<layout-column id="ColumnLayout56" style="align-items: stretch">
-												<davinci-checkbox id="CB_Out8" disabled>
+												<davinci-checkbox id="CB_Out7" disabled>
 												<span></span>
 												<crown-edpws-binding property="checked"
 													name="CSK_Fieldbus/OnNewStatusControlBitsOutTable"
@@ -627,7 +652,7 @@
 												</davinci-checkbox>
 												</layout-column>
 												<layout-column id="ColumnLayout55" style="align-items: stretch">
-												<davinci-checkbox id="CB_Out7" disabled>
+												<davinci-checkbox id="CB_Out6" disabled>
 												<span></span>
 												<crown-edpws-binding property="checked"
 													name="CSK_Fieldbus/OnNewStatusControlBitsOutTable"
@@ -636,7 +661,7 @@
 												</davinci-checkbox>
 												</layout-column>
 												<layout-column id="ColumnLayout54" style="align-items: stretch">
-												<davinci-checkbox id="CB_Out6" disabled>
+												<davinci-checkbox id="CB_Out5" disabled>
 												<span></span>
 												<crown-edpws-binding property="checked"
 													name="CSK_Fieldbus/OnNewStatusControlBitsOutTable"
@@ -645,7 +670,7 @@
 												</davinci-checkbox>
 												</layout-column>
 												<layout-column id="ColumnLayout53" style="align-items: stretch">
-												<davinci-checkbox id="CB_Out5" disabled>
+												<davinci-checkbox id="CB_Out4" disabled>
 												<span></span>
 												<crown-edpws-binding property="checked"
 													name="CSK_Fieldbus/OnNewStatusControlBitsOutTable"
@@ -654,7 +679,7 @@
 												</davinci-checkbox>
 												</layout-column>
 												<layout-column id="ColumnLayout52" style="align-items: stretch">
-												<davinci-checkbox id="CB_Out4" disabled>
+												<davinci-checkbox id="CB_Out3" disabled>
 												<span></span>
 												<crown-edpws-binding property="checked"
 													name="CSK_Fieldbus/OnNewStatusControlBitsOutTable"
@@ -663,7 +688,7 @@
 												</davinci-checkbox>
 												</layout-column>
 												<layout-column id="ColumnLayout66" style="align-items: stretch">
-												<davinci-checkbox id="CB_Out3" disabled>
+												<davinci-checkbox id="CB_Out2" disabled>
 												<span></span>
 												<crown-edpws-binding property="checked"
 													name="CSK_Fieldbus/OnNewStatusControlBitsOutTable"
@@ -672,7 +697,7 @@
 												</davinci-checkbox>
 												</layout-column>
 												<layout-column id="ColumnLayout65" style="align-items: stretch">
-												<davinci-checkbox id="CB_Out2" disabled>
+												<davinci-checkbox id="CB_Out1" disabled>
 												<span></span>
 												<crown-edpws-binding property="checked"
 													name="CSK_Fieldbus/OnNewStatusControlBitsOutTable"
@@ -681,7 +706,7 @@
 												</davinci-checkbox>
 												</layout-column>
 												<layout-column id="ColumnLayout64" style="align-items: stretch">
-												<davinci-checkbox id="CB_Out1" disabled>
+												<davinci-checkbox id="CB_Out0" disabled>
 												<span></span>
 												<crown-edpws-binding property="checked"
 													name="CSK_Fieldbus/OnNewStatusControlBitsOutTable"
@@ -694,14 +719,14 @@
 													label="ControlBits In (Transmitted to PLC)">
 												</davinci-value-display>
 												<layout-row id="RowLayout31" style="justify-content: space-between">
-												<davinci-value-display id="VD_CtrlBitIn_16" value="Bit 16">
+												<davinci-value-display id="VD_CtrlBitIn_15" value="Bit 15">
 												</davinci-value-display>
-												<davinci-value-display id="VD_CtrlBitIn_1" value="Bit 1">
+												<davinci-value-display id="VD_CtrlBitIn_0" value="Bit 0">
 												</davinci-value-display>
 												</layout-row>
 												<layout-row id="RowLayout29">
 												<layout-column id="ColumnLayout67" style="align-items: stretch">
-												<davinci-checkbox id="CB_In16">
+												<davinci-checkbox id="CB_In15">
 												<span></span>
 												<crown-edpws-binding property="checked"
 													name="CSK_Fieldbus/OnNewStatusControlBitsInTable"
@@ -710,12 +735,12 @@
 												<crown-binding event="change"
 													name="CSK_Fieldbus/setSpecificControlBitIn" path="param/args/values"
 													auto-commit
-													converter="function(value) {return [value.toString(), String(16)];}">
+													converter="function(value) {return [value.toString(), String(15)];}">
 												</crown-binding>
 												</davinci-checkbox>
 												</layout-column>
 												<layout-column id="ColumnLayout68" style="align-items: stretch">
-												<davinci-checkbox id="CB_In15">
+												<davinci-checkbox id="CB_In14">
 												<span></span>
 												<crown-edpws-binding property="checked"
 													name="CSK_Fieldbus/OnNewStatusControlBitsInTable"
@@ -724,12 +749,12 @@
 												<crown-binding event="change"
 													name="CSK_Fieldbus/setSpecificControlBitIn" path="param/args/values"
 													auto-commit
-													converter="function(value) {return [value.toString(), String(15)];}">
+													converter="function(value) {return [value.toString(), String(14)];}">
 												</crown-binding>
 												</davinci-checkbox>
 												</layout-column>
 												<layout-column id="ColumnLayout69" style="align-items: stretch">
-												<davinci-checkbox id="CB_In14">
+												<davinci-checkbox id="CB_In13">
 												<span></span>
 												<crown-edpws-binding property="checked"
 													name="CSK_Fieldbus/OnNewStatusControlBitsInTable"
@@ -738,12 +763,12 @@
 												<crown-binding event="change"
 													name="CSK_Fieldbus/setSpecificControlBitIn" path="param/args/values"
 													auto-commit
-													converter="function(value) {return [value.toString(), String(14)];}">
+													converter="function(value) {return [value.toString(), String(13)];}">
 												</crown-binding>
 												</davinci-checkbox>
 												</layout-column>
 												<layout-column id="ColumnLayout70" style="align-items: stretch">
-												<davinci-checkbox id="CB_In13">
+												<davinci-checkbox id="CB_In12">
 												<span></span>
 												<crown-edpws-binding property="checked"
 													name="CSK_Fieldbus/OnNewStatusControlBitsInTable"
@@ -752,12 +777,12 @@
 												<crown-binding event="change"
 													name="CSK_Fieldbus/setSpecificControlBitIn" path="param/args/values"
 													auto-commit
-													converter="function(value) {return [value.toString(), String(13)];}">
+													converter="function(value) {return [value.toString(), String(12)];}">
 												</crown-binding>
 												</davinci-checkbox>
 												</layout-column>
 												<layout-column id="ColumnLayout71" style="align-items: stretch">
-												<davinci-checkbox id="CB_In12">
+												<davinci-checkbox id="CB_In11">
 												<span></span>
 												<crown-edpws-binding property="checked"
 													name="CSK_Fieldbus/OnNewStatusControlBitsInTable"
@@ -766,12 +791,12 @@
 												<crown-binding event="change"
 													name="CSK_Fieldbus/setSpecificControlBitIn" path="param/args/values"
 													auto-commit
-													converter="function(value) {return [value.toString(), String(12)];}">
+													converter="function(value) {return [value.toString(), String(11)];}">
 												</crown-binding>
 												</davinci-checkbox>
 												</layout-column>
 												<layout-column id="ColumnLayout72" style="align-items: stretch">
-												<davinci-checkbox id="CB_In11">
+												<davinci-checkbox id="CB_In10">
 												<span></span>
 												<crown-edpws-binding property="checked"
 													name="CSK_Fieldbus/OnNewStatusControlBitsInTable"
@@ -780,12 +805,12 @@
 												<crown-binding event="change"
 													name="CSK_Fieldbus/setSpecificControlBitIn" path="param/args/values"
 													auto-commit
-													converter="function(value) {return [value.toString(), String(11)];}">
+													converter="function(value) {return [value.toString(), String(10)];}">
 												</crown-binding>
 												</davinci-checkbox>
 												</layout-column>
 												<layout-column id="ColumnLayout73" style="align-items: stretch">
-												<davinci-checkbox id="CB_In10">
+												<davinci-checkbox id="CB_In9">
 												<span></span>
 												<crown-edpws-binding property="checked"
 													name="CSK_Fieldbus/OnNewStatusControlBitsInTable"
@@ -794,12 +819,12 @@
 												<crown-binding event="change"
 													name="CSK_Fieldbus/setSpecificControlBitIn" path="param/args/values"
 													auto-commit
-													converter="function(value) {return [value.toString(), String(10)];}">
+													converter="function(value) {return [value.toString(), String(9)];}">
 												</crown-binding>
 												</davinci-checkbox>
 												</layout-column>
 												<layout-column id="ColumnLayout74" style="align-items: stretch">
-												<davinci-checkbox id="CB_In9">
+												<davinci-checkbox id="CB_In8">
 												<span></span>
 												<crown-edpws-binding property="checked"
 													name="CSK_Fieldbus/OnNewStatusControlBitsInTable"
@@ -808,12 +833,12 @@
 												<crown-binding event="change"
 													name="CSK_Fieldbus/setSpecificControlBitIn" path="param/args/values"
 													auto-commit
-													converter="function(value) {return [value.toString(), String(9)];}">
+													converter="function(value) {return [value.toString(), String(8)];}">
 												</crown-binding>
 												</davinci-checkbox>
 												</layout-column>
 												<layout-column id="ColumnLayout75" style="align-items: stretch">
-												<davinci-checkbox id="CB_In8">
+												<davinci-checkbox id="CB_In7">
 												<span></span>
 												<crown-edpws-binding property="checked"
 													name="CSK_Fieldbus/OnNewStatusControlBitsInTable"
@@ -822,12 +847,12 @@
 												<crown-binding event="change"
 													name="CSK_Fieldbus/setSpecificControlBitIn" path="param/args/values"
 													auto-commit
-													converter="function(value) {return [value.toString(), String(8)];}">
+													converter="function(value) {return [value.toString(), String(7)];}">
 												</crown-binding>
 												</davinci-checkbox>
 												</layout-column>
 												<layout-column id="ColumnLayout76" style="align-items: stretch">
-												<davinci-checkbox id="CB_In7">
+												<davinci-checkbox id="CB_In6">
 												<span></span>
 												<crown-edpws-binding property="checked"
 													name="CSK_Fieldbus/OnNewStatusControlBitsInTable"
@@ -836,12 +861,12 @@
 												<crown-binding event="change"
 													name="CSK_Fieldbus/setSpecificControlBitIn" path="param/args/values"
 													auto-commit
-													converter="function(value) {return [value.toString(), String(7)];}">
+													converter="function(value) {return [value.toString(), String(6)];}">
 												</crown-binding>
 												</davinci-checkbox>
 												</layout-column>
 												<layout-column id="ColumnLayout77" style="align-items: stretch">
-												<davinci-checkbox id="CB_In6">
+												<davinci-checkbox id="CB_In5">
 												<span></span>
 												<crown-edpws-binding property="checked"
 													name="CSK_Fieldbus/OnNewStatusControlBitsInTable"
@@ -850,12 +875,12 @@
 												<crown-binding event="change"
 													name="CSK_Fieldbus/setSpecificControlBitIn" path="param/args/values"
 													auto-commit
-													converter="function(value) {return [value.toString(), String(6)];}">
+													converter="function(value) {return [value.toString(), String(5)];}">
 												</crown-binding>
 												</davinci-checkbox>
 												</layout-column>
 												<layout-column id="ColumnLayout78" style="align-items: stretch">
-												<davinci-checkbox id="CB_In5">
+												<davinci-checkbox id="CB_In4">
 												<span></span>
 												<crown-edpws-binding property="checked"
 													name="CSK_Fieldbus/OnNewStatusControlBitsInTable"
@@ -864,12 +889,12 @@
 												<crown-binding event="change"
 													name="CSK_Fieldbus/setSpecificControlBitIn" path="param/args/values"
 													auto-commit
-													converter="function(value) {return [value.toString(), String(5)];}">
+													converter="function(value) {return [value.toString(), String(4)];}">
 												</crown-binding>
 												</davinci-checkbox>
 												</layout-column>
 												<layout-column id="ColumnLayout79" style="align-items: stretch">
-												<davinci-checkbox id="CB_In4">
+												<davinci-checkbox id="CB_In3">
 												<span></span>
 												<crown-edpws-binding property="checked"
 													name="CSK_Fieldbus/OnNewStatusControlBitsInTable"
@@ -878,12 +903,12 @@
 												<crown-binding event="change"
 													name="CSK_Fieldbus/setSpecificControlBitIn" path="param/args/values"
 													auto-commit
-													converter="function(value) {return [value.toString(), String(4)];}">
+													converter="function(value) {return [value.toString(), String(3)];}">
 												</crown-binding>
 												</davinci-checkbox>
 												</layout-column>
 												<layout-column id="ColumnLayout80" style="align-items: stretch">
-												<davinci-checkbox id="CB_In3">
+												<davinci-checkbox id="CB_In2">
 												<span></span>
 												<crown-edpws-binding property="checked"
 													name="CSK_Fieldbus/OnNewStatusControlBitsInTable"
@@ -892,12 +917,12 @@
 												<crown-binding event="change"
 													name="CSK_Fieldbus/setSpecificControlBitIn" path="param/args/values"
 													auto-commit
-													converter="function(value) {return [value.toString(), String(3)];}">
+													converter="function(value) {return [value.toString(), String(2)];}">
 												</crown-binding>
 												</davinci-checkbox>
 												</layout-column>
 												<layout-column id="ColumnLayout81" style="align-items: stretch">
-												<davinci-checkbox id="CB_In2">
+												<davinci-checkbox id="CB_In1">
 												<span></span>
 												<crown-edpws-binding property="checked"
 													name="CSK_Fieldbus/OnNewStatusControlBitsInTable"
@@ -906,12 +931,12 @@
 												<crown-binding event="change"
 													name="CSK_Fieldbus/setSpecificControlBitIn" path="param/args/values"
 													auto-commit
-													converter="function(value) {return [value.toString(), String(2)];}">
+													converter="function(value) {return [value.toString(), String(1)];}">
 												</crown-binding>
 												</davinci-checkbox>
 												</layout-column>
 												<layout-column id="ColumnLayout82" style="align-items: stretch">
-												<davinci-checkbox id="CB_In1">
+												<davinci-checkbox id="CB_In0">
 												<span></span>
 												<crown-edpws-binding property="checked"
 													name="CSK_Fieldbus/OnNewStatusControlBitsInTable"
@@ -920,7 +945,7 @@
 												<crown-binding event="change"
 													name="CSK_Fieldbus/setSpecificControlBitIn" path="param/args/values"
 													auto-commit
-													converter="function(value) {return [value.toString(), String(1)];}">
+													converter="function(value) {return [value.toString(), String(0)];}">
 												</crown-binding>
 												</davinci-checkbox>
 												</layout-column>
@@ -929,7 +954,7 @@
 												</davinci-value-display>
 												<layout-row id="RowLayout30">
 												<layout-column id="ColumnLayout83" style="align-items: stretch">
-												<davinci-checkbox id="CB_MaskIn16">
+												<davinci-checkbox id="CB_MaskIn15">
 												<span></span>
 												<crown-edpws-binding property="checked"
 													name="CSK_Fieldbus/OnNewStatusControlBitsInBitMaskTable"
@@ -938,12 +963,12 @@
 												<crown-binding event="change"
 													name="CSK_Fieldbus/setSpecificBitMaskBit" path="param/args/values"
 													auto-commit
-													converter="function(value) {return [value.toString(), String(16)];}">
+													converter="function(value) {return [value.toString(), String(15)];}">
 												</crown-binding>
 												</davinci-checkbox>
 												</layout-column>
 												<layout-column id="ColumnLayout84" style="align-items: stretch">
-												<davinci-checkbox id="CB_MaskIn15">
+												<davinci-checkbox id="CB_MaskIn14">
 												<span></span>
 												<crown-edpws-binding property="checked"
 													name="CSK_Fieldbus/OnNewStatusControlBitsInBitMaskTable"
@@ -952,12 +977,12 @@
 												<crown-binding event="change"
 													name="CSK_Fieldbus/setSpecificBitMaskBit" path="param/args/values"
 													auto-commit
-													converter="function(value) {return [value.toString(), String(15)];}">
+													converter="function(value) {return [value.toString(), String(14)];}">
 												</crown-binding>
 												</davinci-checkbox>
 												</layout-column>
 												<layout-column id="ColumnLayout85" style="align-items: stretch">
-												<davinci-checkbox id="CB_MaskIn14">
+												<davinci-checkbox id="CB_MaskIn13">
 												<span></span>
 												<crown-edpws-binding property="checked"
 													name="CSK_Fieldbus/OnNewStatusControlBitsInBitMaskTable"
@@ -966,12 +991,12 @@
 												<crown-binding event="change"
 													name="CSK_Fieldbus/setSpecificBitMaskBit" path="param/args/values"
 													auto-commit
-													converter="function(value) {return [value.toString(), String(14)];}">
+													converter="function(value) {return [value.toString(), String(13)];}">
 												</crown-binding>
 												</davinci-checkbox>
 												</layout-column>
 												<layout-column id="ColumnLayout86" style="align-items: stretch">
-												<davinci-checkbox id="CB_MaskIn13">
+												<davinci-checkbox id="CB_MaskIn12">
 												<span></span>
 												<crown-edpws-binding property="checked"
 													name="CSK_Fieldbus/OnNewStatusControlBitsInBitMaskTable"
@@ -980,12 +1005,12 @@
 												<crown-binding event="change"
 													name="CSK_Fieldbus/setSpecificBitMaskBit" path="param/args/values"
 													auto-commit
-													converter="function(value) {return [value.toString(), String(13)];}">
+													converter="function(value) {return [value.toString(), String(12)];}">
 												</crown-binding>
 												</davinci-checkbox>
 												</layout-column>
 												<layout-column id="ColumnLayout87" style="align-items: stretch">
-												<davinci-checkbox id="CB_MaskIn12">
+												<davinci-checkbox id="CB_MaskIn11">
 												<span></span>
 												<crown-edpws-binding property="checked"
 													name="CSK_Fieldbus/OnNewStatusControlBitsInBitMaskTable"
@@ -994,12 +1019,12 @@
 												<crown-binding event="change"
 													name="CSK_Fieldbus/setSpecificBitMaskBit" path="param/args/values"
 													auto-commit
-													converter="function(value) {return [value.toString(), String(12)];}">
+													converter="function(value) {return [value.toString(), String(11)];}">
 												</crown-binding>
 												</davinci-checkbox>
 												</layout-column>
 												<layout-column id="ColumnLayout88" style="align-items: stretch">
-												<davinci-checkbox id="CB_MaskIn11">
+												<davinci-checkbox id="CB_MaskIn10">
 												<span></span>
 												<crown-edpws-binding property="checked"
 													name="CSK_Fieldbus/OnNewStatusControlBitsInBitMaskTable"
@@ -1008,12 +1033,12 @@
 												<crown-binding event="change"
 													name="CSK_Fieldbus/setSpecificBitMaskBit" path="param/args/values"
 													auto-commit
-													converter="function(value) {return [value.toString(), String(11)];}">
+													converter="function(value) {return [value.toString(), String(10)];}">
 												</crown-binding>
 												</davinci-checkbox>
 												</layout-column>
 												<layout-column id="ColumnLayout89" style="align-items: stretch">
-												<davinci-checkbox id="CB_MaskIn10">
+												<davinci-checkbox id="CB_MaskIn9">
 												<span></span>
 												<crown-edpws-binding property="checked"
 													name="CSK_Fieldbus/OnNewStatusControlBitsInBitMaskTable"
@@ -1022,12 +1047,12 @@
 												<crown-binding event="change"
 													name="CSK_Fieldbus/setSpecificBitMaskBit" path="param/args/values"
 													auto-commit
-													converter="function(value) {return [value.toString(), String(10)];}">
+													converter="function(value) {return [value.toString(), String(9)];}">
 												</crown-binding>
 												</davinci-checkbox>
 												</layout-column>
 												<layout-column id="ColumnLayout90" style="align-items: stretch">
-												<davinci-checkbox id="CB_MaskIn9">
+												<davinci-checkbox id="CB_MaskIn8">
 												<span></span>
 												<crown-edpws-binding property="checked"
 													name="CSK_Fieldbus/OnNewStatusControlBitsInBitMaskTable"
@@ -1036,12 +1061,12 @@
 												<crown-binding event="change"
 													name="CSK_Fieldbus/setSpecificBitMaskBit" path="param/args/values"
 													auto-commit
-													converter="function(value) {return [value.toString(), String(9)];}">
+													converter="function(value) {return [value.toString(), String(8)];}">
 												</crown-binding>
 												</davinci-checkbox>
 												</layout-column>
 												<layout-column id="ColumnLayout91" style="align-items: stretch">
-												<davinci-checkbox id="CB_MaskIn8">
+												<davinci-checkbox id="CB_MaskIn7">
 												<span></span>
 												<crown-edpws-binding property="checked"
 													name="CSK_Fieldbus/OnNewStatusControlBitsInBitMaskTable"
@@ -1050,12 +1075,12 @@
 												<crown-binding event="change"
 													name="CSK_Fieldbus/setSpecificBitMaskBit" path="param/args/values"
 													auto-commit
-													converter="function(value) {return [value.toString(), String(8)];}">
+													converter="function(value) {return [value.toString(), String(7)];}">
 												</crown-binding>
 												</davinci-checkbox>
 												</layout-column>
 												<layout-column id="ColumnLayout92" style="align-items: stretch">
-												<davinci-checkbox id="CB_MaskIn7">
+												<davinci-checkbox id="CB_MaskIn6">
 												<span></span>
 												<crown-edpws-binding property="checked"
 													name="CSK_Fieldbus/OnNewStatusControlBitsInBitMaskTable"
@@ -1064,12 +1089,12 @@
 												<crown-binding event="change"
 													name="CSK_Fieldbus/setSpecificBitMaskBit" path="param/args/values"
 													auto-commit
-													converter="function(value) {return [value.toString(), String(7)];}">
+													converter="function(value) {return [value.toString(), String(6)];}">
 												</crown-binding>
 												</davinci-checkbox>
 												</layout-column>
 												<layout-column id="ColumnLayout93" style="align-items: stretch">
-												<davinci-checkbox id="CB_MaskIn6">
+												<davinci-checkbox id="CB_MaskIn5">
 												<span></span>
 												<crown-edpws-binding property="checked"
 													name="CSK_Fieldbus/OnNewStatusControlBitsInBitMaskTable"
@@ -1078,12 +1103,12 @@
 												<crown-binding event="change"
 													name="CSK_Fieldbus/setSpecificBitMaskBit" path="param/args/values"
 													auto-commit
-													converter="function(value) {return [value.toString(), String(6)];}">
+													converter="function(value) {return [value.toString(), String(5)];}">
 												</crown-binding>
 												</davinci-checkbox>
 												</layout-column>
 												<layout-column id="ColumnLayout94" style="align-items: stretch">
-												<davinci-checkbox id="CB_MaskIn5">
+												<davinci-checkbox id="CB_MaskIn4">
 												<span></span>
 												<crown-edpws-binding property="checked"
 													name="CSK_Fieldbus/OnNewStatusControlBitsInBitMaskTable"
@@ -1092,12 +1117,12 @@
 												<crown-binding event="change"
 													name="CSK_Fieldbus/setSpecificBitMaskBit" path="param/args/values"
 													auto-commit
-													converter="function(value) {return [value.toString(), String(5)];}">
+													converter="function(value) {return [value.toString(), String(4)];}">
 												</crown-binding>
 												</davinci-checkbox>
 												</layout-column>
 												<layout-column id="ColumnLayout95" style="align-items: stretch">
-												<davinci-checkbox id="CB_MaskIn4">
+												<davinci-checkbox id="CB_MaskIn3">
 												<span></span>
 												<crown-edpws-binding property="checked"
 													name="CSK_Fieldbus/OnNewStatusControlBitsInBitMaskTable"
@@ -1106,12 +1131,12 @@
 												<crown-binding event="change"
 													name="CSK_Fieldbus/setSpecificBitMaskBit" path="param/args/values"
 													auto-commit
-													converter="function(value) {return [value.toString(), String(4)];}">
+													converter="function(value) {return [value.toString(), String(3)];}">
 												</crown-binding>
 												</davinci-checkbox>
 												</layout-column>
 												<layout-column id="ColumnLayout96" style="align-items: stretch">
-												<davinci-checkbox id="CB_MaskIn3">
+												<davinci-checkbox id="CB_MaskIn2">
 												<span></span>
 												<crown-edpws-binding property="checked"
 													name="CSK_Fieldbus/OnNewStatusControlBitsInBitMaskTable"
@@ -1120,12 +1145,12 @@
 												<crown-binding event="change"
 													name="CSK_Fieldbus/setSpecificBitMaskBit" path="param/args/values"
 													auto-commit
-													converter="function(value) {return [value.toString(), String(3)];}">
+													converter="function(value) {return [value.toString(), String(2)];}">
 												</crown-binding>
 												</davinci-checkbox>
 												</layout-column>
 												<layout-column id="ColumnLayout97" style="align-items: stretch">
-												<davinci-checkbox id="CB_MaskIn2">
+												<davinci-checkbox id="CB_MaskIn1">
 												<span></span>
 												<crown-edpws-binding property="checked"
 													name="CSK_Fieldbus/OnNewStatusControlBitsInBitMaskTable"
@@ -1134,12 +1159,12 @@
 												<crown-binding event="change"
 													name="CSK_Fieldbus/setSpecificBitMaskBit" path="param/args/values"
 													auto-commit
-													converter="function(value) {return [value.toString(), String(2)];}">
+													converter="function(value) {return [value.toString(), String(1)];}">
 												</crown-binding>
 												</davinci-checkbox>
 												</layout-column>
 												<layout-column id="ColumnLayout98" style="align-items: stretch">
-												<davinci-checkbox id="CB_MaskIn1">
+												<davinci-checkbox id="CB_MaskIn0">
 												<span></span>
 												<crown-edpws-binding property="checked"
 													name="CSK_Fieldbus/OnNewStatusControlBitsInBitMaskTable"
@@ -1148,7 +1173,7 @@
 												<crown-binding event="change"
 													name="CSK_Fieldbus/setSpecificBitMaskBit" path="param/args/values"
 													auto-commit
-													converter="function(value) {return [value.toString(), String(1)];}">
+													converter="function(value) {return [value.toString(), String(0)];}">
 												</crown-binding>
 												</davinci-checkbox>
 												</layout-column>
@@ -1162,7 +1187,7 @@
 												</davinci-button>
 												<davinci-button id="Button_WriteCtrlBits" type="neutral"
 													icon-position="append"
-													title="Write CotrnolBits IN by transmitting to PLC">
+													title="Write ControlBits IN by transmitting to PLC">
 												<span>WriteCtrlBits</span>
 												<crown-binding event="submit"
 													name="CSK_Fieldbus/writeControlBitsInViaUI" auto-commit>
@@ -1181,6 +1206,53 @@
 												<layout-column id="ColumnLayout44" style="align-items: stretch">
 												<davinci-value-display id="VD_TransmissionData" label="Transmit data">
 												</davinci-value-display>
+												<davinci-collapse id="Collapse_DataTypeInfo1"
+													collapsed-title="Show data type info" expanded-title="Hide">
+												<layout-row id="RowLayout39">
+												<layout-column id="ColumnLayout24" style="align-items: stretch">
+												<davinci-callout id="Callout2" type="info">
+												<span>
+												Data types
+												<br>
+												PLC &emsp; <-> &emsp; AppSpace
+												<br>
+												<br>
+												BYTE &emsp;	- &emsp; U_BYTE / U_INT1 &emsp; (0 ... 255)
+												<br>
+												WORD &emsp; - &emsp; U_INT2 &emsp; (0 ... 65535)
+												<br>
+												DWORD &emsp; - &emsp; U_INT4 &emsp; (0 ... 4294967295)
+												<br>
+												LWord &emsp; - &emsp; U_INT8 &emsp; (0 ... 18446744073709551615)
+												<br>
+												<br>
+												SINT &emsp; - &emsp; S_INT1 &emsp; (-128 ... +127)
+												<br>
+												INT	&emsp; - &emsp;	S_INT2 &emsp; (-32768 ... +32767)
+												<br>
+												DINT &emsp; - &emsp; S_INT4 &emsp; (-2147483648 ... +2147483647)
+												<br>
+												LINT &emsp; - &emsp; S_INT8 &emsp; (-9223372036854775808 ... +9223372036854775807)
+												<br>
+												<br>
+												USINT &emsp; - &emsp; U_BYTE / U_INT1 &emsp; (0 ... 255)
+												<br>
+												UINT &emsp; - &emsp; U_INT2 &emsp; (0 ... 65535)
+												<br>
+												UDINT &emsp; - &emsp; U_INT4 &emsp; (0 ... 4294967295)
+												<br>
+												ULINT &emsp; - &emsp; U_INT8 &emsp; (0 ... 18446744073709551615)
+												<br>
+												<br>
+												REAL &emsp; - &emsp; FLOAT &emsp; (-3.402823e+38 ... -1.175495e-38 / +1.175495e-38 ... +3.402823e+38)
+												<br>
+												LREAL &emsp; - &emsp; DOUBLE &emsp; (-1.7976931348623158e+308 ... -2.2250738585072014e-308 / +2.2250738585072014e-308 ... +1.7976931348623158e+308)
+												<br>
+												</span>
+												</davinci-callout>
+												</layout-column>
+												</layout-row>
+												</davinci-collapse>
 												<layout-row id="RowLayout23" style="align-items: center">
 												<layout-column id="ColumnLayout33" style="align-items: stretch">
 												<davinci-text-field id="TF_DataName" type="text" label="DataName">
@@ -1227,6 +1299,9 @@
 												</layout-column>
 												<layout-column id="ColumnLayout39" style="align-items: stretch">
 												<davinci-drop-down id="DD_DataType" label="Data type">
+												<davinci-option id="Option_CHAR" value="CHAR">
+												<span>CHAR</span>
+												</davinci-option>
 												<davinci-option id="Option_DOUBLE" value="DOUBLE">
 												<span>DOUBLE</span>
 												</davinci-option>
@@ -1398,6 +1473,53 @@
 												<layout-column id="ColumnLayout14" style="align-items: stretch">
 												<davinci-value-display id="VD_ReceiveData" label="Receive data">
 												</davinci-value-display>
+                                                <davinci-collapse id="Collapse_DataTypeInfo2"
+													collapsed-title="Show data type info" expanded-title="Hide">
+												<layout-row id="RowLayout40">
+												<layout-column id="ColumnLayout25" style="align-items: stretch">
+												<davinci-callout id="Callout4" type="info">
+												<span>
+												Data types
+												<br>
+												PLC &emsp; <-> &emsp; AppSpace
+												<br>
+												<br>
+												BYTE &emsp;	- &emsp; U_BYTE / U_INT1 &emsp; (0 ... 255)
+												<br>
+												WORD &emsp; - &emsp; U_INT2 &emsp; (0 ... 65535)
+												<br>
+												DWORD &emsp; - &emsp; U_INT4 &emsp; (0 ... 4294967295)
+												<br>
+												LWord &emsp; - &emsp; U_INT8 &emsp; (0 ... 18446744073709551615)
+												<br>
+												<br>
+												SINT &emsp; - &emsp; S_INT1 &emsp; (-128 ... +127)
+												<br>
+												INT	&emsp; - &emsp;	S_INT2 &emsp; (-32768 ... +32767)
+												<br>
+												DINT &emsp; - &emsp; S_INT4 &emsp; (-2147483648 ... +2147483647)
+												<br>
+												LINT &emsp; - &emsp; S_INT8 &emsp; (-9223372036854775808 ... +9223372036854775807)
+												<br>
+												<br>
+												USINT &emsp; - &emsp; U_BYTE / U_INT1 &emsp; (0 ... 255)
+												<br>
+												UINT &emsp; - &emsp; U_INT2 &emsp; (0 ... 65535)
+												<br>
+												UDINT &emsp; - &emsp; U_INT4 &emsp; (0 ... 4294967295)
+												<br>
+												ULINT &emsp; - &emsp; U_INT8 &emsp; (0 ... 18446744073709551615)
+												<br>
+												<br>
+												REAL &emsp; - &emsp; FLOAT &emsp; (-3.402823e+38 ... -1.175495e-38 / +1.175495e-38 ... +3.402823e+38)
+												<br>
+												LREAL &emsp; - &emsp; DOUBLE &emsp; (-1.7976931348623158e+308 ... -2.2250738585072014e-308 / +2.2250738585072014e-308 ... +1.7976931348623158e+308)
+												<br>
+												</span>
+												</davinci-callout>
+												</layout-column>
+												</layout-row>
+												</davinci-collapse>
 												<layout-row id="RowLayout32" style="align-items: center">
 												<layout-column id="ColumnLayout20" style="align-items: stretch">
 												<davinci-text-field id="TF_DataNameReceive" type="text"
@@ -1438,6 +1560,9 @@
 												</layout-column>
 												<layout-column id="ColumnLayout101" style="align-items: stretch">
 												<davinci-drop-down id="DD_DataTypeReceive" label="Data type">
+												<davinci-option id="OptionR_CHAR" value="CHAR">
+												<span>CHAR</span>
+												</davinci-option>
 												<davinci-option id="Option8" value="DOUBLE">
 												<span>DOUBLE</span>
 												</davinci-option>

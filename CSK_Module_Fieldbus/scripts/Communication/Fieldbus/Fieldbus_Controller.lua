@@ -15,6 +15,11 @@ local tmrFieldbus = Timer.create()
 tmrFieldbus:setExpirationTime(300)
 tmrFieldbus:setPeriodic(false)
 
+-- Timer to wait for other modules to be ready to register to their events
+local tmrWaitForSetupOfOtherModules = Timer.create()
+tmrWaitForSetupOfOtherModules:setExpirationTime(1000)
+tmrWaitForSetupOfOtherModules:setPeriodic(false)
+
 -- Reference to global handle
 local fieldbus_Model
 
@@ -164,6 +169,8 @@ local function updateUserLevel()
   end
 end
 
+--TODO not needed?
+--[[
 local function checkExplicitMode()
   if fieldbus_Model.parameters.createMode == 'EXPLICIT_OPEN' then
     Script.notifyEvent("Fieldbus_OnNewStatusExplicitModeActive", true)
@@ -171,6 +178,7 @@ local function checkExplicitMode()
     Script.notifyEvent("Fieldbus_OnNewStatusExplicitModeActive", false)
   end
 end
+]]
 
 --- Function to send all relevant values to UI on resume
 local function handleOnExpiredTmrFieldbus()
@@ -185,7 +193,7 @@ local function handleOnExpiredTmrFieldbus()
   Script.notifyEvent("Fieldbus_OnNewStatusFieldbusActive", fieldbus_Model.opened)
   Script.notifyEvent("Fieldbus_OnNewStatusRestartInfo", '')
 
-  Script.notifyEvent("Fieldbus_OnNewStatusFieldbusInfo", fieldbus_Model.info)
+  Script.notifyEvent("Fieldbus_OnNewStatusFieldbusInfo", fieldbus_Model.helperFuncs.jsonLine2Table(fieldbus_Model.info))
   Script.notifyEvent("Fieldbus_OnNewStatusProtocol", fieldbus_Model.parameters.protocol)
 
   Script.notifyEvent("Fieldbus_OnNewStatusDataTransmissionList", fieldbus_Model.helperFuncs.createJsonListTransmissionData(fieldbus_Model.parameters.dataNamesTransmit, fieldbus_Model.parameters.registeredEventsTransmit, fieldbus_Model.parameters.dataTypesTransmit, fieldbus_Model.parameters.convertDataTypesTransmit, fieldbus_Model.parameters.bigEndiansTransmit, fieldbus_Model.readableDataToTransmit, fieldbus_Model.selectedDataTransmit))
@@ -194,7 +202,7 @@ local function handleOnExpiredTmrFieldbus()
   Script.notifyEvent("Fieldbus_OnNewStatusConvertDataTransmit", fieldbus_Model.convertDataTransmit)
   Script.notifyEvent("Fieldbus_OnNewStatusBigEndianTransmit", fieldbus_Model.bigEndianTransmit)
   Script.notifyEvent("Fieldbus_OnNewStatusDataTypeTransmit", fieldbus_Model.dataTypeTransmit)
-  Script.notifyEvent("Fieldbus_OnNewStatusTempDataTransmit", fieldbus_Model.tempDataTransmit)
+  Script.notifyEvent("Fieldbus_OnNewStatusTempDataTransmit", tostring(fieldbus_Model.tempDataTransmit))
 
   Script.notifyEvent("Fieldbus_OnNewStatusDataReceivingList", fieldbus_Model.helperFuncs.createJsonListReceiveData(fieldbus_Model.parameters.dataNamesReceive, fieldbus_Model.parameters.dataTypesReceive, fieldbus_Model.parameters.convertDataTypesReceive, fieldbus_Model.parameters.bigEndiansReceive, fieldbus_Model.dataReceived, fieldbus_Model.selectedDataReceive))
   Script.notifyEvent("Fieldbus_OnNewStatusDataNameReceive", fieldbus_Model.dataNameReceive)
@@ -202,27 +210,25 @@ local function handleOnExpiredTmrFieldbus()
   Script.notifyEvent("Fieldbus_OnNewStatusBigEndianReceive", fieldbus_Model.bigEndianReceive)
   Script.notifyEvent("Fieldbus_OnNewStatusDataTypeReceive", fieldbus_Model.dataTypeReceive)
 
+  Script.notifyEvent("Fieldbus_OnNewStatusControlBitsIn", fieldbus_Model.controlBitsIn)
+  Script.notifyEvent("Fieldbus_OnNewStatusControlBitsOut", fieldbus_Model.controlBitsOut)
+
+  Script.notifyEvent("Fieldbus_OnNewStatusControlBitsOutTable", fieldbus_Model.boolControlBitsOut)
+  Script.notifyEvent("Fieldbus_OnNewStatusControlBitsInTable", fieldbus_Model.boolControlBitsIn)
+  Script.notifyEvent("Fieldbus_OnNewStatusControlBitsInBitMaskTable", fieldbus_Model.boolBitMask)
+
+  Script.notifyEvent("Fieldbus_OnNewStatusControlBitsInToWrite", fieldbus_Model.controlBitsToWrite)
+  Script.notifyEvent("Fieldbus_OnNewStatusBitMask", fieldbus_Model.bitMask)
+
   if fieldbus_Model.fbMode == 'DISABLED' then
     Script.notifyEvent("Fieldbus_OnNewStatusFieldbusFeatureActive", false)
   else
     Script.notifyEvent("Fieldbus_OnNewStatusFieldbusFeatureActive", true)
 
     Script.notifyEvent("Fieldbus_OnNewStatusCreateMode", fieldbus_Model.parameters.createMode)
-    checkExplicitMode()
+    --checkExplicitMode()
 
     Script.notifyEvent("Fieldbus_OnNewStatusTransmissionMode", fieldbus_Model.parameters.transmissionMode)
-
-    Script.notifyEvent("Fieldbus_OnNewStatusControlBitsIn", fieldbus_Model.controlBitsIn)
-    Script.notifyEvent("Fieldbus_OnNewStatusControlBitsOut", fieldbus_Model.controlBitsOut)
-
-    Script.notifyEvent("Fieldbus_OnNewStatusControlBitsOutTable", fieldbus_Model.boolControlBitsOut)
-    Script.notifyEvent("Fieldbus_OnNewStatusControlBitsInTable", fieldbus_Model.boolControlBitsIn)
-    Script.notifyEvent("Fieldbus_OnNewStatusControlBitsInBitMaskTable", fieldbus_Model.boolBitMask)
-
-    --Script.notifyEvent("Fieldbus_OnNewStatusDataToTransmit", fieldbus_Model.dataToTransmit)
-
-    Script.notifyEvent("Fieldbus_OnNewStatusControlBitsInToWrite", fieldbus_Model.controlBitsToWrite)
-    Script.notifyEvent("Fieldbus_OnNewStatusBitMask", fieldbus_Model.bitMask)
 
     if fieldbus_Model.fbMode == 'EtherNetIP' then
       Script.notifyEvent("Fieldbus_OnNewStatusEtherNetIPAddressingMode", fieldbus_Model.parameters.etherNetIP.addressingMode)
@@ -304,11 +310,15 @@ Script.serveFunction('CSK_Fieldbus.submitProtocol', submitProtocol)
 local function setCreateMode(mode)
   if fieldbus_Model.currentStatus == 'CLOSED' then
     fieldbus_Model.parameters.createMode = mode
+    if mode == 'AUTOMATIC_OPEN' then
+      fieldbus_Model.parameters.transmissionMode = 'CONFIRMED_MESSAGING'
+      Script.notifyEvent("Fieldbus_OnNewStatusTransmissionMode", fieldbus_Model.parameters.transmissionMode)
+    end
   else
     _G.logger:info("Connection needs to be closed to configure the create mode.")
     Script.notifyEvent("Fieldbus_OnNewStatusCreateMode", fieldbus_Model.parameters.createMode)
   end
-  checkExplicitMode()
+  --checkExplicitMode()
 end
 Script.serveFunction('CSK_Fieldbus.setCreateMode', setCreateMode)
 
@@ -372,9 +382,12 @@ local function setSpecificControlBitIn(values)
   if values[1] == 'true' then
     value = true
   end
-  fieldbus_Model.boolControlBitsToWrite[pos] = value
-  fieldbus_Model.controlBitsToWrite = fieldbus_Model.helperFuncs.toNumber(fieldbus_Model.boolControlBitsToWrite)
-  Script.notifyEvent("Fieldbus_OnNewStatusControlBitsInToWrite", fieldbus_Model.controlBitsToWrite)
+  if pos then
+    fieldbus_Model.boolControlBitsToWrite[pos+1] = value
+    fieldbus_Model.controlBitsToWrite = fieldbus_Model.helperFuncs.toNumber(fieldbus_Model.boolControlBitsToWrite)
+    Script.notifyEvent("Fieldbus_OnNewStatusControlBitsInToWrite", fieldbus_Model.controlBitsToWrite)
+    --print(fieldbus_Model.controlBitsToWrite)
+  end
 end
 Script.serveFunction('CSK_Fieldbus.setSpecificControlBitIn', setSpecificControlBitIn)
 
@@ -392,9 +405,12 @@ local function setSpecificBitMaskBit(values)
   if values[1] == 'true' then
     value = true
   end
-  fieldbus_Model.boolBitMask[pos] = value
-  fieldbus_Model.bitMask = fieldbus_Model.helperFuncs.toNumber(fieldbus_Model.boolBitMask)
-  Script.notifyEvent("Fieldbus_OnNewStatusBitMask", fieldbus_Model.bitMask)
+  if pos then
+    fieldbus_Model.boolBitMask[pos+1] = value
+    fieldbus_Model.bitMask = fieldbus_Model.helperFuncs.toNumber(fieldbus_Model.boolBitMask)
+    Script.notifyEvent("Fieldbus_OnNewStatusBitMask", fieldbus_Model.bitMask)
+    --print(fieldbus_Model.bitMask)
+  end
 end
 Script.serveFunction('CSK_Fieldbus.setSpecificBitMaskBit', setSpecificBitMaskBit)
 
@@ -645,7 +661,7 @@ local function deleteDataToTransmitViaUI()
     fieldbus_Model.selectedDataTransmit = ''
   end
   fieldbus_Model.totalDataSizeTransmit = fieldbus_Model.helperFuncs.getDataSize(fieldbus_Model.parameters.dataTypesTransmit)
-  Script.notifyEvent('Fieldbus_OnNewStatusLogMessage', "New data size = " .. tostring(fieldbus_Model.totalDataSizeTransmit))
+  Script.notifyEvent('Fieldbus_OnNewStatusLogMessage', "New transmit data size = " .. tostring(fieldbus_Model.totalDataSizeTransmit))
   handleOnExpiredTmrFieldbus()
 end
 Script.serveFunction('CSK_Fieldbus.deleteDataToTransmitViaUI', deleteDataToTransmitViaUI)
@@ -811,18 +827,24 @@ end
 Script.serveFunction('CSK_Fieldbus.selectDataReceiveViaUI', selectDataReceiveViaUI)
 
 local function setTempTransmitData(data)
-  -- TODO check for other data types? BYTE?
-  fieldbus_Model.tempDataTransmit = tonumber(data)
+  fieldbus_Model.tempDataTransmit = data
 end
 Script.serveFunction('CSK_Fieldbus.setTempTransmitData', setTempTransmitData)
 
 local function triggerTempDataViaUI()
   if fieldbus_Model.selectedDataTransmit ~= '' then
 
+    local value
+    if fieldbus_Model.parameters.dataTypesTransmit[fieldbus_Model.dataNameTransmit] == 'CHAR' or fieldbus_Model.parameters.dataTypesTransmit[fieldbus_Model.dataNameTransmit] == 'STRING' then
+      value = fieldbus_Model.tempDataTransmit
+    else
+      value = tonumber(fieldbus_Model.tempDataTransmit)
+    end
+
     -- Temporarily activate conversion
     local tempConvertStatus = fieldbus_Model.parameters.convertDataTypesTransmit[fieldbus_Model.dataNameTransmit]
     fieldbus_Model.parameters.convertDataTypesTransmit[fieldbus_Model.dataNameTransmit] = true
-    fieldbus_Model.dataUpdateFunctions[fieldbus_Model.dataNameTransmit](fieldbus_Model.tempDataTransmit)
+    fieldbus_Model.dataUpdateFunctions[fieldbus_Model.dataNameTransmit](value)
     fieldbus_Model.parameters.convertDataTypesTransmit[fieldbus_Model.dataNameTransmit] = tempConvertStatus
   else
     _G.logger:fine(nameOfModule .. ": No data position selected.")
@@ -859,14 +881,23 @@ local function sendParameters()
 end
 Script.serveFunction("CSK_Fieldbus.sendParameters", sendParameters)
 
-local function loadParameters()
+--- Function to register on events provided e.g. by other modules (optionally react on timer started after loading of persistent parameters)
+local function registerToEvents()
+  for key, value in ipairs(fieldbus_Model.parameters.dataNamesTransmit) do
+    fieldbus_Model.addEmptySpace(fieldbus_Model.parameters.dataTypesTransmit[value])
+    fieldbus_Model.registerToEvent(fieldbus_Model.parameters.registeredEventsTransmit[value], key, value)
+  end
+end
+Timer.register(tmrWaitForSetupOfOtherModules, 'OnExpired', registerToEvents)
+
+local function loadParameters(wait)
   if fieldbus_Model.persistentModuleAvailable then
     local data = CSK_PersistentData.getParameter(fieldbus_Model.parametersName)
     if data then
       _G.logger:info(nameOfModule .. ": Loaded parameters from CSK_PersistentData module.")
       fieldbus_Model.parameters = fieldbus_Model.helperFuncs.convertContainer2Table(data)
-      -- If something needs to be configured/activated with new loaded data, place this here:
 
+      -- If something needs to be configured/activated with new loaded data, place this here
       local fbMode = Parameters.get('FBmode')
       if (fbMode == 0 and fieldbus_Model.fbMode ~= 'DISABLED') or (fbMode == 1 and fieldbus_Model.fbMode ~= 'ProfinetIO') or ( fbMode == 2 and fieldbus_Model.fbMode ~= 'EtherNetIP') then
         _G.logger:warning(nameOfModule .. ": Current fieldbus protocol of device differs from parameter setup. Please restart device.")
@@ -875,9 +906,8 @@ local function loadParameters()
 
       fieldbus_Model.deregisterAllEvents()
 
-      for key, value in ipairs(fieldbus_Model.parameters.dataNamesTransmit) do
-        fieldbus_Model.addEmptySpace(fieldbus_Model.parameters.dataTypesTransmit[value])
-        fieldbus_Model.registerToEvent(fieldbus_Model.parameters.registeredEventsTransmit[value], key, value)
+      if not wait then
+        registerToEvents()
       end
 
       fieldbus_Model.dataReceived = {}
@@ -926,7 +956,8 @@ local function handleOnInitialDataLoaded()
     end
 
     if fieldbus_Model.parameterLoadOnReboot then
-      loadParameters()
+      tmrWaitForSetupOfOtherModules:start() -- Start timer to wait for events which could be provided by other modules
+      loadParameters(true)
     end
     Script.notifyEvent('Fieldbus_OnDataLoadedOnReboot')
   end

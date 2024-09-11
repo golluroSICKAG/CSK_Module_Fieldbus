@@ -74,33 +74,33 @@ local function main()
   CSK_Fieldbus.setDataTypeReceive('U_INT4')
   CSK_Fieldbus.addDataToReceiveViaUI()
   
-  CSK_Fieldbus.setDataType('U_BYTE')
+  CSK_Fieldbus.setDataTypeTransmit('U_BYTE')
   for i=1, 6 do
     CSK_Fieldbus.setDataNameTransmit('Data' ..tostring(i))
     CSK_Fieldbus.addDataToTransmitViaUI()
   end
 
-  CSK_Fieldbus.setDataType('S_INT2')
+  CSK_Fieldbus.setDataTypeTransmit('S_INT2')
   for i=7, 10 do
     CSK_Fieldbus.setDataNameTransmit('Data' ..tostring(i))
     CSK_Fieldbus.addDataToTransmitViaUI()
   end
 
-  CSK_Fieldbus.setDataType('U_BYTE')
+  CSK_Fieldbus.setDataTypeTransmit('U_BYTE')
   for i=11, 18 do
-    CSK_Fieldbus.setDataName('Data' ..tostring(i))
+    CSK_Fieldbus.setDataNameTransmit('Data' ..tostring(i))
     CSK_Fieldbus.addDataToTransmitViaUI()
   end
 
-  CSK_Fieldbus.setDataType('U_INT8')
+  CSK_Fieldbus.setDataTypeTransmit('U_INT8')
   for i=19, 31 do
-    CSK_Fieldbus.setDataName('Data' ..tostring(i))
+    CSK_Fieldbus.setDataNameTransmit('Data' ..tostring(i))
     CSK_Fieldbus.addDataToTransmitViaUI()
   end
 
-  CSK_Fieldbus.setDataType('U_BYTE')
+  CSK_Fieldbus.setDataTypeTransmit('U_BYTE')
   for i=32, 33 do
-    CSK_Fieldbus.setDataName('Data' ..tostring(i))
+    CSK_Fieldbus.setDataNameTransmit('Data' ..tostring(i))
     CSK_Fieldbus.addDataToTransmitViaUI()
   end
 ]]

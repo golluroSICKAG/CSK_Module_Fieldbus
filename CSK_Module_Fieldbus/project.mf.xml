@@ -69,6 +69,7 @@ The received data values will be provided via dynamically created events (see 'C
                 <item desc="Double (8 bytes)" name="DOUBLE">DOUBLE</item>
                 <item desc="Float (4 bytes)" name="FLOAT">FLOAT</item>
                 <item desc="Signed long (4 bytes)" name="S_LONG">S_LONG</item>
+                <item desc="1 ASCII sign (1 byte)" name="CHAR">CHAR</item>
             </enum>
             <serves>
                 <event name="OnNewStatusLoadParameterOnReboot">
@@ -324,6 +325,7 @@ NAME will be replaced by data identifier (e.g. 'CSK_Fieldbus.OnNewData_Data1').<
                 </function>
                 <function name="loadParameters">
                     <desc>Load parameters for this module from the CSK_PersistentData module if possible and use them.</desc>
+                    <param desc="Set to TRUE if module should wait 1 second before trying to register to events. +&#10;Should be used e.g. if other modules first need to provide dynamically created events which are used." multiplicity="?" name="wait" type="bool"/>
                 </function>
                 <function name="setLoadOnReboot">
                     <desc>Configure if this module should load its saved parameters at app/device boot up.</desc>
@@ -504,11 +506,11 @@ NAME will be replaced by data identifier (e.g. 'CSK_Fieldbus.OnNewData_Data1').<
 After that it will transmit the full data to the fieldbus.</desc>
                 </function>
                 <function name="setSpecificControlBitIn">
-                    <desc>Function to set specific ControlBitIn.</desc>
+                    <desc>Function to set specific ControlBitIn (bit range from 0-15).</desc>
                     <param desc="Status+position (e.g. {'true', '15'})." multiplicity="+" name="values" type="string"/>
                 </function>
                 <function name="setSpecificBitMaskBit">
-                    <desc>Function to set specific bit of bitmask.</desc>
+                    <desc>Function to set specific bit of bitmask (bit range from 0-15).</desc>
                     <param desc="Status + position (e.g. {'true', '15'})." multiplicity="+" name="values" type="string"/>
                 </function>
                 <function name="setDataNameReceive">
