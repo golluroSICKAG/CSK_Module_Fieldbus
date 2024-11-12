@@ -341,6 +341,7 @@ NAME will be replaced by data identifier (e.g. 'CSK_Fieldbus.OnNewData_Data1').<
                 </function>
                 <function name="openCommunication">
                     <desc>Function to open fieldbus communication.</desc>
+                    <return desc="" multiplicity="?" name="success" type="bool"/>
                 </function>
                 <function name="closeCommunication">
                     <desc>Function to close fieldbus communication.</desc>

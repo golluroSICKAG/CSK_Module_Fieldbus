@@ -333,12 +333,14 @@ end
 Script.serveFunction('CSK_Fieldbus.setTransmissionMode', setTransmissionMode)
 
 local function openCommunication()
+  local success = false
   if fieldbus_Model.currentStatus == 'CLOSED' then
     _G.logger:info(nameOfModule .. ": Open communciation.")
-    fieldbus_Model.openCommunication()
+    success = fieldbus_Model.openCommunication()
   else
     _G.logger:fine("Connection already active.")
   end
+  return success 
 end
 Script.serveFunction('CSK_Fieldbus.openCommunication', openCommunication)
 
