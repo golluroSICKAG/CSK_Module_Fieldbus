@@ -396,7 +396,7 @@ local function getProfinetIOConfigInfo()
   fieldbus_Model.parameters.profinetIO.deviceName = FieldBus.Config.ProfinetIO.getDeviceName()
   fieldbus_Model.parameters.profinetIO.ipAddress, fieldbus_Model.parameters.profinetIO.subnetMask, fieldbus_Model.parameters.profinetIO.gateway, fieldbus_Model.parameters.profinetIO.remanent = FieldBus.Config.ProfinetIO.getInterfaceConfig()
 
-  local macAddress = FieldBus.Config.ProfinetIO.getMACAddress(fieldbus_Model.port)
+  local macAddress = FieldBus.Config.ProfinetIO.getMACAddress('INTERFACE')
   if macAddress then
     fieldbus_Model.parameters.profinetIO.macAddress = macAddress
   else
@@ -619,15 +619,18 @@ fieldbus_Model.setTransmissionMode = setTransmissionMode
 
 --- Function to open fieldbus communication
 local function openCommunication()
+  local success = false
   create()
   fieldbus_Model.parameters.active = true
   if fieldbus_Model.handle then
     if fieldbus_Model.parameters.createMode == 'EXPLICIT_OPEN' then
       fieldbus_Model.handle:open()
     end
+    success = true
   else
     _G.logger:warning("Not able to open fieldbus communication.")
   end
+  return success
 end
 fieldbus_Model.openCommunication = openCommunication
 
@@ -668,8 +671,8 @@ local function transmit(data)
   if fieldbus_Model.handle then
     local numberOfBytes = fieldbus_Model.handle:transmit(data)
     if numberOfBytes ~= 0 then
-      _G.logger:fine("Send " .. tostring(numberOfBytes) .. "data Bytes.")
-      Script.notifyEvent('Fieldbus_OnNewStatusLogMessage', "Send " .. tostring(numberOfBytes) .. "data Bytes.")
+      _G.logger:fine("Send " .. tostring(numberOfBytes) .. " data Bytes.")
+      Script.notifyEvent('Fieldbus_OnNewStatusLogMessage', "Send " .. tostring(numberOfBytes) .. " data Bytes.")
     else
       _G.logger:warning("Transmit error.")
       Script.notifyEvent('Fieldbus_OnNewStatusLogMessage', "Transmit error.")
