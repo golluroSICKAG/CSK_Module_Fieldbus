@@ -21,6 +21,8 @@ local fieldbus_Model
 -- ************************ UI Events Start ********************************
 
 -- Script.serveEvent("CSK_Fieldbus.OnNewEvent", "Fieldbus_OnNewEvent")
+
+Script.serveEvent('CSK_Fieldbus.OnNewStatusCSKStyle', 'Fieldbus_OnNewStatusCSKStyle')
 Script.serveEvent("CSK_Fieldbus.OnNewStatusLoadParameterOnReboot", "Fieldbus_OnNewStatusLoadParameterOnReboot")
 Script.serveEvent("CSK_Fieldbus.OnPersistentDataModuleAvailable", "Fieldbus_OnPersistentDataModuleAvailable")
 Script.serveEvent("CSK_Fieldbus.OnNewParameterName", "Fieldbus_OnNewParameterName")
@@ -125,6 +127,15 @@ local function pageCalled()
   return ''
 end
 Script.serveFunction("CSK_Fieldbus.pageCalled", pageCalled)
+
+local function clearFlowConfigRelevantConfiguration()
+  for i = 1, #fieldbus_Instances do
+    Script.notifyEvent('Fieldbus_OnNewProcessingParameter', selectedInstance, 'clearAll')
+    fieldbus_Instances[selectedInstance].parameters.clientBroadcasts.forwardEvents = {}
+    fieldbus_Instances[selectedInstance].parameters.forwardEvents = {}
+  end
+end
+Script.serveFunction('CSK_Fieldbus.clearFlowConfigRelevantConfiguration', clearFlowConfigRelevantConfiguration)
 
 --[[
 local function setSomething(value)
