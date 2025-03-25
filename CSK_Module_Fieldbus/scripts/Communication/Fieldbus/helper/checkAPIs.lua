@@ -9,12 +9,13 @@ local function loadAPIs()
   CSK_Fieldbus = require 'API.CSK_Fieldbus'
 
   Container = require 'API.Container'
-  DateTime = require 'API.DateTime'
   Engine = require 'API.Engine'
+  File = require 'API.File'
   Log = require 'API.Log'
   Log.Handler = require 'API.Log.Handler'
   Log.SharedLogger = require 'API.Log.SharedLogger'
   Object = require 'API.Object'
+  Parameters = require 'API.Parameters'
   Timer = require 'API.Timer'
 
   -- Check if related CSK modules are available to be used
@@ -32,13 +33,12 @@ end
 
 local function loadSpecificAPIs()
   -- If you want to check for specific APIs/functions supported on the device the module is running, place relevant APIs here
-  FieldBus = require(API.FieldBus)
-  Cipher = {}
-  Cipher.AES = require 'API.Cipher.AES'
-  math = require 'API.math'
-  Script = require 'API.Script'
-  string = require 'API.string'
-  table = require 'API.table'
+  -- e.g.:
+  FieldBus = require 'API.FieldBus'
+  FieldBus.Config = require 'API.FieldBus.Config'
+  FieldBus.Config.EtherNetIP = require 'API.FieldBus.Config.EtherNetIP'
+  FieldBus.Config.ProfinetIO = require 'API.FieldBus.Config.ProfinetIO'
+  FieldBus.StorageRequest = require 'API.FieldBus.StorageRequest'
 end
 
 availableAPIs.default = xpcall(loadAPIs, debug.traceback) -- TRUE if all default APIs were loaded correctly

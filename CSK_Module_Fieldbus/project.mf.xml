@@ -6,15 +6,71 @@
         </crown>
         <crown name="CSK_Fieldbus">
             <trait>released</trait>
-            <desc>Please fill in information regarding: What is the idea of this module and its features? +
-How to use this module in general.... like: + 
-{empty} + 
+            <desc>Module to provide fieldbus (Profinet / EtherNet/IP) functionality. +
+This module is helpful to forward data to/from other modules to communicate to a connected PLC. +
+{empty} +
 Typically the features of this module are used like this (check also main script of this module): +
-**1) Setup** +
-ToDo +
-{empty} + 
-**2) Something else...** +
-</desc>
+{empty} +
+**1) Selecte protocol** +
+Select a fieldbus protocol to use via 'setProtocol' and trigger a device reboot to activate the protocol via 'submitProtocol'. +
+After the reboot open the connection via 'openCommunication'. +
+{empty} +
+**2) ControlBits** +
+To read the currently active ControlBits use 'refreshControlBits' and the events 'OnNewStatusControlBitsIn', 'OnNewStatusControlBitsInTable', 'OnNewStatusControlBitsOut', 'OnNewStatusControlBitsOut'. +
+It is possible to set the ControlBitsIn by presetting them via 'setControlBitsIn'/'setSpecificControlBit' and to send them via 'writeControlBitsInViaUI'. +
+To set a bitmask for the ControlBitsIn make use of 'setBitMask' or 'setSpecificBitMaskBit'. +
+{empty} +
+**3) Data to transmit** +
+It is possible to define the data structure and source of the transmitted data. +
+To do this preconfigure the data entry via 'setDataNameTransmit', 'setRegisteredEventTransmit', 'setConvertDataTransmit', 'setBigEndianTransmit', 'setDataTypeTransmit' and after that add this data via 'addDataToTransmitViaUI'. +
+Based on the data received by the configured event (see 'setRegisteredEventTransmit') it will forward this data via fieldbus communication. +
+{empty} +
+**4) Data to receive** +
+It is possible to define the data structure of the data to receive from the PLC. +
+To do this preconfigure the data entry via 'setDataNameReceive', 'setConvertDataReceive', 'setBigEndianReceive', 'setDataTypeReceive' and after that add this data via 'addDataToReceiveViaUI'. +
+The received data values will be provided via dynamically created events (see 'CSK_Fieldbus.OnNewData_DATANAME') and the full data via event 'CSK_Fieldbus.OnNewStatusReceivedData'. +</desc>
+            <enum name="Protocol" trait="released">
+                <desc>Fieldbus protocol.</desc>
+                <item desc="PROFINET" name="PROFINET">PROFINET</item>
+                <item desc="EtherNet/IP" name="EtherNet_IP">EtherNet_IP</item>
+                <item desc="EtherCAT" name="EtherCAT">EtherCAT</item>
+            </enum>
+            <enum name="CreateMode" trait="released">
+                <desc>Mode for calling Fieldbus 'create' function.</desc>
+                <item desc="Only create the handle, but do not automatically open communication. Communication must be started explicitly using the function 'open'." name="EXPLICIT_OPEN">EXPLICIT_OPEN</item>
+                <item desc="Create the handle and automatically open the communication." name="AUTOMATIC_OPEN">AUTOMATIC_OPEN</item>
+            </enum>
+            <enum name="TransmissionMode" trait="released">
+                <desc>Fieldbus TransmissionMode</desc>
+                <item desc="Transmission mode without any protocol." name="RAW">RAW</item>
+                <item desc="Transmission mode using the SICK Confirmed Messaging protocol to transfer and fragment process data." name="CONFIRMED_MESSAGING">CONFIRMED_MESSAGING</item>
+            </enum>
+            <enum name="AddressingMode" trait="released">
+                <desc>Addressing mode for the IP address assignment.</desc>
+                <item desc="Get IP-address via DHCP." name="DHCP">DHCP</item>
+                <item desc="Get IP-address via BOOTP." name="BOOTP">BOOTP</item>
+                <item desc="Statically set the IP-address." name="STATIC">STATIC</item>
+            </enum>
+            <enum name="DataTypes" trait="released">
+                <desc>Types of data to transmit</desc>
+                <item desc="Signed INT (2 bytes)" name="S_INT2">S_INT2</item>
+                <item desc="Signed byte  (1 byte)" name="S_BYTE">S_BYTE</item>
+                <item desc="Unsigned INT (2 bytes)" name="U_INT2">U_INT2</item>
+                <item desc="Unsinged byte (1 byte)" name="U_BYTE">U_BYTE</item>
+                <item desc="Signed short (2 byte)" name="S_SHORT">S_SHORT</item>
+                <item desc="Unsigned short (2 bytes)" name="U_SHORT">U_SHORT</item>
+                <item desc="Unsigned INT (1 byte)" name="U_INT1">U_INT1</item>
+                <item desc="Unsigned INT (8 bytes)" name="U_INT8">U_INT8</item>
+                <item desc="Unsigned INT (4 bytes)" name="U_INT4">U_INT4</item>
+                <item desc="Signed INT (1 byte)" name="S_INT1">S_INT1</item>
+                <item desc="Signed INT (4 bytes)" name="S_INT4">S_INT4</item>
+                <item desc="Unsigned long (4 bytes)" name="U_LONG">U_LONG</item>
+                <item desc="Signed INT (8 bytes)" name="S_INT8">S_INT8</item>
+                <item desc="Double (8 bytes)" name="DOUBLE">DOUBLE</item>
+                <item desc="Float (4 bytes)" name="FLOAT">FLOAT</item>
+                <item desc="Signed long (4 bytes)" name="S_LONG">S_LONG</item>
+                <item desc="1 ASCII sign (1 byte)" name="CHAR">CHAR</item>
+            </enum>
             <serves>
                 <event name="OnNewStatusLoadParameterOnReboot">
                     <desc>Notify status if parameters should be loaded on app/device boot up.</desc>
@@ -47,9 +103,218 @@ ToDo +
                     <desc>Status of Admin userlevel. Used internally in combination with the CSK_UserManagement module if available.</desc>
                     <param desc="Status" multiplicity="1" name="status" type="bool"/>
                 </event>
-                <event name="OnNewStatusCSKStyle">
-                    <desc>Notify UI style to use for CSK modules.</desc>
-                    <param desc="UI style" multiplicity="1" name="theme" type="string"/>
+                <event name="OnNewStatusProtocol">
+                    <desc>Notify current selected fieldbus protocol.</desc>
+                    <param desc="Fieldbus protocol." multiplicity="1" name="protocol" type="string"/>
+                </event>
+                <event name="OnNewStatusFieldbusFeatureActive">
+                    <desc>Notify if Fieldbus features should be used.</desc>
+                    <param desc="Status" multiplicity="1" name="status" type="bool"/>
+                </event>
+                <event name="OnNewStatusCreateMode">
+                    <desc>Notify fieldbus create mode.</desc>
+                    <param desc="Create mode." multiplicity="1" name="mode" type="string"/>
+                </event>
+                <event name="OnNewStatusTransmissionMode">
+                    <desc>Notify fieldbus transmission mode.</desc>
+                    <param desc="Transmission mode." multiplicity="1" name="mode" type="string"/>
+                </event>
+                <event name="OnNewStatusDataToTransmit">
+                    <desc>Notify preset data to be transmitted.</desc>
+                    <param desc="Data to transmit." multiplicity="1" name="data" type="string"/>
+                </event>
+                <event name="OnNewStatusControlBitsInToWrite">
+                    <desc>Notify preset ControlBitsIn to write.</desc>
+                    <param desc="ControlBitsIn." multiplicity="1" name="controlBits" type="int"/>
+                </event>
+                <event name="OnNewStatusBitMask">
+                    <desc>Notify bit mask to use for preset control bits to write.</desc>
+                    <param desc="Bit mask." multiplicity="1" name="bitMask" type="int"/>
+                </event>
+                <event name="OnNewStatusControlBitsOut">
+                    <desc>Notify latest ControlBitsOut received from the PLC.</desc>
+                    <param desc="ControlBitsOut." multiplicity="1" name="controlBits" type="int"/>
+                </event>
+                <event name="OnNewStatusFieldbusStatus">
+                    <desc>Notify status of the fieldbus communication.</desc>
+                    <param desc="Status" multiplicity="1" name="status" type="string"/>
+                </event>
+                <event name="OnNewStatusFieldbusActive">
+                    <desc>Notify if fieldbus communication is currently 'OPENED' or 'ONLINE'.</desc>
+                    <param desc="Status" multiplicity="1" name="status" type="bool"/>
+                </event>
+                <event name="OnNewStatusFieldbusInfo">
+                    <desc>Notify info of fieldbus communication.</desc>
+                    <param desc="Fieldbus Info." multiplicity="1" name="fieldbusInfo" type="string"/>
+                </event>
+                <event name="OnNewStatusControlBitsIn">
+                    <desc>Notify current value of the control bits transmitted to the PLC.</desc>
+                    <param desc="ControlBitsIn." multiplicity="1" name="controlbitsIn" type="int"/>
+                </event>
+                <event name="OnNewStatusEtherNetIPAddressingMode">
+                    <desc>Notify addressing mode for EtherNet/IP IP assignment.</desc>
+                    <param desc="Mode" multiplicity="1" name="mode" type="string"/>
+                </event>
+                <event name="OnNewStatusEtherNetIPIPAddress">
+                    <desc>Notify IP address of EtherNet/IP network.</desc>
+                    <param desc="IP" multiplicity="1" name="ip" type="string"/>
+                </event>
+                <event name="OnNewStatusEtherNetIPSubnetMask">
+                    <desc>Notfify subnet mask of EtherNet/IP network.</desc>
+                    <param desc="Subnet mask." multiplicity="1" name="subnet" type="string"/>
+                </event>
+                <event name="OnNewStatusEtherNetIPGateway">
+                    <desc>Notfify gateway of EtherNet/IP network.</desc>
+                    <param desc="Gateway" multiplicity="1" name="gateway" type="string"/>
+                </event>
+                <event name="OnNewStatusEtherNetIPNameServer">
+                    <desc>Notfify primary name server of EtherNet/IP network.</desc>
+                    <param desc="Name server" multiplicity="1" name="nameserver" type="string"/>
+                </event>
+                <event name="OnNewStatusEtherNetIPNameServer2">
+                    <desc>Notfify secondary name server of EtherNet/IP network.</desc>
+                    <param desc="Secondary Name server." multiplicity="1" name="nameServer" type="string"/>
+                </event>
+                <event name="OnNewStatusEtherNetIPDomainName">
+                    <desc>Notfify domain name of EtherNet/IP network.</desc>
+                    <param desc="Domain name." multiplicity="1" name="domainName" type="string"/>
+                </event>
+                <event name="OnNewStatusEtherNetIPMACAddress">
+                    <desc>Notfify MAC address of specified interface of EtherNet/IP network.</desc>
+                    <param desc="MAC address of specified interface." multiplicity="1" name="macAddress" type="string"/>
+                </event>
+                <event name="OnNewStatusProfinetIODeviceName">
+                    <desc>Notify name of the device in the Profinet network.</desc>
+                    <param desc="Mode" multiplicity="1" name="mode" type="string"/>
+                </event>
+                <event name="OnNewStatusProfinetIOIPAddress">
+                    <desc>Notify IP address of ProfinetIO network.</desc>
+                    <param desc="IP" multiplicity="1" name="ip" type="string"/>
+                </event>
+                <event name="OnNewStatusProfinetIOSubnetMask">
+                    <desc>Notfify subnet mask of ProfinetIO network.</desc>
+                    <param desc="Subnet mask." multiplicity="1" name="subnet" type="string"/>
+                </event>
+                <event name="OnNewStatusProfinetIOGateway">
+                    <desc>Notfify gateway of ProfinetIO network.</desc>
+                    <param desc="Gateway" multiplicity="1" name="gateway" type="string"/>
+                </event>
+                <event name="OnNewStatusProfinetIORemanent">
+                    <desc>Notfify if the ProfinetIO network configuration tool set the IP address settings permanently.</desc>
+                    <param desc="Status" multiplicity="1" name="status" type="bool"/>
+                </event>
+                <event name="OnNewStatusProfinetIOMACAddress">
+                    <desc>Notfify MAC address of specified interface of ProfinetIO network.</desc>
+                    <param desc="MAC address of specified interface." multiplicity="1" name="macAddress" type="string"/>
+                </event>
+                <event name="OnNewStatusDAPIMDescriptor">
+                    <desc>Notify descriptor as used for the ProfinetIO DAP’s I&amp;M3 data.</desc>
+                    <param desc="Descriptor" multiplicity="1" name="descriptor" type="string"/>
+                </event>
+                <event name="OnNewStatusDAPIMHardwareRev">
+                    <desc>Notify hardware revision as used for the DAP used in the I&amp;M0 data.</desc>
+                    <param desc="Hardware revision." multiplicity="1" name="hardwareRev" type="int"/>
+                </event>
+                <event name="OnNewStatusDAPIMInstallationDate">
+                    <desc>Notify installation date as used for the DAP’s I&amp;M2 data.</desc>
+                    <param desc="Installation date." multiplicity="1" name="date" type="string"/>
+                </event>
+                <event name="OnNewStatusDAPIMSoftwareRev">
+                    <desc>Notify software revision for the DAP (device access point) used in the I&amp;M0 data.</desc>
+                    <param desc="Software revision." multiplicity="1" name="softwareRev" type="string"/>
+                </event>
+                <event name="OnNewStatusDAPIMTagFunction">
+                    <desc>Notify function tag as used for the DAP’s I&amp;M1 data.</desc>
+                    <param desc="Function tag." multiplicity="1" name="tagFunction" type="string"/>
+                </event>
+                <event name="OnNewStatusDAPIMTagLocation">
+                    <desc>Notify location tag as used for the DAP’s I&amp;M1 data.</desc>
+                    <param desc="Location tag." multiplicity="1" name="tagLocation" type="string"/>
+                </event>
+                <event name="OnNewStatusActiveProtocol">
+                    <desc>Notify currently active fieldbus protocol.</desc>
+                    <param desc="Fieldbus protocol." multiplicity="1" name="protocol" type="string"/>
+                </event>
+                <event name="OnNewStatusExplicitModeActive">
+                    <desc>Notify if explicit mode is selected.</desc>
+                    <param desc="Status" multiplicity="1" name="status" type="bool"/>
+                </event>
+                <event name="OnNewStatusRegisteredEventTransmit">
+                    <desc>Notify name of event to receive data to transmit.</desc>
+                    <param desc="Name of event." multiplicity="1" name="eventName" type="string"/>
+                </event>
+                <event name="OnNewStatusDataNameTransmit">
+                    <desc>Notify name of preconfigured transmit data.</desc>
+                    <param desc="Data name as identifier." multiplicity="1" name="name" type="string"/>
+                </event>
+                <event name="OnNewStatusConvertDataTransmit">
+                    <desc>Notify preconfigured status if data needs to be converted to binary before transmission.</desc>
+                    <param desc="Status (TRUE if data needs to be converted)" multiplicity="1" name="status" type="bool"/>
+                </event>
+                <event name="OnNewStatusBigEndianTransmit">
+                    <desc>Notify if big endian should be used to convert data to transmit (otherwise little endian will be used).</desc>
+                    <param desc="Status" multiplicity="1" name="status" type="bool"/>
+                </event>
+                <event name="OnNewStatusDataTypeTransmit">
+                    <desc>Notify preconfigured data type of data to transmit.</desc>
+                    <param desc="Data type" multiplicity="1" name="dataType" type="string"/>
+                </event>
+                <event name="OnNewStatusDataTransmissionList">
+                    <desc>Notify list of data entires to use for data transmission.</desc>
+                    <param desc="List of data entries." multiplicity="1" name="list" type="string"/>
+                </event>
+                <event name="OnNewStatusTempDataTransmit">
+                    <desc>Notify temporarily set data to transmit on selected data position.</desc>
+                    <param desc="Data value." multiplicity="1" name="value" type="string"/>
+                </event>
+                <event name="OnNewStatusLogMessage">
+                    <desc>Notify fieldbus relevant log message.</desc>
+                    <param desc="Message" multiplicity="1" name="message" type="string"/>
+                </event>
+                <event name="OnNewStatusControlBitsOutTable">
+                    <desc>Notify ControlBitsOut as boolean table.</desc>
+                    <param desc="Status of ControlBitsOut ." multiplicity="+" name="status" type="bool"/>
+                </event>
+                <event name="OnNewStatusControlBitsInTable">
+                    <desc>Notify control bits IN as boolean table.</desc>
+                    <param desc="Status of all bits." multiplicity="+" name="status" type="bool"/>
+                </event>
+                <event name="OnNewStatusControlBitsInBitMaskTable">
+                    <desc>Notify bitmask of control bits IN as boolean table.</desc>
+                    <param desc="Status of all bits of the bitmask." multiplicity="+" name="status" type="bool"/>
+                </event>
+                <event name="OnNewStatusReceivedData">
+                    <desc>Notfiy received data.</desc>
+                    <param desc="Received binary data." multiplicity="1" name="data" type="binary"/>
+                </event>
+                <event name="OnNewStatusDataNameReceive">
+                    <desc>Notify name of preconfigured data to receive.</desc>
+                    <param desc="Data name as identifier." multiplicity="1" name="name" type="string"/>
+                </event>
+                <event name="OnNewStatusDataReceivingList">
+                    <desc>Notify list of data entires to use for data receiving.</desc>
+                    <param desc="List of data entries." multiplicity="1" name="list" type="string"/>
+                </event>
+                <event name="OnNewStatusConvertDataReceive">
+                    <desc>Notify preconfigured status if data needs to be converted to binary after receiving.</desc>
+                    <param desc="Status (TRUE if data needs to be converted)" multiplicity="1" name="status" type="bool"/>
+                </event>
+                <event name="OnNewStatusBigEndianReceive">
+                    <desc>Notify if big endian should be used to convert received data (otherwise little endian will be used).</desc>
+                    <param desc="Status" multiplicity="1" name="status" type="bool"/>
+                </event>
+                <event name="OnNewStatusDataTypeReceive">
+                    <desc>Notify preconfigured data type of data to receive.</desc>
+                    <param desc="Data type" multiplicity="1" name="dataType" type="string"/>
+                </event>
+                <event name="OnNewData_NAME">
+                    <desc>Dynamically created event to provide received data from PLC via event. +
+NAME will be replaced by data identifier (e.g. 'CSK_Fieldbus.OnNewData_Data1').</desc>
+                    <param desc="Received data content." multiplicity="?" name="data" type="auto"/>
+                </event>
+                <event name="OnNewStatusRestartInfo">
+                    <desc>Notify info text to restart device.</desc>
+                    <param desc="Info message." multiplicity="1" name="msg" type="string"/>
                 </event>
                 <function name="setParameterName">
                     <desc>Function to set the name of the parameters if saved/loaded via the CSK_PersistentData module.</desc>
@@ -60,6 +325,7 @@ ToDo +
                 </function>
                 <function name="loadParameters">
                     <desc>Load parameters for this module from the CSK_PersistentData module if possible and use them.</desc>
+                    <param desc="Set to TRUE if module should wait 1 second before trying to register to events. +&#10;Should be used e.g. if other modules first need to provide dynamically created events which are used." multiplicity="?" name="wait" type="bool"/>
                 </function>
                 <function name="setLoadOnReboot">
                     <desc>Configure if this module should load its saved parameters at app/device boot up.</desc>
@@ -69,18 +335,229 @@ ToDo +
                     <desc>Function to register "OnResume" of the module UI (only as helper function).</desc>
                     <return desc="Empty string (only needed to simplify binding)." multiplicity="1" name="empty" type="string"/>
                 </function>
-                <function name="clearFlowConfigRelevantConfiguration">
-                    <desc>Function to clear FlowConfig relevant configurations.</desc>
+                <function name="setProtocol">
+                    <desc>Function to set fiedlbus protocol to use.</desc>
+                    <param desc="Fieldbus protocol." multiplicity="1" name="protocol" ref="CSK_Fieldbus.Protocol" type="enum"/>
+                </function>
+                <function name="openCommunication">
+                    <desc>Function to open fieldbus communication.</desc>
+                    <return desc="TRUE if communication is opened successfully otherwise FALSE" multiplicity="1" name="success" type="bool"/>
+                </function>
+                <function name="closeCommunication">
+                    <desc>Function to close fieldbus communication.</desc>
+                </function>
+                <function name="refreshControlBits">
+                    <desc>Function to refresh data of ControlBitsIn/Out</desc>
+                </function>
+                <function name="setDataToTransmit">
+                    <desc>Function to preset data to transmit.</desc>
+                    <param desc="Binary data string." multiplicity="1" name="data" type="binary"/>
+                </function>
+                <function name="transmitViaUI">
+                    <desc>Function to transmit preset data (see 'setDataToTransmit').</desc>
+                </function>
+                <function name="setControlBitsIn">
+                    <desc>Function to preset controlBitsIn to write/transmit to PLC.</desc>
+                    <param desc="Control bits to write." multiplicity="1" name="controlBits" type="int"/>
+                </function>
+                <function name="setBitMask">
+                    <desc>Function to preset bitmask to use for preset ControlBitsIn to write.</desc>
+                    <param desc="Bitmask to use for ControlBitsIn." multiplicity="1" name="bitMask" type="int"/>
+                </function>
+                <function name="writeControlBitsInViaUI">
+                    <desc>Function to write preset ControlBitsIn to the PLC.</desc>
+                </function>
+                <function name="setCreateMode">
+                    <desc>Function to set create mode of fieldbus communication.</desc>
+                    <param desc="Create mode." multiplicity="1" name="mode" ref="CSK_Fieldbus.CreateMode" type="enum"/>
+                </function>
+                <function name="setTransmissionMode">
+                    <desc>Function to set transmission mode.</desc>
+                    <param desc="Transmission mode." multiplicity="1" name="mode" ref="CSK_Fieldbus.TransmissionMode" type="enum"/>
+                </function>
+                <function name="submitProtocol">
+                    <desc>Function to set preset fieldbus protocol (see 'setProtocol') and restart device.</desc>
+                </function>
+                <function name="getEtherNetIPConfig">
+                    <desc>Function to get EtherNetIP configuration.</desc>
+                </function>
+                <function name="setEtherNetIPConfig">
+                    <desc>Function to setup preconfigured EtherNet/IP config.</desc>
+                </function>
+                <function name="setAddressingMode">
+                    <desc>Function to set addressing mode of EtherNetIP communication.</desc>
+                    <param desc="Mode" multiplicity="1" name="mode" ref="CSK_Fieldbus.AddressingMode" type="enum"/>
+                </function>
+                <function name="setEtherNetIPIP">
+                    <desc>Function to preset IP for EtherNet/IP communication.</desc>
+                    <param desc="IP" multiplicity="1" name="ip" type="string"/>
+                </function>
+                <function name="setEtherNetIPSubnetMask">
+                    <desc>Function to preset subnet mask for EtherNet/IP communication.</desc>
+                    <param desc="Subnet mask." multiplicity="1" name="netmask" type="string"/>
+                </function>
+                <function name="setEtherNetIPGateway">
+                    <desc>Function to preset gateway for EtherNet/IP communication.</desc>
+                    <param desc="Gateway" multiplicity="1" name="gateway" type="string"/>
+                </function>
+                <function name="setEtherNetIPNameServer">
+                    <desc>Function to preset primary name server for EtherNet/IP communication.</desc>
+                    <param desc="Primary name server." multiplicity="1" name="nameServer" type="string"/>
+                </function>
+                <function name="setEtherNetIPNameServer2">
+                    <desc>Function to preset secondary name server for EtherNet/IP communication.</desc>
+                    <param desc="Secondary name server." multiplicity="1" name="nameServer" type="string"/>
+                </function>
+                <function name="setEtherNetIPDomainName">
+                    <desc>Function to preset domain name for EtherNet/IP communication.</desc>
+                    <param desc="Domain name." multiplicity="1" name="domainName" type="string"/>
+                </function>
+                <function name="setProfinetIODeviceName">
+                    <desc>Function to preset ProfinetIO device name.</desc>
+                    <param desc="Device name." multiplicity="1" name="name" type="string"/>
+                </function>
+                <function name="setProfinetIOIP">
+                    <desc>Function to preset IP for ProfinetIO communication.</desc>
+                    <param desc="IP" multiplicity="1" name="ip" type="string"/>
+                </function>
+                <function name="setProfinetIOSubnetMask">
+                    <desc>Function to preset subnet mask for ProfinetIO communication.</desc>
+                    <param desc="Subnet mask." multiplicity="1" name="netmask" type="string"/>
+                </function>
+                <function name="setProfinetIOGateway">
+                    <desc>Function to preset gateway for ProfinetIO communication.</desc>
+                    <param desc="Gateway" multiplicity="1" name="gateway" type="string"/>
+                </function>
+                <function name="getProfinetIOConfig">
+                    <desc>Function to get ProfinetIO configuration.</desc>
+                </function>
+                <function name="applyProfinetIOConfig">
+                    <desc>Function apply ProfinetIO configuration.</desc>
+                </function>
+                <function name="storeProfinetIOConfig">
+                    <desc>Function to store ProfinetIO configuration.</desc>
+                </function>
+                <function name="setDAPIMConfig">
+                    <desc>Function to set ProfinetIO DAP IM configuration.</desc>
+                </function>
+                <function name="getDAPIMConfig">
+                    <desc>Function to get ProfinetIO DAP IM data.</desc>
+                </function>
+                <function name="storeDAPIMData">
+                    <desc>Function to store ProfinetIO DAP I&amp;M data.</desc>
+                </function>
+                <function name="setDAPIMDescriptor">
+                    <desc>Function to set descriptor for the DAPs I&amp;M3 data.</desc>
+                    <param desc="Descriptor to use for this I&amp;M3 data." multiplicity="1" name="descriptor" type="string"/>
+                </function>
+                <function name="setDAPIMInstallationDate">
+                    <desc>Function to set the installation date for the DAPs I&amp;M2 data.</desc>
+                    <param desc="String encoding the date and time (optional) in accordance with ISO 8601" multiplicity="1" name="date" type="string"/>
+                </function>
+                <function name="setDAPIMTagFunction">
+                    <desc>Function to set the function tag for the DAPs I&amp;M1 data.</desc>
+                    <param desc="String with 32 visible characters. Will be filled with blanks automatically if shorter." multiplicity="1" name="tag" type="string"/>
+                </function>
+                <function name="setDAPIMTagLocation">
+                    <desc>Function to set location tag for the DAPs I&amp;M1 data.</desc>
+                    <param desc="Location tag (check device API reference)." multiplicity="1" name="location" type="string"/>
+                </function>
+                <function name="setRegisteredEventTransmit">
+                    <desc>Function to set event to receive data to transmit via fieldbus for new/selected data entry.</desc>
+                    <param desc="Name of event providing data." multiplicity="1" name="eventName" type="string"/>
+                </function>
+                <function name="addDataToTransmitViaUI">
+                    <desc>Function to add preconfigured data to transmit.</desc>
+                </function>
+                <function name="setDataNameTransmit">
+                    <desc>Function to preconfigure name of data entry to transmit.</desc>
+                    <param desc="Name of data as identifier." multiplicity="1" name="name" type="string"/>
+                </function>
+                <function name="setConvertDataTransmit">
+                    <desc>Function to preconfigure if internally received data (via event) needs to be converted before transmission.</desc>
+                    <param desc="Status (TRUE if data needs to be converted)." multiplicity="1" name="status" type="bool"/>
+                </function>
+                <function name="setBigEndianTransmit">
+                    <desc>Function to preconfigure if data to transmit uses big endianness. Will use little endian per default.</desc>
+                    <param desc="Status (TRUE to use big endianness / FALSE to use litte endianness for data conversion)." multiplicity="1" name="status" type="bool"/>
+                </function>
+                <function name="setDataTypeTransmit">
+                    <desc>Function to preconfigure type of data to convert data before transmission.</desc>
+                    <param desc="Type of data." multiplicity="1" name="dataType" ref="CSK_Fieldbus.DataTypes" type="enum"/>
+                </function>
+                <function name="selectDataTransmitViaUI">
+                    <desc>Function to select transmit data entry in UI.</desc>
+                    <param desc="Selection" multiplicity="1" name="selection" type="string"/>
+                </function>
+                <function name="deleteDataToTransmitViaUI">
+                    <desc>Function to delete preselected data entry.</desc>
+                </function>
+                <function name="dataTransmitPositionUp">
+                    <desc>Function to move the position of the transmit data about one position higher.</desc>
+                </function>
+                <function name="dataTransmitPositionDown">
+                    <desc>Function to move the position of the selected transmit data about one position lower.</desc>
+                </function>
+                <function name="setTempTransmitData">
+                    <desc>Function to set temporarily data of in UI selected data postion to transmit.</desc>
+                    <param desc="Data to set." multiplicity="1" name="data" type="string"/>
+                </function>
+                <function name="triggerTempDataViaUI">
+                    <desc>Function to set preconfigured data to in UI selected data position (see 'setTempTransmitData'). +
+After that it will transmit the full data to the fieldbus.</desc>
+                </function>
+                <function name="setSpecificControlBitIn">
+                    <desc>Function to set specific ControlBitIn (bit range from 0-15).</desc>
+                    <param desc="Status+position (e.g. {'true', '15'})." multiplicity="+" name="values" type="string"/>
+                </function>
+                <function name="setSpecificBitMaskBit">
+                    <desc>Function to set specific bit of bitmask (bit range from 0-15).</desc>
+                    <param desc="Status + position (e.g. {'true', '15'})." multiplicity="+" name="values" type="string"/>
+                </function>
+                <function name="setDataNameReceive">
+                    <desc>Function to preconfigure name of data entry to receive.</desc>
+                    <param desc="Name of data as identifier." multiplicity="1" name="name" type="string"/>
+                </function>
+                <function name="setConvertDataReceive">
+                    <desc>Function to preconfigure if received data form PLC needs to be converted before transmission.</desc>
+                    <param desc="Status (TRUE if data needs to be converted)." multiplicity="1" name="status" type="bool"/>
+                </function>
+                <function name="setBigEndianReceive">
+                    <desc>Function to preconfigure if received data uses big endianness. Will use little endian per default.</desc>
+                    <param desc="Status (TRUE to use big endianness / FALSE to use litte endianness for data conversion)." multiplicity="1" name="status" type="bool"/>
+                </function>
+                <function name="setDataTypeReceive">
+                    <desc>Function to preconfigure type of data to convert received data.</desc>
+                    <param desc="Type of data." multiplicity="1" name="dataType" ref="CSK_Fieldbus.DataTypes" type="enum"/>
+                </function>
+                <function name="addDataToReceiveViaUI">
+                    <desc>Function to add preconfigured data to receive.</desc>
+                </function>
+                <function name="deleteDataToReceiveViaUI">
+                    <desc>Function to delete preselected data entry.</desc>
+                </function>
+                <function name="dataReceivePositionDown">
+                    <desc>Function to move the position of the selected data to receive about one position lower.</desc>
+                </function>
+                <function name="dataReceivePositionUp">
+                    <desc>Function to move the position of the data to receive about one position higher.</desc>
+                </function>
+                <function name="selectDataReceiveViaUI">
+                    <desc>Function to select data entry in UI.</desc>
+                    <param desc="Selection" multiplicity="1" name="selection" type="string"/>
+                </function>
+                <function name="resetTransmitData">
+                    <desc>Function to reset all data to transmit.</desc>
                 </function>
             </serves>
         </crown>
         <meta key="author">SICK AG</meta>
-        <meta key="version">0.1.0</meta>
+        <meta key="version">1.0.1</meta>
         <meta key="priority">low</meta>
         <meta key="copy-protected">false</meta>
         <meta key="read-protected">false</meta>
         <meta key="crown2-flow-engine">false</meta>
-        <meta key="LuaLoadAllEngineAPI">true</meta>
+        <meta key="LuaLoadAllEngineAPI">false</meta>
         <entry default="CSK_Module_Fieldbus.lua" path="scripts"/>
     </application>
 </manifest>

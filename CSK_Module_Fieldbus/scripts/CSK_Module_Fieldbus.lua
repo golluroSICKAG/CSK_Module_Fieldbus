@@ -21,42 +21,28 @@
 --SOFTWARE.
 
 ---@diagnostic disable: undefined-global, redundant-parameter, missing-parameter
-
+-- CreationTemplateVersion: 3.6.0
 --**************************************************************************
 --**********************Start Global Scope *********************************
 --**************************************************************************
 
 -- If app property "LuaLoadAllEngineAPI" is FALSE, use this to load and check for required APIs
 -- This can improve performance of garbage collection
+
 _G.availableAPIs = require('Communication/Fieldbus/helper/checkAPIs') -- can be used to adjust function scope of the module related on available APIs of the device
 -----------------------------------------------------------
 -- Logger
 _G.logger = Log.SharedLogger.create('ModuleLogger')
 _G.logHandle = Log.Handler.create()
 _G.logHandle:attachToSharedLogger('ModuleLogger')
-_G.logHandle:setConsoleSinkEnabled(false) --> Set to TRUE if CSK_Logger module is not used
+_G.logHandle:setConsoleSinkEnabled(true) --> Set to TRUE if CSK_Logger module is not used
 _G.logHandle:setLevel("ALL")
 _G.logHandle:applyConfig()
 -----------------------------------------------------------
 
 -- Loading script regarding Fieldbus_Model
 -- Check this script regarding Fieldbus_Model parameters and functions
-_G.fieldbus_Model = require('Communication/Fieldbus/Fieldbus_Model') --AR - sometimes this is local scope ie MultiTCPIPServer?
-
-local fieldbus_Instances = {} -- Handle all instances
-
--- Load script to communicate with the fieldbus_Model UI
--- Check / edit this script to see/edit functions which communicate with the UI
-local fieldbusController = require('Communication/Fieldbus/Fieldbus_Controller')
-
-if _G.availableAPIs.default and _G.availableAPIs.specific then
-  local setInstanceHandle = require('Communication/Fieldbus/FlowConfig/Fieldbus_FlowConfig')
-  table.insert(fieldbus_Instances, fieldbus_Model.create(1)) --AR -- Create at least 1 instance
-  fieldbusController.setFieldbus_Instances_Handle(fieldbus_Instances) -- share handle of instances
-  setInstanceHandle(fieldbus_Instances)
-else
-  _G.logger:warning("CSK_Fieldbus: Relevant CROWN(s) not available on device. Module is not supported...")
-end
+_G.fieldbus_Model = require('Communication/Fieldbus/Fieldbus_Model')
 
 --**************************************************************************
 --**********************End Global Scope ***********************************
@@ -76,19 +62,51 @@ local function main()
   -- Can be used e.g. like this
   ----------------------------------------------------------------------------------------
 
-  -- _G.fieldbus_Model.doSomething() -- if you want to start a function
   -- ...
-  fieldbusController.setFieldbus_Model_Handle(Fieldbus_Model)
-
   CSK_Fieldbus.pageCalled() -- Update UI
 
+  --[[
+  CSK_Fieldbus.setDataNameReceive('Data1')
+  CSK_Fieldbus.setDataTypeReceive('U_INT2')
+  CSK_Fieldbus.addDataToReceiveViaUI()
+
+  CSK_Fieldbus.setDataNameReceive('Data2')
+  CSK_Fieldbus.setDataTypeReceive('U_INT4')
+  CSK_Fieldbus.addDataToReceiveViaUI()
+  
+  CSK_Fieldbus.setDataTypeTransmit('U_BYTE')
+  for i=1, 6 do
+    CSK_Fieldbus.setDataNameTransmit('Data' ..tostring(i))
+    CSK_Fieldbus.addDataToTransmitViaUI()
+  end
+
+  CSK_Fieldbus.setDataTypeTransmit('S_INT2')
+  for i=7, 10 do
+    CSK_Fieldbus.setDataNameTransmit('Data' ..tostring(i))
+    CSK_Fieldbus.addDataToTransmitViaUI()
+  end
+
+  CSK_Fieldbus.setDataTypeTransmit('U_BYTE')
+  for i=11, 18 do
+    CSK_Fieldbus.setDataNameTransmit('Data' ..tostring(i))
+    CSK_Fieldbus.addDataToTransmitViaUI()
+  end
+
+  CSK_Fieldbus.setDataTypeTransmit('U_INT8')
+  for i=19, 31 do
+    CSK_Fieldbus.setDataNameTransmit('Data' ..tostring(i))
+    CSK_Fieldbus.addDataToTransmitViaUI()
+  end
+
+  CSK_Fieldbus.setDataTypeTransmit('U_BYTE')
+  for i=32, 33 do
+    CSK_Fieldbus.setDataNameTransmit('Data' ..tostring(i))
+    CSK_Fieldbus.addDataToTransmitViaUI()
+  end
+]]
+  
 end
 Script.register("Engine.OnStarted", main)
-
---OR
-
--- Call function after persistent data was loaded
---Script.register("CSK_Fieldbus.OnDataLoadedOnReboot", main)
 
 --**************************************************************************
 --**********************End Function Scope *********************************

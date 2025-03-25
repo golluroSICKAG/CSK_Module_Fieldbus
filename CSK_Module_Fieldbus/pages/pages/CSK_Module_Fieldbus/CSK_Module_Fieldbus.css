@@ -5,5 +5,14 @@
   margin: 6px;
 }
 
-.myCustomCssClass_CSK_Module_Fieldbus {
+.myCustomMinHeight100p_CSK_Module_Fieldbus {
+  min-height: 100%;
+}
+
+.myCustomMarginBottom4px_CSK_Module_Fieldbus {
+  margin-bottom: 4px;
+}
+
+.myCustomRedText_CSK_Module_Fieldbus {
+  color: crimson;
 }
