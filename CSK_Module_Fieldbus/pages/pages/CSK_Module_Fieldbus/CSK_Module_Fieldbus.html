@@ -7,6 +7,39 @@
 						<h4 id="Heading4_Fieldbus">Fieldbus</h4>
 						<layout-row id="RowLayout6">
 							<layout-column id="ColumnLayout8" style="align-items: stretch">
+								<layout-row id="RowLayout8">
+									<layout-column id="ColumnLayout16" style="align-items: stretch">
+										<davinci-drop-down id="DD_Protocol"
+											title="If you set a new protocol, a device restart is necessary to activate the new protocol."
+											label="Change protocol">
+											<davinci-option id="Option1" value="DISABLED">
+												<span>DISABLED</span>
+											</davinci-option>
+											<davinci-option id="Option2" value="ProfinetIO">
+												<span>ProfinetIO</span>
+											</davinci-option>
+											<davinci-option id="Option3" value="EtherNetIP">
+												<span>EtherNet/IP</span>
+											</davinci-option>
+											<crown-edpws-binding property="value"
+												name="CSK_Fieldbus/OnNewStatusProtocol" update-on-resume>
+											</crown-edpws-binding>
+											<crown-binding event="change" name="CSK_Fieldbus/setProtocol"
+												path="param/args/protocol" auto-commit>
+											</crown-binding>
+										</davinci-drop-down>
+									</layout-column>
+									<layout-column id="ColumnLayout19" style="align-items: stretch">
+										<davinci-button id="Button_SetProtocol" type="primary"
+											icon-position="append"
+											title="If you set a new protocol, a device restart is necessary to activate the new protocol.">
+											<span>Set / Restart</span>
+											<crown-binding event="submit" name="CSK_Fieldbus/submitProtocol"
+												auto-commit>
+											</crown-binding>
+										</davinci-button>
+									</layout-column>
+								</layout-row>
 								<layout-row id="RowLayout34" style="justify-content: space-between">
 									<layout-column id="ColumnLayout110" style="align-items: stretch">
 										<davinci-value-display id="VD_ActiveFieldbusProtocol"
@@ -24,6 +57,14 @@
 										</davinci-value-display>
 									</layout-column>
 								</layout-row>
+								<layout-row id="RowLayout41" style="justify-content: space-between">
+									<davinci-value-display id="VD_RestartInfo"
+										class="myCustomRedText_CSK_Module_Fieldbus">
+										<crown-edpws-binding property="value"
+											name="CSK_Fieldbus/OnNewStatusRestartInfo" update-on-resume>
+										</crown-edpws-binding>
+									</davinci-value-display>
+								</layout-row>
 								<stacked-view id="SV_FieldbusFeatures">
 									<stacked-pane id="SP_FB_Active" value="true">
 										<layout-row id="RowLayout9">
@@ -31,7 +72,7 @@
 												<layout-row id="RowLayout17"
 													class="myCustomFrame_CSK_Module_Fieldbus">
 												<layout-column id="ColumnLayout17" style="align-items: stretch">
-												<davinci-drop-down id="DD_CreateMode" label="CreateMode">
+												<davinci-drop-down id="DD_CreateMode" label="Create Mode">
 												<davinci-option id="Option6" value="AUTOMATIC_OPEN">
 												<span>AUTOMATIC_OPEN</span>
 												</davinci-option>
@@ -45,7 +86,8 @@
 													path="param/args/mode" auto-commit>
 												</crown-binding>
 												<crown-edpws-binding property="disabled"
-													name="CSK_Fieldbus/OnNewStatusFieldbusActive" update-on-resume>
+													name="CSK_Fieldbus/OnNewStatusFieldbusActive" update-on-resume
+													auto-commit>
 												</crown-edpws-binding>
 												</davinci-drop-down>
 												<davinci-button id="Button_Open" type="primary"
@@ -60,8 +102,7 @@
 												</davinci-button>
 												</layout-column>
 												<layout-column id="ColumnLayout18" style="align-items: stretch">
-												<davinci-drop-down id="DD_TransmissionMode"
-													label="TransmissionMode for 'EXPLICIT_MODE'"
+												<davinci-drop-down id="DD_TransmissionMode" label="Transmission Mode"
 													title="Only available in 'EXPLICIT_MODE'.">
 												<davinci-option id="Option4" value="CONFIRMED_MESSAGING"
 													title="Only available in 'EXPLICIT_MODE'.">
@@ -87,6 +128,10 @@
 												<crown-binding event="submit" name="CSK_Fieldbus/closeCommunication"
 													auto-commit>
 												</crown-binding>
+												<crown-edpws-binding property="disabled"
+													name="CSK_Fieldbus/OnNewStatusFieldbusActive" update-on-resume
+													converter="function(value) {return !value;}">
+												</crown-edpws-binding>
 												</davinci-button>
 												</layout-column>
 												</layout-row>
@@ -96,7 +141,7 @@
 													class="myCustomFrame_CSK_Module_Fieldbus">
 												<layout-column id="ColumnLayout11" style="align-items: stretch">
 												<davinci-value-display id="VD_EtherNetIP"
-													label="EtherNet/IP specific">
+													label="EtherNet/IP Specific">
 												</davinci-value-display>
 												<layout-row id="RowLayout18">
 												<layout-column id="ColumnLayout22" style="align-items: stretch">
@@ -117,10 +162,15 @@
 												<crown-binding event="change" name="CSK_Fieldbus/setAddressingMode"
 													path="param/args/mode" auto-commit>
 												</crown-binding>
+												<crown-edpws-binding property="disabled"
+													name="CSK_Fieldbus/OnNewStatusFieldbusActive" update-on-resume
+													converter="function(value) {return !value;}">
+												</crown-edpws-binding>
 												</davinci-drop-down>
 												</layout-column>
 												<layout-column id="ColumnLayout26" style="align-items: stretch">
-												<davinci-text-field id="TF_EthernetIP_IP" type="text" label="IP">
+												<davinci-text-field id="TF_EthernetIP_IP" type="text"
+													label="IP address">
 												<crown-edpws-binding property="value"
 													name="CSK_Fieldbus/OnNewStatusEtherNetIPIPAddress"
 													update-on-resume>
@@ -134,7 +184,7 @@
 												<layout-row id="RowLayout35">
 												<layout-column id="ColumnLayout114" style="align-items: stretch">
 												<davinci-text-field id="TF_EthernetIP_Subnet" type="text"
-													label="Subnet mask">
+													label="Netmask">
 												<crown-edpws-binding property="value"
 													name="CSK_Fieldbus/OnNewStatusEtherNetIPSubnetMask"
 													update-on-resume>
@@ -146,7 +196,7 @@
 												</davinci-text-field>
 												</layout-column>
 												<layout-column id="ColumnLayout115" style="align-items: stretch">
-												<davinci-text-field id="TF_Gateway" type="text" label="Gateway">
+												<davinci-text-field id="TF_Gateway" type="text" label="GW address">
 												<crown-edpws-binding property="value"
 													name="CSK_Fieldbus/OnNewStatusEtherNetIPGateway" update-on-resume>
 												</crown-edpws-binding>
@@ -159,7 +209,7 @@
 												<layout-row id="RowLayout36">
 												<layout-column id="ColumnLayout116" style="align-items: stretch">
 												<davinci-text-field id="TF_NameServer" type="text"
-													label="Name server">
+													label="Primary nameserver">
 												<crown-edpws-binding property="value"
 													name="CSK_Fieldbus/OnNewStatusEtherNetIPNameServer"
 													update-on-resume>
@@ -172,7 +222,7 @@
 												</layout-column>
 												<layout-column id="ColumnLayout117" style="align-items: stretch">
 												<davinci-text-field id="TF_NameServer2" type="text"
-													label="Name server 2">
+													label="Secondary nameserver">
 												<crown-edpws-binding property="value"
 													name="CSK_Fieldbus/OnNewStatusEtherNetIPNameServer2"
 													update-on-resume>
@@ -187,7 +237,7 @@
 												<layout-row id="RowLayout37">
 												<layout-column id="ColumnLayout118" style="align-items: stretch">
 												<davinci-text-field id="TF_DomainName" type="text"
-													label="Domain Name">
+													label="Domain name">
 												<crown-edpws-binding property="value"
 													name="CSK_Fieldbus/OnNewStatusEtherNetIPDomainName"
 													update-on-resume>
@@ -199,7 +249,8 @@
 												</davinci-text-field>
 												</layout-column>
 												<layout-column id="ColumnLayout119" style="align-items: stretch">
-												<davinci-text-field id="TF_MAC" type="text" readonly label="MAC">
+												<davinci-text-field id="TF_MAC" type="text" readonly
+													label="MAC Address">
 												<crown-edpws-binding property="value"
 													name="CSK_Fieldbus/OnNewStatusEtherNetIPMACAddress"
 													update-on-resume>
@@ -215,6 +266,10 @@
 												<crown-binding event="submit" name="CSK_Fieldbus/getEtherNetIPConfig"
 													auto-commit>
 												</crown-binding>
+												<crown-edpws-binding property="disabled"
+													name="CSK_Fieldbus/OnNewStatusFieldbusActive" update-on-resume
+													converter="function(value) {return !value;}">
+												</crown-edpws-binding>
 												</davinci-button>
 												</layout-column>
 												<layout-column id="ColumnLayout113" style="align-items: stretch">
@@ -417,45 +472,6 @@
 										converter="function(value) {return value.toString();}">
 									</crown-edpws-binding>
 								</stacked-view>
-								<layout-row id="RowLayout8">
-									<layout-column id="ColumnLayout16" style="align-items: stretch">
-										<davinci-drop-down id="DD_Protocol"
-											title="If you set a new protocol, a device restart is necessary to activate the new protocol."
-											label="Change protocol">
-											<davinci-option id="Option1" value="DISABLED">
-												<span>DISABLED</span>
-											</davinci-option>
-											<davinci-option id="Option2" value="ProfinetIO">
-												<span>ProfinetIO</span>
-											</davinci-option>
-											<davinci-option id="Option3" value="EtherNetIP">
-												<span>EtherNet/IP</span>
-											</davinci-option>
-											<crown-edpws-binding property="value"
-												name="CSK_Fieldbus/OnNewStatusProtocol" update-on-resume>
-											</crown-edpws-binding>
-											<crown-binding event="change" name="CSK_Fieldbus/setProtocol"
-												path="param/args/protocol" auto-commit>
-											</crown-binding>
-										</davinci-drop-down>
-									</layout-column>
-									<layout-column id="ColumnLayout19" style="align-items: stretch">
-										<davinci-button id="Button_SetProtocol" type="primary"
-											icon-position="append"
-											title="If you set a new protocol, a device restart is necessary to activate the new protocol.">
-											<span>Set / Restart</span>
-											<crown-binding event="submit" name="CSK_Fieldbus/submitProtocol"
-												auto-commit>
-											</crown-binding>
-										</davinci-button>
-									</layout-column>
-								</layout-row>
-								<davinci-value-display id="VD_RestartInfo"
-									class="myCustomRedText_CSK_Module_Fieldbus">
-									<crown-edpws-binding property="value"
-										name="CSK_Fieldbus/OnNewStatusRestartInfo" update-on-resume>
-									</crown-edpws-binding>
-								</davinci-value-display>
 								<layout-row id="RowLayout7">
 									<layout-column id="Column_PersistentData"
 										class="myCustomFrame_CSK_Module_Fieldbus"

@@ -145,7 +145,7 @@ funcs.createStringListBySimpleTable = createStringListBySimpleTable
 --- Function to convert value out of binary string
 ---@param value binary Binary string
 ---@param format string Format the value is packed
----@param bigEndian ?bool Status if big endian is used. Otherwise little endian is active
+---@param bigEndian bool Status if big endian is used. Otherwise little endian is active
 ---@return auto result Converted value
 local function convertFromBinary(value, format, bigEndian)
   local result
@@ -199,7 +199,7 @@ funcs.convertFromBinary = convertFromBinary
 --- Function to convert value to binary string
 ---@param value auto Value to convert
 ---@param format string Format the value is packed
----@param bigEndian? bool Status if big endian is used. Otherwise little endian is active
+---@param bigEndian bool Status if big endian is used. Otherwise little endian is active
 ---@return binary result Converted value
 local function convertToBinary(value, format, bigEndian)
   local result

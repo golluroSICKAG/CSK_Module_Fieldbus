@@ -111,21 +111,24 @@ fieldbus_Model.parameters.etherNetIP = {}
 fieldbus_Model.parameters.etherNetIP.storageRequestDataPath = '/public/FieldBus/EtherNetIP/StorageData.dat' -- Path to store fieldbus storage data.
 fieldbus_Model.parameters.etherNetIP.addressingMode = 'STATIC' -- or 'DHCP' / 'BOOTP'
 fieldbus_Model.parameters.etherNetIP.ipAddress = '192.168.0.1' -- IP address
+fieldbus_Model.parameters.etherNetIP.ipAddress2 = '192.168.0.1' -- IP address
 fieldbus_Model.parameters.etherNetIP.netmask = '255.255.255.0' --  Subnet mask
+fieldbus_Model.parameters.etherNetIP.netmask2 = '255.255.255.0' --  Subnet mask
 fieldbus_Model.parameters.etherNetIP.gateway = '0.0.0.0' -- Gateway address
+fieldbus_Model.parameters.etherNetIP.gateway2 = '0.0.0.0' -- Gateway address
 fieldbus_Model.parameters.etherNetIP.nameServer = '0.0.0.0' -- Primary name server
 fieldbus_Model.parameters.etherNetIP.nameServer2 = '0.0.0.0' -- Secondary name server
-fieldbus_Model.parameters.etherNetIP.domainName = '0.0.0.0' -- Domain name
-fieldbus_Model.parameters.etherNetIP.macAddress = '00:00:00:00:00:00' -- MAC address of fieldbus implementation.
+fieldbus_Model.parameters.etherNetIP.domainName = '' -- Domain name
+fieldbus_Model.parameters.etherNetIP.macAddress = '' -- MAC address of fieldbus implementation.
 
 fieldbus_Model.parameters.profinetIO = {}
 fieldbus_Model.parameters.profinetIO.storageRequestDataPath = '/public/FieldBus/ProfinetIO/StorageData.dat' -- Path to store fieldbus storage data.
 fieldbus_Model.parameters.profinetIO.deviceName = '' -- Device name
 fieldbus_Model.parameters.profinetIO.remanent = false -- Status if the network configuration tool sets the current name of the device permanently (true), that is, it will be reloaded after a restart of the device.
-fieldbus_Model.parameters.profinetIO.ipAddress = '192.168.0.1' -- IP address
+fieldbus_Model.parameters.profinetIO.ipAddress = '0.0.0.0' -- IP address
 fieldbus_Model.parameters.profinetIO.netmask = '255.255.255.0' --  Subnet mask
 fieldbus_Model.parameters.profinetIO.gateway = '0.0.0.0' -- Gateway address
-fieldbus_Model.parameters.profinetIO.macAddress = '00:00:00:00:00:00' -- MAC address of fieldbus implementation.
+fieldbus_Model.parameters.profinetIO.macAddress = '' -- MAC address of fieldbus implementation.
 
 fieldbus_Model.parameters.profinetIO.dapImDescriptor = 'Descriptor' -- The descriptor (a.k.a. 'comment') as used for the DAP’s (device access point) I&M3 data.
 fieldbus_Model.parameters.profinetIO.dapImHardwareRev = 0 --  Hardware revision as used for the DAP (device access point) used in the I&M0 data.
@@ -162,87 +165,142 @@ createFolder('/public/FieldBus/ProfinetIO')
 --**********************Start Function Scope *******************************
 --**************************************************************************
 
+--- Function to get various information about the fieldbus, its componentes and internals.
+local function getInfo()
+  fieldbus_Model.info = FieldBus.getInfo(fieldbus_Model.handle)
+  Script.notifyEvent("Fieldbus_OnNewStatusFieldbusInfo", fieldbus_Model.helperFuncs.jsonLine2Table(fieldbus_Model.info))
+end
+fieldbus_Model.getInfo = getInfo
+
+--- Function to get status information about the fieldbus.
+local function getStatus()
+  fieldbus_Model.currentStatus = FieldBus.getStatus(fieldbus_Model.handle)
+  Script.notifyEvent("Fieldbus_OnNewStatusFieldbusStatus", fieldbus_Model.currentStatus)
+end
+fieldbus_Model.getStatus = getStatus
+
 -----------------------
 -- EtherNet/IP relevant
 -----------------------
 
+
 local function getEtherNetIPConfig()
-  fieldbus_Model.parameters.etherNetIP.addressingMode = FieldBus.Config.EtherNetIP.getAddressingMode()
-  _G.logger:fine("Addressing Mode: " .. fieldbus_Model.parameters.etherNetIP.addressingMode)
   local ipAddress, netmask, gateway, nameServer, nameServer2, domainName = FieldBus.Config.EtherNetIP.getInterfaceConfig()
-  if fieldbus_Model.parameters.etherNetIP.addressingMode == 'STATIC' and ipAddress ~= '0.0.0.0' and netmask ~= '0.0.0.0' then
-    _G.logger:fine("New EtherNet/IP interface config:")
+  if ipAddress ~= '0.0.0.0' and netmask ~= '0.0.0.0' then
     fieldbus_Model.parameters.etherNetIP.ipAddress = ipAddress
-    _G.logger:fine("IP Address / NetMask = " .. tostring(ipAddress) .. ' / ' .. tostring(netmask))
+    Script.notifyEvent("Fieldbus_OnNewStatusEtherNetIPIPAddress", fieldbus_Model.parameters.etherNetIP.ipAddress)
     fieldbus_Model.parameters.etherNetIP.netmask = netmask
-    _G.logger:fine("Gateway = " .. tostring(gateway))
+    Script.notifyEvent("Fieldbus_OnNewStatusEtherNetIPGateway", fieldbus_Model.parameters.etherNetIP.gateway)
     fieldbus_Model.parameters.etherNetIP.gateway = gateway
-    _G.logger:fine("Nameserver 1 / 2 = " .. tostring(nameServer) .. ' / ' .. tostring(nameServer2))
+    Script.notifyEvent("Fieldbus_OnNewStatusEtherNetIPSubnetMask", fieldbus_Model.parameters.etherNetIP.netmask)
     fieldbus_Model.parameters.etherNetIP.nameServer = nameServer
+    Script.notifyEvent("Fieldbus_OnNewStatusEtherNetIPNameServer", fieldbus_Model.parameters.etherNetIP.nameServer)
     fieldbus_Model.parameters.etherNetIP.nameServer2 = nameServer2
-    _G.logger:fine("DomainName = " .. tostring(domainName))
+    Script.notifyEvent("Fieldbus_OnNewStatusEtherNetIPNameServer2", fieldbus_Model.parameters.etherNetIP.nameServer2)
     fieldbus_Model.parameters.etherNetIP.domainName = domainName
-    local macAddress = FieldBus.Config.EtherNetIP.getMACAddress()
-    _G.logger:fine("MAC Address = " .. tostring(macAddress))
-    fieldbus_Model.parameters.etherNetIP.macAddress = macAddress
-  elseif not fieldbus_Model.parameters.etherNetIP.addressingMode == 'STATIC' then
-    _G.logger:warning("IP Address / NetMask = " .. tostring(ipAddress) .. ' / ' .. tostring(netmask))
+    Script.notifyEvent("Fieldbus_OnNewStatusEtherNetIPDomainName", fieldbus_Model.parameters.etherNetIP.domainName)
   end
-  CSK_Fieldbus.pageCalled()
+  if fieldbus_Model.handle then
+    getInfo()
+    getStatus()
+  else
+    fieldbus_Model.info ="Fieldbus handle not created yet."
+    Script.notifyEvent("Fieldbus_OnNewStatusFieldbusInfo", fieldbus_Model.info)
+  end
 end
 fieldbus_Model.getEtherNetIPConfig = getEtherNetIPConfig
 
 -- Function to set EtherNet/IP config
 local function setEtherNetIPConfig()
-  if fieldbus_Model.parameters.etherNetIP.addressingMode == 'DHCP' or fieldbus_Model.parameters.etherNetIP.addressingMode == 'BOOTP' then
---    local suc = FieldBus.Config.EtherNetIP.setAddressingMode(fieldbus_Model.parameters.etherNetIP.addressingMode)
---    if suc then
---      _G.logger:fine(string.format("ENIP: Setting addressing mode to '%s' succeeded", fieldbus_Model.parameters.etherNetIP.addressingMode))
---    end
-  elseif fieldbus_Model.parameters.etherNetIP.ipAddress ~= '0.0.0.0' and fieldbus_Model.parameters.etherNetIP.netmask ~= '0.0.0.0' then
---    _G.logger:fine(string.format("ENIP: Setting addressing mode to '%s' succeeded", fieldbus_Model.parameters.etherNetIP.addressingMode))
---    local suc = FieldBus.Config.EtherNetIP.setAddressingMode(fieldbus_Model.parameters.etherNetIP.addressingMode)
---    if suc then
-      local ipAddress = fieldbus_Model.parameters.etherNetIP.ipAddress
-      local netmask = fieldbus_Model.parameters.etherNetIP.netmask
-      local gateway = fieldbus_Model.parameters.etherNetIP.gateway
-      local nameServer = fieldbus_Model.parameters.etherNetIP.nameServer
-      local nameServer2 = fieldbus_Model.parameters.etherNetIP.nameServer2
-      local domainName =  fieldbus_Model.parameters.etherNetIP.domainName
-      local suc = FieldBus.Config.EtherNetIP.setInterfaceConfig(ipAddress, netmask, gateway, nameServer, nameServer2, domainName)
-      if suc then
-        _G.logger:fine(string.format("ENIP: Setting IP Address to '%s' succeeded", fieldbus_Model.parameters.etherNetIP.ipAddress))
---        _G.logger:finer(string.format("ENIP: Setting NetMask to '%s' succeeded", fieldbus_Model.parameters.etherNetIP.netmask))
---        _G.logger:finer(string.format("ENIP: Setting Gateway IP Address to '%s' succeeded", fieldbus_Model.parameters.etherNetIP.gateway))
---        _G.logger:finer(string.format("ENIP: Setting Name Server 1 to '%s' succeeded", fieldbus_Model.parameters.etherNetIP.nameServer))
---        _G.logger:finer(string.format("ENIP: Setting Name Server 2 to '%s' succeeded", fieldbus_Model.parameters.etherNetIP.nameServer2))
---        _G.logger:finer(string.format("ENIP: Setting Domain Name Server to '%s' succeeded", fieldbus_Model.parameters.etherNetIP.domainName))
+  if fieldbus_Model.parameters.etherNetIP.ipAddress ~= '0.0.0.0' and fieldbus_Model.parameters.etherNetIP.netmask ~= '0.0.0.0' then
+    -- Convert IPs and netmask to numbers
+    local a, b, c, d = fieldbus_Model.parameters.etherNetIP.ipAddress:match("(%d+)%.(%d+)%.(%d+)%.(%d+)")
+    local ipNum = tonumber(a) * 256^3 + tonumber(b) * 256^2 + tonumber(c) * 256 + tonumber(d)
+    a, b, c, d = fieldbus_Model.parameters.etherNetIP.netmask:match("(%d+)%.(%d+)%.(%d+)%.(%d+)")
+    local nmNum = tonumber(a) * 256^3 + tonumber(b) * 256^2 + tonumber(c) * 256 + tonumber(d)
+    a, b, c, d = fieldbus_Model.parameters.etherNetIP.gateway:match("(%d+)%.(%d+)%.(%d+)%.(%d+)")
+    local gwNum = tonumber(a) * 256^3 + tonumber(b) * 256^2 + tonumber(c) * 256 + tonumber(d)
+
+    -- Perform bitwise AND between IP address and Netmask to get the network address
+    local networkAddress = ipNum & nmNum
+    local gwNetworkAddress = gwNum & nmNum
+
+    -- Check if IP address and GW address are in the same network
+    if networkAddress == gwNetworkAddress then
+      if FieldBus.Config.EtherNetIP.setInterfaceConfig(
+        fieldbus_Model.parameters.etherNetIP.ipAddress,
+        fieldbus_Model.parameters.etherNetIP.netmask,
+        fieldbus_Model.parameters.etherNetIP.gateway,
+        fieldbus_Model.parameters.etherNetIP.nameServer,
+        fieldbus_Model.parameters.etherNetIP.nameServer2,
+        fieldbus_Model.parameters.etherNetIP.domainName
+      ) then
+        if fieldbus_Model.handle then
+          getInfo()
+          getStatus()
+        else
+          fieldbus_Model.info ="Fieldbus handle not created yet."
+          Script.notifyEvent("Fieldbus_OnNewStatusFieldbusInfo", fieldbus_Model.info)
+        end
       else
-        _G.logger:severe(string.format("ENIP: Setting IP Address to '%s' failed", fieldbus_Model.parameters.etherNetIP.ipAddress))
---        _G.logger:severe(string.format("ENIP: Setting NetMask to '%s' failed", fieldbus_Model.parameters.etherNetIP.netmask))
---        _G.logger:severe(string.format("ENIP: Setting Gateway IP Address to '%s' failed", fieldbus_Model.parameters.etherNetIP.gateway))
---        _G.logger:severe(string.format("ENIP: Setting Name Server 1 to '%s' failed", fieldbus_Model.parameters.etherNetIP.nameServer))
---        _G.logger:severe(string.format("ENIP: Setting Name Server 2 to '%s' failed", fieldbus_Model.parameters.etherNetIP.nameServer2))
---        _G.logger:severe(string.format("ENIP: Setting Domain Name Server to '%s' failed", fieldbus_Model.parameters.etherNetIP.domainName))
+        print(fieldbus_Model.currentStatus)
+        _G.logger:warning("Cannot set the Ethernet connection. The configuration is not valid.")
+        fieldbus_Model.info = "Cannot set the Ethernet connection. The configuration is not valid."
+      end
+    else
+      -- Convert backup IP address to numbers
+      a, b, c, d = fieldbus_Model.parameters.etherNetIP.ipAddress2:match("(%d+)%.(%d+)%.(%d+)%.(%d+)")
+      ipNum = tonumber(a) * 256^3 + tonumber(b) * 256^2 + tonumber(c) * 256 + tonumber(d)
+
+      -- Perform bitwise AND between backup IP address and Netmask to get the network address
+      networkAddress = ipNum & nmNum
+      gwNetworkAddress = gwNum & nmNum
+
+      -- Check if IP address and gateway are in the same network
+      if networkAddress == gwNetworkAddress then
+        if FieldBus.Config.EtherNetIP.setInterfaceConfig(
+          fieldbus_Model.parameters.etherNetIP.ipAddress2,
+          fieldbus_Model.parameters.etherNetIP.netmask,
+          fieldbus_Model.parameters.etherNetIP.gateway,
+          fieldbus_Model.parameters.etherNetIP.nameServer,
+          fieldbus_Model.parameters.etherNetIP.nameServer2,
+          fieldbus_Model.parameters.etherNetIP.domainName
+        ) then
+          if fieldbus_Model.handle then
+            getInfo()
+            getStatus()
+          else
+            fieldbus_Model.info ="Fieldbus handle not created yet."
+            Script.notifyEvent("Fieldbus_OnNewStatusFieldbusInfo", fieldbus_Model.info)
+          end
+        else
+          print(fieldbus_Model.currentStatus)
+          _G.logger:warning("Cannot set the Ethernet connection. The configuration is not valid.")
+          fieldbus_Model.info = "Cannot set the Ethernet connection. The configuration is not valid."
+        end
+      else
+        _G.logger:warning("Cannot set the Ethernet connection. The configuration is not valid. IP address and GW address out of range.")
+        fieldbus_Model.info = "Cannot set the Ethernet connection. The configuration is not valid. IP address and GW address out of range."
       end
     end
---  end
-  CSK_Fieldbus.pageCalled()
-  Script.notifyEvent("Fieldbus_OnNewStatusFieldbusInfo", fieldbus_Model.helperFuncs.jsonLine2Table(fieldbus_Model.info))
+  else
+    _G.logger:warning("IP Address / NetMask = " .. tostring(fieldbus_Model.parameters.etherNetIP.ipAddress) .. " / " .. tostring(fieldbus_Model.parameters.etherNetIP.netmask))
+    fieldbus_Model.info = "Cannot set the Ethernet connection. IP Address / NetMask = " .. tostring(fieldbus_Model.parameters.etherNetIP.ipAddress) .. " / " .. tostring(fieldbus_Model.parameters.etherNetIP.netmask)
+  end
+  Script.notifyEvent("Fieldbus_OnNewStatusFieldbusInfo", fieldbus_Model.info)
 end
 fieldbus_Model.setEtherNetIPConfig = setEtherNetIPConfig
 
 
--- Function to react on received EtherNet/IP addressing mode
+--- 
 ---@param addressingMode FieldBus.Config.EtherNetIP.AddressingMode Addressing mode for the ip parameters.
 local function handleOnAddressingModeChanged(addressingMode)
-  _G.logger:finer("New EtherNet/IP Adressing Mode = " .. tostring(addressingMode))
-  if fieldbus_Model.parameters.etherNetIP.addressingMode == addressingMode then
-    _G.logger:severe('error: how can this happen?')
-  else
-    fieldbus_Model.parameters.etherNetIP.addressingMode = addressingMode
-  end
+  _G.logger:fine("New EtherNet/IP Addressing Mode: " .. addressingMode)
+  fieldbus_Model.parameters.etherNetIP.addressingMode = addressingMode
+  Script.notifyEvent("Fieldbus_OnNewStatusEtherNetIPAddressingMode", fieldbus_Model.parameters.etherNetIP.addressingMode)
 end
+Script.register('FieldBus.Config.EtherNetIP.OnAddressingModeChanged', handleOnAddressingModeChanged)
+
 
 -- Function to react on received EtherNet/IP interface config.
 ---@param ipAddress string IP address.
@@ -253,64 +311,74 @@ end
 ---@param domainName? string Default domain name.
 local function handleOnEthernetIPInterfaceConfigChanged(ipAddress, netmask, gateway, nameServer, nameServer2, domainName)
   if ipAddress ~= '0.0.0.0' and netmask ~= '0.0.0.0' then
-    _G.logger:fine("New EtherNet/IP interface config:")
-    _G.logger:finer("IP Address / NetMask = " .. tostring(ipAddress) .. ' / ' .. tostring(netmask))
+    _G.logger:fine("New EtherNet/IP interface config: " .. ipAddress)
+--    _G.logger:finer("IP Address / NetMask = " .. tostring(ipAddress) .. ' / ' .. tostring(netmask))
     fieldbus_Model.parameters.etherNetIP.ipAddress = ipAddress
     fieldbus_Model.parameters.etherNetIP.netmask = netmask
-    _G.logger:finer("Gateway = " .. tostring(gateway))
+--    _G.logger:finer("Gateway = " .. tostring(gateway))
     fieldbus_Model.parameters.etherNetIP.gateway = gateway
     if nameServer and nameServer2 then
-      _G.logger:finer("Nameserver 1 / 2 = " .. tostring(nameServer) .. ' / ' .. tostring(nameServer2))
+--      _G.logger:finer("Nameserver 1 / 2 = " .. tostring(nameServer) .. ' / ' .. tostring(nameServer2))
       fieldbus_Model.parameters.etherNetIP.nameServer = nameServer
       fieldbus_Model.parameters.etherNetIP.nameServer2 = nameServer2
     else
       if nameServer then
-        _G.logger:finer("Nameserver 1 = " .. tostring(nameServer))
+--        _G.logger:finer("Nameserver 1 = " .. tostring(nameServer))
         fieldbus_Model.parameters.etherNetIP.nameServer = nameServer
       end
       if nameServer2 then
-        _G.logger:finer("Nameserver 2 = " .. tostring(nameServer2))
+--        _G.logger:finer("Nameserver 2 = " .. tostring(nameServer2))
         fieldbus_Model.parameters.etherNetIP.nameServer2 = nameServer2
       end
     end
     if domainName then
-      _G.logger:finer("DomainName = " .. tostring(domainName))
+--      _G.logger:finer("DomainName = " .. tostring(domainName))
       fieldbus_Model.parameters.etherNetIP.domainName = domainName
     end
-  else
+  elseif not fieldbus_Model.parameters.etherNetIP.addressingMode == 'STATIC' then
     _G.logger:warning("IP Address / NetMask = " .. tostring(ipAddress) .. ' / ' .. tostring(netmask))
   end
+  fieldbus_Model.parameters.etherNetIP.macAddress = FieldBus.Config.EtherNetIP.getMACAddress()
+  if nil == fieldbus_Model.parameters.etherNetIP.macAddress then
+    _G.logger:warning("ENIP: FieldBus.Config.EtherNetIP.getMACAddress returned NIL!!!")
+    fieldbus_Model.parameters.etherNetIP.macAddress = ''
+  end
+  getInfo()
+  getStatus()
 end
 
 -- Function to react on FieldbusStoreRequest
 ---@param storageHandle FieldBus.StorageRequest Object containing the data to be saved or loaded
 local function handleOnEtherNetIPFieldbusStorageRequest(storageHandle)
-  local operation = FieldBus.StorageRequest.getOperation(storageHandle)
-  _G.logger:fine('StorageRequest operation = ' .. tostring(operation))
+  local storageOperation = FieldBus.StorageRequest.getOperation(storageHandle)
+  --_G.logger:fine("ENIP: onFieldbusStorageRequest event received, operation: " .. storageOperation)
   local dataToStore = FieldBus.StorageRequest.getData(storageHandle)
+  local dataFromFile = nil
   local storageResult = false
+  if storageOperation == "SAVE" then --FieldBus.StorageRequest.StorageOperation.Save
+    -- store in a file
+    local handle = File.open(fieldbus_Model.parameters.etherNetIP.storageRequestDataPath, 'wb')
+    if handle then
+      File.write(handle, dataToStore)
+      File.close(handle)
+      storageResult = true
+    else
+      _G.logger:severe(string.format("Failed to open file for saving of storage data!"))
+    end
+  end
   if storageOperation == "LOAD" then --FieldBus.StorageRequest.StorageOperation.Load
-    -- load from a file
-    local file = File.open(fieldbusStorageFile, 'rb')
-    if file then
-      local dataLoaded = File.read(file)
-      File.close(file)
-      storageResult = FieldBus.StorageRequest.setData(storageHandle, dataLoaded)
+  -- load from a file
+    local handle = File.open(fieldbus_Model.parameters.etherNetIP.storageRequestDataPath, 'rb')
+    if handle then
+      dataFromFile = File.read(handle)
+      File.close(handle)
+      storageResult = FieldBus.StorageRequest.setData(storageHandle, dataFromFile)
       if storageResult == false then
         _G.logger:severe(string.format("Setting data at storage request failed"))
       end
     else
       _G.logger:severe(string.format("Failed to open file to load storage data from!"))
       storageResult = false
-    end
-  elseif storageOperation == "SAVE" then --FieldBus.StorageRequest.StorageOperation.Save
-    -- store in a file
-    local file = File.open(fieldbusStorageFile, 'wb')
-    if file then
-      storageResult = File.write(file, dataToStore)
-      File.close(file)
-    else
-      _G.logger:severe(string.format("Failed to open file for saving of storage data!"))
     end
   end
   FieldBus.StorageRequest.notifyResult(storageHandle, storageResult)
@@ -529,20 +597,6 @@ local function handleOnControlBitsOutChanged(ctrlBits)
   Script.notifyEvent("Fieldbus_OnNewStatusControlBitsOutTable", fieldbus_Model.boolControlBitsOut)
 end
 
---- Function to get various information about the fieldbus, its componentes and internals.
-local function getInfo()
-  fieldbus_Model.info = FieldBus.getInfo(fieldbus_Model.handle)
-  Script.notifyEvent("Fieldbus_OnNewStatusFieldbusInfo", fieldbus_Model.helperFuncs.jsonLine2Table(fieldbus_Model.info))
-end
-fieldbus_Model.getInfo = getInfo
-
---- Function to get status information about the fieldbus.
-local function getStatus()
-  fieldbus_Model.currentStatus = FieldBus.getStatus(fieldbus_Model.handle)
-  Script.notifyEvent("Fieldbus_OnNewStatusFieldbusStatus", fieldbus_Model.currentStatus)
-end
-fieldbus_Model.getStatus = getStatus
-
 --TODO
 local function deregisterFieldbusEvents()
   if fieldbus_Model.handle then
@@ -565,14 +619,18 @@ local function handleOnStatusChanged(status)
   fieldbus_Model.currentStatus = status
   Script.notifyEvent("Fieldbus_OnNewStatusFieldbusStatus", fieldbus_Model.currentStatus)
   getInfo()
-
   if fieldbus_Model.currentStatus == 'CLOSED' then
     fieldbus_Model.opened = false
     deregisterFieldbusEvents()
     Script.releaseObject(fieldbus_Model.handle)
     fieldbus_Model.handle = nil
     collectgarbage()
-  elseif status == 'OPENED' or status == 'ONLINE' then
+  elseif status == 'OPENED' then
+    fieldbus_Model.opened = true
+    if fieldbus_Model.fbMode ~= "ProfinetIO" then
+      CSK_Fieldbus.setEtherNetIPConfig()
+    end
+  elseif status == 'ONLINE' then
     fieldbus_Model.opened = true
   elseif status == 'OFFLINE' or status == 'ERROR' then
     fieldbus_Model.opened = false
@@ -588,8 +646,8 @@ local function create()
       if fieldbus_Model.handle then
         FieldBus.setMode(fieldbus_Model.handle, fieldbus_Model.parameters.transmissionMode)
         _G.logger:fine("Successfully created Fieldbus handle.")
-        --getInfo()
-        --getStatus()
+        getInfo()
+        getStatus()
 
         deregisterFieldbusEvents()
         FieldBus.register(fieldbus_Model.handle, 'OnStatusChanged', handleOnStatusChanged)
@@ -599,6 +657,7 @@ local function create()
           Script.register('FieldBus.Config.EtherNetIP.OnFieldbusStorageRequest', handleOnEtherNetIPFieldbusStorageRequest)
           Script.register('FieldBus.Config.EtherNetIP.OnAddressingModeChanged', handleOnAddressingModeChanged)
           Script.register('FieldBus.Config.EtherNetIP.OnInterfaceConfigChanged', handleOnEthernetIPInterfaceConfigChanged)
+          setEtherNetIPConfig()
 
         elseif fieldbus_Model.fbMode == 'ProfinetIO' then
           Script.register('FieldBus.Config.ProfinetIO.OnFieldbusStorageRequest', handleOnProfinetIOFieldbusStorageRequest)
@@ -611,7 +670,6 @@ local function create()
       end
     else
       _G.logger:fine("Handle already exists.")
-      Script.notifyEvent("Fieldbus_OnNewStatusFieldbusInfo", fieldbus_Model.helperFuncs.jsonLine2Table(fieldbus_Model.info))
     end
   end
 end

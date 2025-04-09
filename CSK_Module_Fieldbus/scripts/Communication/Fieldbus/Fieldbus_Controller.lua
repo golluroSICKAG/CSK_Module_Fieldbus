@@ -49,7 +49,6 @@ Script.serveEvent('CSK_Fieldbus.OnNewStatusFieldbusInfo', 'Fieldbus_OnNewStatusF
 Script.serveEvent('CSK_Fieldbus.OnNewStatusCreateMode', 'Fieldbus_OnNewStatusCreateMode')
 Script.serveEvent('CSK_Fieldbus.OnNewStatusExplicitModeActive', 'Fieldbus_OnNewStatusExplicitModeActive')
 
-Script.serveEvent('CSK_Fieldbus.OnNewStatusFieldbusMode', 'Fieldbus_OnNewStatusFieldbusMode')
 Script.serveEvent('CSK_Fieldbus.OnNewStatusTransmissionMode', 'Fieldbus_OnNewStatusTransmissionMode')
 
 Script.serveEvent('CSK_Fieldbus.OnNewStatusControlBitsIn', 'Fieldbus_OnNewStatusControlBitsIn')
@@ -229,7 +228,6 @@ local function handleOnExpiredTmrFieldbus()
     Script.notifyEvent("Fieldbus_OnNewStatusCreateMode", fieldbus_Model.parameters.createMode)
     --checkExplicitMode()
 
-
     Script.notifyEvent("Fieldbus_OnNewStatusTransmissionMode", fieldbus_Model.parameters.transmissionMode)
 
     if fieldbus_Model.fbMode == 'EtherNetIP' then
@@ -240,9 +238,7 @@ local function handleOnExpiredTmrFieldbus()
       Script.notifyEvent("Fieldbus_OnNewStatusEtherNetIPNameServer", fieldbus_Model.parameters.etherNetIP.nameServer)
       Script.notifyEvent("Fieldbus_OnNewStatusEtherNetIPNameServer2", fieldbus_Model.parameters.etherNetIP.nameServer2)
       Script.notifyEvent("Fieldbus_OnNewStatusEtherNetIPDomainName", fieldbus_Model.parameters.etherNetIP.domainName)
-      if fieldbus_Model.parameters.etherNetIP.macAddress then
-        Script.notifyEvent("Fieldbus_OnNewStatusEtherNetIPMACAddress", fieldbus_Model.parameters.etherNetIP.macAddress)
-      end
+      Script.notifyEvent("Fieldbus_OnNewStatusEtherNetIPMACAddress", fieldbus_Model.parameters.etherNetIP.macAddress)
 
     elseif fieldbus_Model.fbMode == 'ProfinetIO' then
       Script.notifyEvent("Fieldbus_OnNewStatusProfinetIODeviceName", fieldbus_Model.parameters.profinetIO.deviceName)
@@ -294,6 +290,8 @@ local function restartDevice()
   if CSK_PersistentData then
     CSK_Fieldbus.sendParameters()
   end
+  fieldbus_Model.info = "Rebooting the device NOW! Reason: 'Change fieldbus protocol.'"
+  Script.notifyEvent("Fieldbus_OnNewStatusFieldbusInfo", fieldbus_Model.info)
   Engine.reboot('Change fieldbus protocol.')
 end
 
@@ -332,6 +330,8 @@ local function setTransmissionMode(mode)
   else
     _G.logger:info("Transmission mode only configurable if 'create mode' is 'EXPLICIT_OPEN'.")
     Script.notifyEvent("Fieldbus_OnNewStatusTransmissionMode", fieldbus_Model.parameters.transmissionMode)
+    fieldbus_Model.info = "Transmission mode only configurable if 'create mode' is 'EXPLICIT_OPEN'."
+    Script.notifyEvent("Fieldbus_OnNewStatusFieldbusInfo", fieldbus_Model.info)
   end
 end
 Script.serveFunction('CSK_Fieldbus.setTransmissionMode', setTransmissionMode)
@@ -344,8 +344,7 @@ local function openCommunication()
   else
     _G.logger:fine("Connection already active.")
   end
-  Script.notifyEvent("Fieldbus_OnNewStatusFieldbusInfo", fieldbus_Model.helperFuncs.jsonLine2Table(fieldbus_Model.info))
-  return success
+  return success 
 end
 Script.serveFunction('CSK_Fieldbus.openCommunication', openCommunication)
 
@@ -393,7 +392,7 @@ local function setSpecificControlBitIn(values)
     fieldbus_Model.boolControlBitsToWrite[pos+1] = value
     fieldbus_Model.controlBitsToWrite = fieldbus_Model.helperFuncs.toNumber(fieldbus_Model.boolControlBitsToWrite)
     Script.notifyEvent("Fieldbus_OnNewStatusControlBitsInToWrite", fieldbus_Model.controlBitsToWrite)
-    _G.logger:severe('fieldbus_Model.controlBitsToWrite') --Is this needed?
+    --print(fieldbus_Model.controlBitsToWrite)
   end
 end
 Script.serveFunction('CSK_Fieldbus.setSpecificControlBitIn', setSpecificControlBitIn)
@@ -416,7 +415,7 @@ local function setSpecificBitMaskBit(values)
     fieldbus_Model.boolBitMask[pos+1] = value
     fieldbus_Model.bitMask = fieldbus_Model.helperFuncs.toNumber(fieldbus_Model.boolBitMask)
     Script.notifyEvent("Fieldbus_OnNewStatusBitMask", fieldbus_Model.bitMask)
-    _G.logger:severe('fieldbus_Model.bitMask') --Is this needed?
+    --print(fieldbus_Model.bitMask)
   end
 end
 Script.serveFunction('CSK_Fieldbus.setSpecificBitMaskBit', setSpecificBitMaskBit)
@@ -426,52 +425,117 @@ local function writeControlBitsInViaUI()
 end
 Script.serveFunction('CSK_Fieldbus.writeControlBitsInViaUI', writeControlBitsInViaUI)
 
--- EtherNet/IP relevant
 local function setAddressingMode(mode)
-  _G.logger:fine(nameOfModule .. ": Preset Addressing mode to: " .. tostring(mode))
-  local suc = FieldBus.Config.EtherNetIP.setAddressingMode(mode)
-  if suc then
-    fieldbus_Model.parameters.etherNetIP.addressingMode = FieldBus.Config.EtherNetIP.getAddressingMode()
-    if fieldbus_Model.parameters.etherNetIP.addressingMode == mode then
-      Script.notifyEvent("Fieldbus_OnNewStatusEtherNetIPAddressingMode", fieldbus_Model.parameters.etherNetIP.addressingMode)
-    else
-      _G.logger:severe(nameOfModule .. ": Set Addressing mode error:" .. tostring(mode))
-    end
+  if FieldBus.Config.EtherNetIP.setAddressingMode(mode) then
+    _G.logger:fine(string.format("ENIP: Setting addressing mode to '%s' succeeded", mode))
+  else
+    _G.logger:severe(string.format("ENIP: Setting addressing mode to '%s' failed", mode))
   end
+  fieldbus_Model.parameters.etherNetIP.addressingMode = mode
+  Script.notifyEvent("Fieldbus_OnNewStatusEtherNetIPAddressingMode", fieldbus_Model.parameters.etherNetIP.addressingMode)
+  fieldbus_Model.getInfo()
 end
 Script.serveFunction('CSK_Fieldbus.setAddressingMode', setAddressingMode)
 
 local function setEtherNetIPIP(ip)
-  _G.logger:fine(nameOfModule .. ": Preset EtherNet/IP IP to: " .. tostring(ip))
-  fieldbus_Model.parameters.etherNetIP.ipAddress = ip
+  if ip ~= "0.0.0.0" then
+    -- Convert IPs and netmask to numbers
+    local a, b, c, d = ip:match("(%d+)%.(%d+)%.(%d+)%.(%d+)")
+    local ipNum = tonumber(a) * 256^3 + tonumber(b) * 256^2 + tonumber(c) * 256 + tonumber(d)
+    a, b, c, d = fieldbus_Model.parameters.etherNetIP.netmask:match("(%d+)%.(%d+)%.(%d+)%.(%d+)")
+    local nmNum = tonumber(a) * 256^3 + tonumber(b) * 256^2 + tonumber(c) * 256 + tonumber(d)
+    a, b, c, d = fieldbus_Model.parameters.etherNetIP.gateway:match("(%d+)%.(%d+)%.(%d+)%.(%d+)")
+    local gwNum = tonumber(a) * 256^3 + tonumber(b) * 256^2 + tonumber(c) * 256 + tonumber(d)
+
+    -- Perform bitwise AND between IP address and netmask to get the network address
+    local networkAddress = ipNum & nmNum
+    local gwNetworkAddress = gwNum & nmNum
+
+    -- Check if IP address and gateway are in the same network
+    if networkAddress == gwNetworkAddress then
+      _G.logger:fine(nameOfModule .. ": Preset EtherNet/IP IP to: " .. tostring(ip))
+    else
+      _G.logger:fine(nameOfModule .. ": Store old valid EtherNet/IP IP address since current preset IP address is out of range with Gw address.")
+      fieldbus_Model.parameters.etherNetIP.ipAddress2 = fieldbus_Model.parameters.etherNetIP.ipAddress
+    end
+    fieldbus_Model.parameters.etherNetIP.ipAddress = ip
+    Script.notifyEvent("Fieldbus_OnNewStatusEtherNetIPIPAddress", fieldbus_Model.parameters.etherNetIP.ipAddress)
+else
+    _G.logger:warning(nameOfModule .. ": Can't set EtherNet/IP IP address to '0.0.0.0'")
+    fieldbus_Model.info ="Can't set EtherNet/IP IP to '0.0.0.0'"
+    Script.notifyEvent("Fieldbus_OnNewStatusFieldbusInfo", fieldbus_Model.info)
+  end
   Script.notifyEvent("Fieldbus_OnNewStatusEtherNetIPIPAddress", fieldbus_Model.parameters.etherNetIP.ipAddress)
 end
 Script.serveFunction('CSK_Fieldbus.setEtherNetIPIP', setEtherNetIPIP)
 
 local function setEtherNetIPSubnetMask(netmask)
-  _G.logger:fine(nameOfModule .. ": Preset EtherNet/IP subnet mask: " .. tostring(netmask))
-  fieldbus_Model.parameters.etherNetIP.netmask = netmask
+  if netmask ~= "0.0.0.0" then
+    -- Convert IPs and netmask to numbers
+    local a, b, c, d = fieldbus_Model.parameters.etherNetIP.ipAddress:match("(%d+)%.(%d+)%.(%d+)%.(%d+)")
+    local ipNum = tonumber(a) * 256^3 + tonumber(b) * 256^2 + tonumber(c) * 256 + tonumber(d)
+    a, b, c, d = netmask:match("(%d+)%.(%d+)%.(%d+)%.(%d+)")
+    local nmNum = tonumber(a) * 256^3 + tonumber(b) * 256^2 + tonumber(c) * 256 + tonumber(d)
+    a, b, c, d = fieldbus_Model.parameters.etherNetIP.gateway:match("(%d+)%.(%d+)%.(%d+)%.(%d+)")
+    local gwNum = tonumber(a) * 256^3 + tonumber(b) * 256^2 + tonumber(c) * 256 + tonumber(d)
+
+    -- Perform bitwise AND between IP address and netmask to get the network address
+    local networkAddress = ipNum & nmNum
+    local gwNetworkAddress = gwNum & nmNum
+
+    -- Check if IP address and gateway are in the same network
+    if networkAddress == gwNetworkAddress then
+      _G.logger:fine(nameOfModule .. ": Preset EtherNet/IP Netmask: " .. tostring(netmask))
+    else
+      _G.logger:fine(nameOfModule .. ": Store old valid EtherNet/IP Netmask since current preset IP address is out of range with Gw address.")
+      fieldbus_Model.parameters.etherNetIP.netmask2 = fieldbus_Model.parameters.etherNetIP.netmask
+    end
+    fieldbus_Model.parameters.etherNetIP.netmask = netmask
+    Script.notifyEvent("Fieldbus_OnNewStatusEtherNetIPSubnetMask", fieldbus_Model.parameters.etherNetIP.netmask)
+    else
+    _G.logger:warning(nameOfModule .. ": Can't set EtherNet/IP Netmask to '0.0.0.0'")
+    fieldbus_Model.info ="Can't set EtherNet/IP Netmask to '0.0.0.0'"
+    Script.notifyEvent("Fieldbus_OnNewStatusFieldbusInfo", fieldbus_Model.info)
+  end
   Script.notifyEvent("Fieldbus_OnNewStatusEtherNetIPSubnetMask", fieldbus_Model.parameters.etherNetIP.netmask)
 end
 Script.serveFunction('CSK_Fieldbus.setEtherNetIPSubnetMask', setEtherNetIPSubnetMask)
 
 local function setEtherNetIPGateway(gateway)
-  _G.logger:fine(nameOfModule .. ": Preset EtherNet/IP gateway: " .. tostring(gateway))
-  fieldbus_Model.parameters.etherNetIP.gateway = gateway
-  Script.notifyEvent("Fieldbus_OnNewStatusEtherNetIPGateway", fieldbus_Model.parameters.etherNetIP.gateway)
+    -- Convert IPs and netmask to numbers
+    local a, b, c, d = fieldbus_Model.parameters.etherNetIP.ipAddress:match("(%d+)%.(%d+)%.(%d+)%.(%d+)")
+    local ipNum = tonumber(a) * 256^3 + tonumber(b) * 256^2 + tonumber(c) * 256 + tonumber(d)
+    a, b, c, d = fieldbus_Model.parameters.etherNetIP.netmask:match("(%d+)%.(%d+)%.(%d+)%.(%d+)")
+    local nmNum = tonumber(a) * 256^3 + tonumber(b) * 256^2 + tonumber(c) * 256 + tonumber(d)
+    a, b, c, d = gateway:match("(%d+)%.(%d+)%.(%d+)%.(%d+)")
+    local gwNum = tonumber(a) * 256^3 + tonumber(b) * 256^2 + tonumber(c) * 256 + tonumber(d)
+
+    -- Perform bitwise AND between IP address and netmask to get the network address
+    local networkAddress = ipNum & nmNum
+    local gwNetworkAddress = gwNum & nmNum
+
+    -- Check if IP address and gateway are in the same network
+    if networkAddress == gwNetworkAddress then
+      _G.logger:fine(nameOfModule .. ": Preset EtherNet/IP GW address: " .. tostring(gateway))
+    else
+      _G.logger:fine(nameOfModule .. ": Store old valid EtherNet/IP GW address since current preset IP address is out of range with Gw address.")
+      fieldbus_Model.parameters.etherNetIP.gateway2 = fieldbus_Model.parameters.etherNetIP.gateway
+    end
+    fieldbus_Model.parameters.etherNetIP.gateway = gateway
+    Script.notifyEvent("Fieldbus_OnNewStatusEtherNetIPGateway", fieldbus_Model.parameters.etherNetIP.gateway)
 end
 Script.serveFunction('CSK_Fieldbus.setEtherNetIPGateway', setEtherNetIPGateway)
 
 local function setEtherNetIPNameServer(nameServer)
-  _G.logger:fine(nameOfModule .. ": Preset EtherNet/IP primary name server: " .. tostring(nameServer))
+  _G.logger:fine(nameOfModule .. ": Preset EtherNet/IP Primary name server: " .. tostring(nameServer))
   fieldbus_Model.parameters.etherNetIP.nameServer = nameServer
   Script.notifyEvent("Fieldbus_OnNewStatusEtherNetIPNameServer", fieldbus_Model.parameters.etherNetIP.nameServer)
 end
 Script.serveFunction('CSK_Fieldbus.setEtherNetIPNameServer', setEtherNetIPNameServer)
 
-local function setEtherNetIPNameServer2(nameServer)
-  _G.logger:fine(nameOfModule .. ": Preset EtherNet/IP secondary name server: " .. tostring(nameServer))
-  fieldbus_Model.parameters.etherNetIP.nameServer2 = nameServer
+local function setEtherNetIPNameServer2(nameServer2)
+  _G.logger:fine(nameOfModule .. ": Preset EtherNet/IP Secondary name server: " .. tostring(nameServer2))
+  fieldbus_Model.parameters.etherNetIP.nameServer2 = nameServer2
   Script.notifyEvent("Fieldbus_OnNewStatusEtherNetIPNameServer2", fieldbus_Model.parameters.etherNetIP.nameServer2)
 end
 Script.serveFunction('CSK_Fieldbus.setEtherNetIPNameServer2', setEtherNetIPNameServer2)
@@ -490,7 +554,7 @@ end
 Script.serveFunction('CSK_Fieldbus.getEtherNetIPConfig', getEtherNetIPConfig)
 
 local function setEtherNetIPConfig()
-  _G.logger:fine(nameOfModule .. ": Activate preset EtherNet/IP configuration")
+  _G.logger:fine(nameOfModule .. ": Activate preset EtherNet/IP configuration.")
   fieldbus_Model.setEtherNetIPConfig()
 end
 Script.serveFunction('CSK_Fieldbus.setEtherNetIPConfig', setEtherNetIPConfig)
