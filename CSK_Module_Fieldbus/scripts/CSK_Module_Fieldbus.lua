@@ -35,7 +35,7 @@ _G.availableAPIs = require('Communication/Fieldbus/helper/checkAPIs') -- can be 
 _G.logger = Log.SharedLogger.create('ModuleLogger')
 _G.logHandle = Log.Handler.create()
 _G.logHandle:attachToSharedLogger('ModuleLogger')
-_G.logHandle:setConsoleSinkEnabled(true) --> Set to TRUE if CSK_Logger module is not used
+_G.logHandle:setConsoleSinkEnabled(false) --> Set to TRUE if CSK_Logger module is not used
 _G.logHandle:setLevel("ALL")
 _G.logHandle:applyConfig()
 -----------------------------------------------------------
@@ -43,6 +43,12 @@ _G.logHandle:applyConfig()
 -- Loading script regarding Fieldbus_Model
 -- Check this script regarding Fieldbus_Model parameters and functions
 _G.fieldbus_Model = require('Communication/Fieldbus/Fieldbus_Model')
+
+require('Communication/Fieldbus/FlowConfig/Fieldbus_FlowConfig')
+
+if _G.availableAPIs.default == false or _G.availableAPIs.specific == false then
+  _G.logger:warning("CSK_Fieldbus: Relevant CROWN(s) not available on device. Module is not supported...")
+end
 
 --**************************************************************************
 --**********************End Global Scope ***********************************

@@ -1,6 +1,6 @@
 # CSK_Module_Fieldbus
 
-Module to provide fieldbus communication functionality.  
+Module to provide field bus access. It is intended for field bus slave devices and allows them exchange data with a PLC. It currently only implements PROFINET and EtherNet/IP. 
 
 ![](./docu/media/UI_Screenshot.png)
 
@@ -12,10 +12,11 @@ For further information check out the [documentation](https://raw.githack.com/go
 ## Information
 
 Tested on:
-|Device|Firmware|Module version
+|Device|Firmware|Module version|
 |--|--|--|
+|SIM 2x00|V1.8.0|V1.0.0|
+|SIM 2x00|V1.8.0|V0.1.1|
 |SIM 2x00|V1.5.0|V0.1.0|
-|SIM 2x00|V1.7.0|V1.0.0|
 
 This module is part of the SICK AppSpace Coding Starter Kit developing approach.  
 It is programmed in an object-oriented way. Some of the modules use kind of "classes" in Lua to make it possible to reuse code / classes in other projects.  

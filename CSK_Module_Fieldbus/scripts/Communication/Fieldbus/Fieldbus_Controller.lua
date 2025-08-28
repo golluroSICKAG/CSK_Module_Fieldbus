@@ -15,11 +15,6 @@ local tmrFieldbus = Timer.create()
 tmrFieldbus:setExpirationTime(300)
 tmrFieldbus:setPeriodic(false)
 
--- Timer to wait for other modules to be ready to register to their events
-local tmrWaitForSetupOfOtherModules = Timer.create()
-tmrWaitForSetupOfOtherModules:setExpirationTime(1000)
-tmrWaitForSetupOfOtherModules:setPeriodic(false)
-
 -- Reference to global handle
 local fieldbus_Model
 
@@ -31,6 +26,11 @@ Script.serveEvent('CSK_Fieldbus.OnNewData_NAME', 'Fieldbus_OnNewData_NAME')
 
 -- Real events
 --------------------------------------------------
+
+Script.serveEvent('CSK_Fieldbus.OnNewStatusModuleVersion', 'Fieldbus_OnNewStatusModuleVersion')
+Script.serveEvent('CSK_Fieldbus.OnNewStatusCSKStyle', 'Fieldbus_OnNewStatusCSKStyle')
+Script.serveEvent('CSK_Fieldbus.OnNewStatusModuleIsActive', 'Fieldbus_OnNewStatusModuleIsActive')
+
 Script.serveEvent('CSK_Fieldbus.OnNewStatusLogMessage', 'Fieldbus_OnNewStatusLogMessage')
 Script.serveEvent('CSK_Fieldbus.OnNewStatusRestartInfo', 'Fieldbus_OnNewStatusRestartInfo')
 
@@ -103,6 +103,7 @@ Script.serveEvent("CSK_Fieldbus.OnPersistentDataModuleAvailable", "Fieldbus_OnPe
 Script.serveEvent("CSK_Fieldbus.OnNewParameterName", "Fieldbus_OnNewParameterName")
 Script.serveEvent("CSK_Fieldbus.OnDataLoadedOnReboot", "Fieldbus_OnDataLoadedOnReboot")
 
+Script.serveEvent('CSK_Fieldbus.OnNewStatusFlowConfigPriority', 'Fieldbus_OnNewStatusFlowConfigPriority')
 Script.serveEvent('CSK_Fieldbus.OnUserLevelOperatorActive', 'Fieldbus_OnUserLevelOperatorActive')
 Script.serveEvent('CSK_Fieldbus.OnUserLevelMaintenanceActive', 'Fieldbus_OnUserLevelMaintenanceActive')
 Script.serveEvent('CSK_Fieldbus.OnUserLevelServiceActive', 'Fieldbus_OnUserLevelServiceActive')
@@ -169,21 +170,14 @@ local function updateUserLevel()
   end
 end
 
---TODO not needed?
---[[
-local function checkExplicitMode()
-  if fieldbus_Model.parameters.createMode == 'EXPLICIT_OPEN' then
-    Script.notifyEvent("Fieldbus_OnNewStatusExplicitModeActive", true)
-  else
-    Script.notifyEvent("Fieldbus_OnNewStatusExplicitModeActive", false)
-  end
-end
-]]
-
 --- Function to send all relevant values to UI on resume
 local function handleOnExpiredTmrFieldbus()
 
   updateUserLevel()
+
+  Script.notifyEvent("Fieldbus_OnNewStatusModuleVersion", 'v' .. fieldbus_Model.version)
+  Script.notifyEvent("Fieldbus_OnNewStatusCSKStyle", fieldbus_Model.styleForUI)
+  Script.notifyEvent("Fieldbus_OnNewStatusModuleIsActive", _G.availableAPIs.default and _G.availableAPIs.specific)
 
   fieldbus_Model.boolControlBitsToWrite = fieldbus_Model.boolControlBitsOut
 
@@ -226,7 +220,6 @@ local function handleOnExpiredTmrFieldbus()
     Script.notifyEvent("Fieldbus_OnNewStatusFieldbusFeatureActive", true)
 
     Script.notifyEvent("Fieldbus_OnNewStatusCreateMode", fieldbus_Model.parameters.createMode)
-    --checkExplicitMode()
 
     Script.notifyEvent("Fieldbus_OnNewStatusTransmissionMode", fieldbus_Model.parameters.transmissionMode)
 
@@ -257,6 +250,7 @@ local function handleOnExpiredTmrFieldbus()
     end
   end
 
+  Script.notifyEvent("Fieldbus_OnNewStatusFlowConfigPriority", fieldbus_Model.parameters.flowConfigPriority)
   Script.notifyEvent("Fieldbus_OnNewStatusLoadParameterOnReboot", fieldbus_Model.parameterLoadOnReboot)
   Script.notifyEvent("Fieldbus_OnPersistentDataModuleAvailable", fieldbus_Model.persistentModuleAvailable)
   Script.notifyEvent("Fieldbus_OnNewParameterName", fieldbus_Model.parametersName)
@@ -290,6 +284,9 @@ local function restartDevice()
   if CSK_PersistentData then
     CSK_Fieldbus.sendParameters()
   end
+
+  fieldbus_Model.info = "Rebooting the device NOW! Reason: 'Change fieldbus protocol.'"
+  Script.notifyEvent("Fieldbus_OnNewStatusFieldbusInfo", fieldbus_Model.info)
   Engine.reboot('Change fieldbus protocol.')
 end
 
@@ -318,7 +315,6 @@ local function setCreateMode(mode)
     _G.logger:info("Connection needs to be closed to configure the create mode.")
     Script.notifyEvent("Fieldbus_OnNewStatusCreateMode", fieldbus_Model.parameters.createMode)
   end
-  --checkExplicitMode()
 end
 Script.serveFunction('CSK_Fieldbus.setCreateMode', setCreateMode)
 
@@ -328,6 +324,9 @@ local function setTransmissionMode(mode)
   else
     _G.logger:info("Transmission mode only configurable if 'create mode' is 'EXPLICIT_OPEN'.")
     Script.notifyEvent("Fieldbus_OnNewStatusTransmissionMode", fieldbus_Model.parameters.transmissionMode)
+
+    fieldbus_Model.info = "Transmission mode only configurable if 'create mode' is 'EXPLICIT_OPEN'."
+    Script.notifyEvent("Fieldbus_OnNewStatusFieldbusInfo", fieldbus_Model.info)
   end
 end
 Script.serveFunction('CSK_Fieldbus.setTransmissionMode', setTransmissionMode)
@@ -340,7 +339,7 @@ local function openCommunication()
   else
     _G.logger:fine("Connection already active.")
   end
-  return success 
+  return success
 end
 Script.serveFunction('CSK_Fieldbus.openCommunication', openCommunication)
 
@@ -388,7 +387,6 @@ local function setSpecificControlBitIn(values)
     fieldbus_Model.boolControlBitsToWrite[pos+1] = value
     fieldbus_Model.controlBitsToWrite = fieldbus_Model.helperFuncs.toNumber(fieldbus_Model.boolControlBitsToWrite)
     Script.notifyEvent("Fieldbus_OnNewStatusControlBitsInToWrite", fieldbus_Model.controlBitsToWrite)
-    --print(fieldbus_Model.controlBitsToWrite)
   end
 end
 Script.serveFunction('CSK_Fieldbus.setSpecificControlBitIn', setSpecificControlBitIn)
@@ -411,7 +409,6 @@ local function setSpecificBitMaskBit(values)
     fieldbus_Model.boolBitMask[pos+1] = value
     fieldbus_Model.bitMask = fieldbus_Model.helperFuncs.toNumber(fieldbus_Model.boolBitMask)
     Script.notifyEvent("Fieldbus_OnNewStatusBitMask", fieldbus_Model.bitMask)
-    --print(fieldbus_Model.bitMask)
   end
 end
 Script.serveFunction('CSK_Fieldbus.setSpecificBitMaskBit', setSpecificBitMaskBit)
@@ -423,44 +420,124 @@ Script.serveFunction('CSK_Fieldbus.writeControlBitsInViaUI', writeControlBitsInV
 
 -- EtherNet/IP relevant
 local function setAddressingMode(mode)
-  _G.logger:fine(nameOfModule .. ": Preset Addressing mode to: " .. tostring(mode))
+  if FieldBus.Config.EtherNetIP.setAddressingMode(mode) then
+    _G.logger:fine(string.format("ENIP: Setting addressing mode to '%s' succeeded", mode))
+  else
+    _G.logger:severe(string.format("ENIP: Setting addressing mode to '%s' failed", mode))
+  end
   fieldbus_Model.parameters.etherNetIP.addressingMode = mode
+  Script.notifyEvent("Fieldbus_OnNewStatusEtherNetIPAddressingMode", fieldbus_Model.parameters.etherNetIP.addressingMode)
+  fieldbus_Model.getInfo()
 end
 Script.serveFunction('CSK_Fieldbus.setAddressingMode', setAddressingMode)
 
 local function setEtherNetIPIP(ip)
-  _G.logger:fine(nameOfModule .. ": Preset EtherNet/IP IP to: " .. tostring(ip))
-  fieldbus_Model.parameters.etherNetIP.ipAddress = ip
+  if ip ~= "0.0.0.0" then
+    -- Convert IPs and netmask to numbers
+    local a, b, c, d = ip:match("(%d+)%.(%d+)%.(%d+)%.(%d+)")
+    local ipNum = tonumber(a) * 256^3 + tonumber(b) * 256^2 + tonumber(c) * 256 + tonumber(d)
+    a, b, c, d = fieldbus_Model.parameters.etherNetIP.netmask:match("(%d+)%.(%d+)%.(%d+)%.(%d+)")
+    local nmNum = tonumber(a) * 256^3 + tonumber(b) * 256^2 + tonumber(c) * 256 + tonumber(d)
+    a, b, c, d = fieldbus_Model.parameters.etherNetIP.gateway:match("(%d+)%.(%d+)%.(%d+)%.(%d+)")
+    local gwNum = tonumber(a) * 256^3 + tonumber(b) * 256^2 + tonumber(c) * 256 + tonumber(d)
+
+    -- Perform bitwise AND between IP address and netmask to get the network address
+    local networkAddress = ipNum & nmNum
+    local gwNetworkAddress = gwNum & nmNum
+
+    -- Check if IP address and gateway are in the same network
+    if networkAddress == gwNetworkAddress then
+      _G.logger:fine(nameOfModule .. ": Preset EtherNet/IP IP to: " .. tostring(ip))
+    else
+      _G.logger:fine(nameOfModule .. ": Store old valid EtherNet/IP IP address since current preset IP address is out of range with Gw address.")
+      fieldbus_Model.parameters.etherNetIP.ipAddress2 = fieldbus_Model.parameters.etherNetIP.ipAddress
+    end
+    fieldbus_Model.parameters.etherNetIP.ipAddress = ip
+    Script.notifyEvent("Fieldbus_OnNewStatusEtherNetIPIPAddress", fieldbus_Model.parameters.etherNetIP.ipAddress)
+  else
+    _G.logger:warning(nameOfModule .. ": Can't set EtherNet/IP IP address to '0.0.0.0'")
+    fieldbus_Model.info ="Can't set EtherNet/IP IP to '0.0.0.0'"
+    Script.notifyEvent("Fieldbus_OnNewStatusFieldbusInfo", fieldbus_Model.info)
+  end
+  Script.notifyEvent("Fieldbus_OnNewStatusEtherNetIPIPAddress", fieldbus_Model.parameters.etherNetIP.ipAddress)
 end
 Script.serveFunction('CSK_Fieldbus.setEtherNetIPIP', setEtherNetIPIP)
 
 local function setEtherNetIPSubnetMask(netmask)
-  _G.logger:fine(nameOfModule .. ": Preset EtherNet/IP subnet mask: " .. tostring(netmask))
-  fieldbus_Model.parameters.etherNetIP.netmask = netmask
+  if netmask ~= "0.0.0.0" then
+    -- Convert IPs and netmask to numbers
+    local a, b, c, d = fieldbus_Model.parameters.etherNetIP.ipAddress:match("(%d+)%.(%d+)%.(%d+)%.(%d+)")
+    local ipNum = tonumber(a) * 256^3 + tonumber(b) * 256^2 + tonumber(c) * 256 + tonumber(d)
+    a, b, c, d = netmask:match("(%d+)%.(%d+)%.(%d+)%.(%d+)")
+    local nmNum = tonumber(a) * 256^3 + tonumber(b) * 256^2 + tonumber(c) * 256 + tonumber(d)
+    a, b, c, d = fieldbus_Model.parameters.etherNetIP.gateway:match("(%d+)%.(%d+)%.(%d+)%.(%d+)")
+    local gwNum = tonumber(a) * 256^3 + tonumber(b) * 256^2 + tonumber(c) * 256 + tonumber(d)
+
+    -- Perform bitwise AND between IP address and netmask to get the network address
+    local networkAddress = ipNum & nmNum
+    local gwNetworkAddress = gwNum & nmNum
+
+    -- Check if IP address and gateway are in the same network
+    if networkAddress == gwNetworkAddress then
+      _G.logger:fine(nameOfModule .. ": Preset EtherNet/IP Netmask: " .. tostring(netmask))
+    else
+      _G.logger:fine(nameOfModule .. ": Store old valid EtherNet/IP Netmask since current preset IP address is out of range with Gw address.")
+      fieldbus_Model.parameters.etherNetIP.netmask2 = fieldbus_Model.parameters.etherNetIP.netmask -- TODO, never used?
+    end
+    fieldbus_Model.parameters.etherNetIP.netmask = netmask
+    Script.notifyEvent("Fieldbus_OnNewStatusEtherNetIPSubnetMask", fieldbus_Model.parameters.etherNetIP.netmask)
+  else
+    _G.logger:warning(nameOfModule .. ": Can't set EtherNet/IP Netmask to '0.0.0.0'")
+    fieldbus_Model.info ="Can't set EtherNet/IP Netmask to '0.0.0.0'"
+    Script.notifyEvent("Fieldbus_OnNewStatusFieldbusInfo", fieldbus_Model.info)
+  end
+  Script.notifyEvent("Fieldbus_OnNewStatusEtherNetIPSubnetMask", fieldbus_Model.parameters.etherNetIP.netmask)
 end
 Script.serveFunction('CSK_Fieldbus.setEtherNetIPSubnetMask', setEtherNetIPSubnetMask)
 
 local function setEtherNetIPGateway(gateway)
-  _G.logger:fine(nameOfModule .. ": Preset EtherNet/IP gateway: " .. tostring(gateway))
-  fieldbus_Model.parameters.etherNetIP.gateway = gateway
+    -- Convert IPs and netmask to numbers
+    local a, b, c, d = fieldbus_Model.parameters.etherNetIP.ipAddress:match("(%d+)%.(%d+)%.(%d+)%.(%d+)")
+    local ipNum = tonumber(a) * 256^3 + tonumber(b) * 256^2 + tonumber(c) * 256 + tonumber(d)
+    a, b, c, d = fieldbus_Model.parameters.etherNetIP.netmask:match("(%d+)%.(%d+)%.(%d+)%.(%d+)")
+    local nmNum = tonumber(a) * 256^3 + tonumber(b) * 256^2 + tonumber(c) * 256 + tonumber(d)
+    a, b, c, d = gateway:match("(%d+)%.(%d+)%.(%d+)%.(%d+)")
+    local gwNum = tonumber(a) * 256^3 + tonumber(b) * 256^2 + tonumber(c) * 256 + tonumber(d)
+
+    -- Perform bitwise AND between IP address and netmask to get the network address
+    local networkAddress = ipNum & nmNum
+    local gwNetworkAddress = gwNum & nmNum
+
+    -- Check if IP address and gateway are in the same network
+    if networkAddress == gwNetworkAddress then
+      _G.logger:fine(nameOfModule .. ": Preset EtherNet/IP GW address: " .. tostring(gateway))
+    else
+      _G.logger:fine(nameOfModule .. ": Store old valid EtherNet/IP GW address since current preset IP address is out of range with Gw address.")
+      fieldbus_Model.parameters.etherNetIP.gateway2 = fieldbus_Model.parameters.etherNetIP.gateway -- TODO, never used?
+    end
+    fieldbus_Model.parameters.etherNetIP.gateway = gateway
+    Script.notifyEvent("Fieldbus_OnNewStatusEtherNetIPGateway", fieldbus_Model.parameters.etherNetIP.gateway)
 end
 Script.serveFunction('CSK_Fieldbus.setEtherNetIPGateway', setEtherNetIPGateway)
 
 local function setEtherNetIPNameServer(nameServer)
-  _G.logger:fine(nameOfModule .. ": Preset EtherNet/IP primary name server: " .. tostring(nameServer))
+  _G.logger:fine(nameOfModule .. ": Preset EtherNet/IP Primary name server: " .. tostring(nameServer))
   fieldbus_Model.parameters.etherNetIP.nameServer = nameServer
+  Script.notifyEvent("Fieldbus_OnNewStatusEtherNetIPNameServer", fieldbus_Model.parameters.etherNetIP.nameServer)
 end
 Script.serveFunction('CSK_Fieldbus.setEtherNetIPNameServer', setEtherNetIPNameServer)
 
 local function setEtherNetIPNameServer2(nameServer)
   _G.logger:fine(nameOfModule .. ": Preset EtherNet/IP secondary name server: " .. tostring(nameServer))
   fieldbus_Model.parameters.etherNetIP.nameServer2 = nameServer
+  Script.notifyEvent("Fieldbus_OnNewStatusEtherNetIPNameServer2", fieldbus_Model.parameters.etherNetIP.nameServer2)
 end
 Script.serveFunction('CSK_Fieldbus.setEtherNetIPNameServer2', setEtherNetIPNameServer2)
 
 local function setEtherNetIPDomainName(domainName)
   _G.logger:fine(nameOfModule .. ": Preset EtherNet/IP domain name: " .. tostring(domainName))
   fieldbus_Model.parameters.etherNetIP.domainName = domainName
+  Script.notifyEvent("Fieldbus_OnNewStatusEtherNetIPDomainName", fieldbus_Model.parameters.etherNetIP.domainName)
 end
 Script.serveFunction('CSK_Fieldbus.setEtherNetIPDomainName', setEtherNetIPDomainName)
 
@@ -772,6 +849,34 @@ local function checkSelection(selection, pattern)
   return nil
 end
 
+local function selectDataTransmit(dataName)
+  for key, value in pairs(fieldbus_Model.parameters.dataNamesTransmit) do
+    if value == dataName then
+
+      _G.logger:fine(nameOfModule .. ": Selected data no." .. tostring(key))
+      fieldbus_Model.selectedDataTransmit = tostring(key)
+
+      --local tempName = fieldbus_Model.parameters.dataNamesTransmit[tonumber(key)]
+
+      fieldbus_Model.dataNameTransmit = value
+      fieldbus_Model.registerEventTransmit = fieldbus_Model.parameters.registeredEventsTransmit[value]
+      fieldbus_Model.convertDataTransmit = fieldbus_Model.parameters.convertDataTypesTransmit[value]
+      fieldbus_Model.bigEndianTransmit = fieldbus_Model.parameters.bigEndiansTransmit[value]
+      fieldbus_Model.dataTypeTransmit = fieldbus_Model.parameters.dataTypesTransmit[value]
+
+      Script.notifyEvent("Fieldbus_OnNewStatusDataNameTransmit", fieldbus_Model.dataNameTransmit)
+      Script.notifyEvent("Fieldbus_OnNewStatusRegisteredEventTransmit", fieldbus_Model.registerEventTransmit)
+      Script.notifyEvent("Fieldbus_OnNewStatusConvertDataTransmit", fieldbus_Model.convertDataTransmit)
+      Script.notifyEvent("Fieldbus_OnNewStatusBigEndianTransmit", fieldbus_Model.bigEndianTransmit)
+      Script.notifyEvent("Fieldbus_OnNewStatusDataTypeTransmit", fieldbus_Model.dataTypeTransmit)
+      return true
+    end
+  end
+  fieldbus_Model.selectedDataTransmit = ''
+  return false
+end
+Script.serveFunction('CSK_Fieldbus.selectDataTransmit', selectDataTransmit)
+
 local function selectDataTransmitViaUI(selection)
   local tempSelection = checkSelection(selection, '"DTC_IDTransmit":"')
   if tempSelection then
@@ -861,6 +966,21 @@ local function resetTransmitData()
 end
 Script.serveFunction('CSK_Fieldbus.resetTransmitData', resetTransmitData)
 
+local function getStatusModuleActive()
+  return _G.availableAPIs.default and _G.availableAPIs.specific
+end
+Script.serveFunction('CSK_Fieldbus.getStatusModuleActive', getStatusModuleActive)
+
+local function clearFlowConfigRelevantConfiguration()
+  fieldbus_Model.deregisterAllEvents()
+end
+Script.serveFunction('CSK_Fieldbus.clearFlowConfigRelevantConfiguration', clearFlowConfigRelevantConfiguration)
+
+local function getParameters()
+  return fieldbus_Model.helperFuncs.json.encode(fieldbus_Model.parameters)
+end
+Script.serveFunction('CSK_Fieldbus.getParameters', getParameters)
+
 -- *****************************************************************
 -- Following function can be adapted for CSK_PersistentData module usage
 -- *****************************************************************
@@ -871,12 +991,14 @@ local function setParameterName(name)
 end
 Script.serveFunction("CSK_Fieldbus.setParameterName", setParameterName)
 
-local function sendParameters()
+local function sendParameters(noDataSave)
   if fieldbus_Model.persistentModuleAvailable then
     CSK_PersistentData.addParameter(fieldbus_Model.helperFuncs.convertTable2Container(fieldbus_Model.parameters), fieldbus_Model.parametersName)
     CSK_PersistentData.setModuleParameterName(nameOfModule, fieldbus_Model.parametersName, fieldbus_Model.parameterLoadOnReboot)
     _G.logger:fine(nameOfModule .. ": Send Fieldbus parameters with name '" .. fieldbus_Model.parametersName .. "' to CSK_PersistentData module.")
-    CSK_PersistentData.saveData()
+    if not noDataSave then
+      CSK_PersistentData.saveData()
+    end
   else
     _G.logger:warning(nameOfModule .. ": CSK_PersistentData module not available.")
   end
@@ -890,27 +1012,24 @@ local function registerToEvents()
     fieldbus_Model.registerToEvent(fieldbus_Model.parameters.registeredEventsTransmit[value], key, value)
   end
 end
-Timer.register(tmrWaitForSetupOfOtherModules, 'OnExpired', registerToEvents)
 
 local function loadParameters(wait)
   if fieldbus_Model.persistentModuleAvailable then
     local data = CSK_PersistentData.getParameter(fieldbus_Model.parametersName)
     if data then
+      clearFlowConfigRelevantConfiguration()
+
       _G.logger:info(nameOfModule .. ": Loaded parameters from CSK_PersistentData module.")
       fieldbus_Model.parameters = fieldbus_Model.helperFuncs.convertContainer2Table(data)
 
       -- If something needs to be configured/activated with new loaded data, place this here
-      local fbMode = Parameters.get('FBmode')
+      local fbMode = Parameters.get('FBmode') -- TODO check with SIM2000STE
       if (fbMode == 0 and fieldbus_Model.fbMode ~= 'DISABLED') or (fbMode == 1 and fieldbus_Model.fbMode ~= 'ProfinetIO') or ( fbMode == 2 and fieldbus_Model.fbMode ~= 'EtherNetIP') then
         _G.logger:warning(nameOfModule .. ": Current fieldbus protocol of device differs from parameter setup. Please restart device.")
         return
       end
 
-      fieldbus_Model.deregisterAllEvents()
-
-      if not wait then
-        registerToEvents()
-      end
+      registerToEvents()
 
       fieldbus_Model.dataReceived = {}
       for key, value in ipairs(fieldbus_Model.parameters.dataNamesReceive) do
@@ -923,11 +1042,14 @@ local function loadParameters(wait)
       end
 
       CSK_Fieldbus.pageCalled()
+      return true
     else
       _G.logger:warning(nameOfModule .. ": Loading parameters from CSK_PersistentData module did not work.")
+      return false
     end
   else
     _G.logger:warning(nameOfModule .. ": CSK_PersistentData module not available.")
+    return false
   end
 end
 Script.serveFunction("CSK_Fieldbus.loadParameters", loadParameters)
@@ -935,36 +1057,57 @@ Script.serveFunction("CSK_Fieldbus.loadParameters", loadParameters)
 local function setLoadOnReboot(status)
   fieldbus_Model.parameterLoadOnReboot = status
   _G.logger:fine(nameOfModule .. ": Set new status to load setting on reboot: " .. tostring(status))
+  Script.notifyEvent("Fieldbus_OnNewStatusLoadParameterOnReboot", status)
 end
 Script.serveFunction("CSK_Fieldbus.setLoadOnReboot", setLoadOnReboot)
+
+local function setFlowConfigPriority(status)
+  fieldbus_Model.parameters.flowConfigPriority = status
+  _G.logger:fine(nameOfModule .. ": Set new status of FlowConfig priority: " .. tostring(status))
+  Script.notifyEvent("Fieldbus_OnNewStatusFlowConfigPriority", fieldbus_Model.parameters.flowConfigPriority)
+end
+Script.serveFunction('CSK_Fieldbus.setFlowConfigPriority', setFlowConfigPriority)
 
 --- Function to react on initial load of persistent parameters
 local function handleOnInitialDataLoaded()
 
-  if string.sub(CSK_PersistentData.getVersion(), 1, 1) == '1' then
+  if _G.availableAPIs.default and _G.availableAPIs.specific then
+    _G.logger:fine(nameOfModule .. ': Try to initially load parameter from CSK_PersistentData module.')
 
-    _G.logger:warning(nameOfModule .. ': CSK_PersistentData module is too old and will not work. Please update CSK_PersistentData module.')
+    if string.sub(CSK_PersistentData.getVersion(), 1, 1) == '1' then
 
-    fieldbus_Model.persistentModuleAvailable = false
-  else
+      _G.logger:warning(nameOfModule .. ': CSK_PersistentData module is too old and will not work. Please update CSK_PersistentData module.')
 
-    local parameterName, loadOnReboot = CSK_PersistentData.getModuleParameterName(nameOfModule)
-
-    if parameterName then
-      fieldbus_Model.parametersName = parameterName
-      fieldbus_Model.parameterLoadOnReboot = loadOnReboot
+      fieldbus_Model.persistentModuleAvailable = false
     else
-      fieldbus_Model.create()
-    end
 
-    if fieldbus_Model.parameterLoadOnReboot then
-      tmrWaitForSetupOfOtherModules:start() -- Start timer to wait for events which could be provided by other modules
-      loadParameters(true)
+      local parameterName, loadOnReboot = CSK_PersistentData.getModuleParameterName(nameOfModule)
+
+      if parameterName then
+        fieldbus_Model.parametersName = parameterName
+        fieldbus_Model.parameterLoadOnReboot = loadOnReboot
+      else
+        fieldbus_Model.create()
+      end
+
+      if fieldbus_Model.parameterLoadOnReboot then
+        loadParameters()
+      end
+      Script.notifyEvent('Fieldbus_OnDataLoadedOnReboot')
     end
-    Script.notifyEvent('Fieldbus_OnDataLoadedOnReboot')
   end
 end
 Script.register("CSK_PersistentData.OnInitialDataLoaded", handleOnInitialDataLoaded)
+
+local function resetModule()
+  if _G.availableAPIs.default and _G.availableAPIs.specific then
+    clearFlowConfigRelevantConfiguration()
+    closeCommunication()
+    pageCalled()
+  end
+end
+Script.serveFunction('CSK_Fieldbus.resetModule', resetModule)
+Script.register("CSK_PersistentData.OnResetAllModules", resetModule)
 
 -- *************************************************
 -- END of functions for CSK_PersistentData module usage
