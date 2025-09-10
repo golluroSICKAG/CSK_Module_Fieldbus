@@ -332,6 +332,10 @@ NAME will be replaced by data identifier (e.g. 'CSK_Fieldbus.OnNewData_Data1').<
                     <desc>Notify if FlowConfig should have priority for FlowConfig relevant configurations.</desc>
                     <param desc="Status" multiplicity="1" name="status" type="bool"/>
                 </event>
+                <event name="OnNewStatusDHCPEnabled">
+                    <desc>Notify status if DHCP is active.</desc>
+                    <param desc="Status" multiplicity="1" name="status" type="bool"/>
+                </event>
                 <function name="setParameterName">
                     <desc>Function to set the name of the parameters if saved/loaded via the CSK_PersistentData module.</desc>
                     <param desc="Name of the parameter." multiplicity="1" name="name" type="string"/>
@@ -651,7 +655,7 @@ After that it will transmit the full data to the fieldbus.</desc>
             </crown>
         </crown>
         <meta key="author">SICK AG</meta>
-        <meta key="version">1.0.0b</meta>
+        <meta key="version">1.0.0b_2025091001</meta>
         <meta key="priority">low</meta>
         <meta key="copy-protected">false</meta>
         <meta key="read-protected">false</meta>

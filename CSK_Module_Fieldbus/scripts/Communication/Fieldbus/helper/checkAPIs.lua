@@ -46,11 +46,11 @@ end
 -- Function to check for SIM2000ST devices
 local function checkIsSIM2000ST()
   local deviceName = Engine.getTypeCode()
-  local isSIM2000ST = string.find(deviceName, 'SIM2000-3')
+  local isSIM2000ST = string.find(deviceName, 'SIM2000%-3')
   if isSIM2000ST then
-    return false
-  else
     return true
+  else
+    return false
   end
 end
 

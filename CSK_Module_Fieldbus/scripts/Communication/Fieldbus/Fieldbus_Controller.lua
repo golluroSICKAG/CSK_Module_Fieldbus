@@ -15,6 +15,11 @@ local tmrFieldbus = Timer.create()
 tmrFieldbus:setExpirationTime(300)
 tmrFieldbus:setPeriodic(false)
 
+-- Timer to wait to reopen connection after it was closed
+local tmrOpenCommunication = Timer.create()
+tmrOpenCommunication:setExpirationTime(3000)
+tmrOpenCommunication:setPeriodic(false)
+
 -- Reference to global handle
 local fieldbus_Model
 
@@ -76,6 +81,7 @@ Script.serveEvent('CSK_Fieldbus.OnNewStatusBigEndianReceive', 'Fieldbus_OnNewSta
 Script.serveEvent('CSK_Fieldbus.OnNewStatusDataTypeReceive', 'Fieldbus_OnNewStatusDataTypeReceive')
 
 Script.serveEvent('CSK_Fieldbus.OnNewStatusEtherNetIPAddressingMode', 'Fieldbus_OnNewStatusEtherNetIPAddressingMode')
+Script.serveEvent('CSK_Fieldbus.OnNewStatusDHCPEnabled', 'Fieldbus_OnNewStatusDHCPEnabled')
 Script.serveEvent('CSK_Fieldbus.OnNewStatusEtherNetIPIPAddress', 'Fieldbus_OnNewStatusEtherNetIPIPAddress')
 Script.serveEvent('CSK_Fieldbus.OnNewStatusEtherNetIPSubnetMask', 'Fieldbus_OnNewStatusEtherNetIPSubnetMask')
 Script.serveEvent('CSK_Fieldbus.OnNewStatusEtherNetIPGateway', 'Fieldbus_OnNewStatusEtherNetIPGateway')
@@ -225,6 +231,11 @@ local function handleOnExpiredTmrFieldbus()
 
     if fieldbus_Model.fbMode == 'EtherNetIP' then
       Script.notifyEvent("Fieldbus_OnNewStatusEtherNetIPAddressingMode", fieldbus_Model.parameters.etherNetIP.addressingMode)
+      if fieldbus_Model.parameters.etherNetIP.addressingMode == 'DHCP' then
+        Script.notifyEvent("Fieldbus_OnNewStatusDHCPEnabled", true)
+      else
+        Script.notifyEvent("Fieldbus_OnNewStatusDHCPEnabled", false)
+      end
       Script.notifyEvent("Fieldbus_OnNewStatusEtherNetIPIPAddress", fieldbus_Model.parameters.etherNetIP.ipAddress)
       Script.notifyEvent("Fieldbus_OnNewStatusEtherNetIPSubnetMask", fieldbus_Model.parameters.etherNetIP.netmask)
       Script.notifyEvent("Fieldbus_OnNewStatusEtherNetIPGateway", fieldbus_Model.parameters.etherNetIP.gateway)
@@ -271,35 +282,64 @@ local function setProtocol(protocol)
   fieldbus_Model.parameters.protocol = protocol
   handleOnExpiredTmrFieldbus()
 
-  if (fieldbus_Model.parameters.protocol == 'ProfinetIO' and Parameters.get('FBmode') ~= 1) or (fieldbus_Model.parameters.protocol == 'EtherNetIP' and Parameters.get('FBmode') ~= 2) or (fieldbus_Model.parameters.protocol == 'DISABLED' and Parameters.get('FBmode') ~= 0) then
-    Script.notifyEvent("Fieldbus_OnNewStatusRestartInfo", 'Device restart needed to activate new protocol!')
-  else
-    Script.notifyEvent("Fieldbus_OnNewStatusRestartInfo", '')
+  if not _G.availableAPIs.isSIM2000ST then
+    if (fieldbus_Model.parameters.protocol == 'ProfinetIO' and Parameters.get('FBmode') ~= 1) or (fieldbus_Model.parameters.protocol == 'EtherNetIP' and Parameters.get('FBmode') ~= 2) or (fieldbus_Model.parameters.protocol == 'DISABLED' and Parameters.get('FBmode') ~= 0) then
+      Script.notifyEvent("Fieldbus_OnNewStatusRestartInfo", 'Device restart needed to activate new protocol!')
+    else
+      Script.notifyEvent("Fieldbus_OnNewStatusRestartInfo", '')
+    end
   end
 end
 Script.serveFunction('CSK_Fieldbus.setProtocol', setProtocol)
 
 local function restartDevice()
   Parameters.savePermanent()
-  if CSK_PersistentData then
-    CSK_Fieldbus.sendParameters()
-  end
 
   fieldbus_Model.info = "Rebooting the device NOW! Reason: 'Change fieldbus protocol.'"
   Script.notifyEvent("Fieldbus_OnNewStatusFieldbusInfo", fieldbus_Model.info)
   Engine.reboot('Change fieldbus protocol.')
 end
 
+local function openCommunication()
+  local success = false
+  if fieldbus_Model.currentStatus == 'CLOSED' then
+    _G.logger:info(nameOfModule .. ": Open communciation.")
+    success = fieldbus_Model.openCommunication()
+  else
+    _G.logger:fine("Connection already active.")
+  end
+  return success
+end
+Script.serveFunction('CSK_Fieldbus.openCommunication', openCommunication)
+
+local function closeCommunication()
+  _G.logger:info(nameOfModule .. ": Close communication.")
+  fieldbus_Model.closeCommunication()
+
+  fieldbus_Model.info = 'No info available.'
+  Script.notifyEvent("Fieldbus_OnNewStatusFieldbusInfo", fieldbus_Model.info)
+end
+Script.serveFunction('CSK_Fieldbus.closeCommunication', closeCommunication)
+
 local function submitProtocol()
-  if fieldbus_Model.parameters.protocol == 'ProfinetIO' and Parameters.get('FBmode') ~= 1 then
+  if not _G.availableAPIs.isSIM2000ST then
+    if fieldbus_Model.parameters.protocol == 'ProfinetIO' and Parameters.get('FBmode') ~= 1 then
       Parameters.set('FBmode', 1)
       restartDevice()
-  elseif fieldbus_Model.parameters.protocol == 'EtherNetIP' and Parameters.get('FBmode') ~= 2 then
-    Parameters.set('FBmode', 2)
-    restartDevice()
-  elseif fieldbus_Model.parameters.protocol == 'DISABLED' and Parameters.get('FBmode') ~= 0 then
-    Parameters.set('FBmode', 0)
-    restartDevice()
+    elseif fieldbus_Model.parameters.protocol == 'EtherNetIP' and Parameters.get('FBmode') ~= 2 then
+      Parameters.set('FBmode', 2)
+      restartDevice()
+    elseif fieldbus_Model.parameters.protocol == 'DISABLED' and Parameters.get('FBmode') ~= 0 then
+      Parameters.set('FBmode', 0)
+      restartDevice()
+    end
+  else
+    -- SIM2000ST-E
+    closeCommunication()
+    if fieldbus_Model.parameters.protocol ~= 'DISABLED' then
+      fieldbus_Model.openCommunication()
+    end
+    handleOnExpiredTmrFieldbus()
   end
 end
 Script.serveFunction('CSK_Fieldbus.submitProtocol', submitProtocol)
@@ -330,27 +370,6 @@ local function setTransmissionMode(mode)
   end
 end
 Script.serveFunction('CSK_Fieldbus.setTransmissionMode', setTransmissionMode)
-
-local function openCommunication()
-  local success = false
-  if fieldbus_Model.currentStatus == 'CLOSED' then
-    _G.logger:info(nameOfModule .. ": Open communciation.")
-    success = fieldbus_Model.openCommunication()
-  else
-    _G.logger:fine("Connection already active.")
-  end
-  return success
-end
-Script.serveFunction('CSK_Fieldbus.openCommunication', openCommunication)
-
-local function closeCommunication()
-  _G.logger:info(nameOfModule .. ": Close communication.")
-  fieldbus_Model.closeCommunication()
-
-  fieldbus_Model.info = 'No info available.'
-  Script.notifyEvent("Fieldbus_OnNewStatusFieldbusInfo", fieldbus_Model.info)
-end
-Script.serveFunction('CSK_Fieldbus.closeCommunication', closeCommunication)
 
 local function refreshControlBits()
   fieldbus_Model.readControlBitsIn()
@@ -427,6 +446,11 @@ local function setAddressingMode(mode)
   end
   fieldbus_Model.parameters.etherNetIP.addressingMode = mode
   Script.notifyEvent("Fieldbus_OnNewStatusEtherNetIPAddressingMode", fieldbus_Model.parameters.etherNetIP.addressingMode)
+  if mode == 'DHCP' then
+    Script.notifyEvent("Fieldbus_OnNewStatusDHCPEnabled", true)
+  else
+    Script.notifyEvent("Fieldbus_OnNewStatusDHCPEnabled", false)
+  end
   fieldbus_Model.getInfo()
 end
 Script.serveFunction('CSK_Fieldbus.setAddressingMode', setAddressingMode)
@@ -1013,7 +1037,14 @@ local function registerToEvents()
   end
 end
 
-local function loadParameters(wait)
+--- Function to reopen the communication after 3 seconds it was closed before
+local function handleOnExpiredOpenCommunication()
+  Script.notifyEvent("Fieldbus_OnNewStatusFieldbusInfo", 'Setting up fieldbus protocol. Please be patient...')
+  fieldbus_Model.openCommunication()
+end
+Timer.register(tmrOpenCommunication, 'OnExpired', handleOnExpiredOpenCommunication)
+
+local function loadParameters()
   if fieldbus_Model.persistentModuleAvailable then
     local data = CSK_PersistentData.getParameter(fieldbus_Model.parametersName)
     if data then
@@ -1023,10 +1054,12 @@ local function loadParameters(wait)
       fieldbus_Model.parameters = fieldbus_Model.helperFuncs.convertContainer2Table(data)
 
       -- If something needs to be configured/activated with new loaded data, place this here
-      local fbMode = Parameters.get('FBmode') -- TODO check with SIM2000STE
-      if (fbMode == 0 and fieldbus_Model.fbMode ~= 'DISABLED') or (fbMode == 1 and fieldbus_Model.fbMode ~= 'ProfinetIO') or ( fbMode == 2 and fieldbus_Model.fbMode ~= 'EtherNetIP') then
-        _G.logger:warning(nameOfModule .. ": Current fieldbus protocol of device differs from parameter setup. Please restart device.")
-        return
+      if not _G.availableAPIs.isSIM2000ST then
+        local fbMode = Parameters.get('FBmode')
+        if (fbMode == 0 and fieldbus_Model.parameters.protocol ~= 'DISABLED') or (fbMode == 1 and fieldbus_Model.parameters.protocol ~= 'ProfinetIO') or ( fbMode == 2 and fieldbus_Model.parameters.protocol ~= 'EtherNetIP') then
+          _G.logger:warning(nameOfModule .. ": Current fieldbus protocol of device differs from parameter setup. Please restart device.")
+          return false
+        end
       end
 
       registerToEvents()
@@ -1038,7 +1071,16 @@ local function loadParameters(wait)
       end
 
       if fieldbus_Model.parameters.active == true then
-        fieldbus_Model.openCommunication()
+        if _G.availableAPIs.isSIM2000ST then
+          closeCommunication() -- SIM2000ST-E is able to switch mode during runtime
+          tmrOpenCommunication:start()
+        else
+          fieldbus_Model.openCommunication()
+        end
+      else
+        if _G.availableAPIs.isSIM2000ST then
+          closeCommunication() -- SIM2000ST-E is able to switch mode during runtime
+        end
       end
 
       CSK_Fieldbus.pageCalled()
@@ -1086,8 +1128,6 @@ local function handleOnInitialDataLoaded()
       if parameterName then
         fieldbus_Model.parametersName = parameterName
         fieldbus_Model.parameterLoadOnReboot = loadOnReboot
-      else
-        fieldbus_Model.create()
       end
 
       if fieldbus_Model.parameterLoadOnReboot then
