@@ -64,6 +64,7 @@ Script.serveEvent('CSK_Fieldbus.OnNewStatusControlBitsInToWrite', 'Fieldbus_OnNe
 Script.serveEvent('CSK_Fieldbus.OnNewStatusControlBitsInTable', 'Fieldbus_OnNewStatusControlBitsInTable')
 Script.serveEvent('CSK_Fieldbus.OnNewStatusBitMask', 'Fieldbus_OnNewStatusBitMask')
 Script.serveEvent('CSK_Fieldbus.OnNewStatusControlBitsInBitMaskTable', 'Fieldbus_OnNewStatusControlBitsInBitMaskTable')
+Script.serveEvent('CSK_Fieldbus.OnNewStatusControlBitsInEvent', 'Fieldbus_OnNewStatusControlBitsInEvent')
 
 Script.serveEvent('CSK_Fieldbus.OnNewStatusDataTransmissionList', 'Fieldbus_OnNewStatusDataTransmissionList')
 Script.serveEvent('CSK_Fieldbus.OnNewStatusRegisteredEventTransmit', 'Fieldbus_OnNewStatusRegisteredEventTransmit')
@@ -185,8 +186,6 @@ local function handleOnExpiredTmrFieldbus()
   Script.notifyEvent("Fieldbus_OnNewStatusCSKStyle", fieldbus_Model.styleForUI)
   Script.notifyEvent("Fieldbus_OnNewStatusModuleIsActive", _G.availableAPIs.default and _G.availableAPIs.specific)
 
-  fieldbus_Model.boolControlBitsToWrite = fieldbus_Model.boolControlBitsOut
-
   Script.notifyEvent("Fieldbus_OnNewStatusActiveProtocol", fieldbus_Model.fbMode)
 
   Script.notifyEvent("Fieldbus_OnNewStatusFieldbusStatus", fieldbus_Model.currentStatus)
@@ -214,8 +213,9 @@ local function handleOnExpiredTmrFieldbus()
   Script.notifyEvent("Fieldbus_OnNewStatusControlBitsOut", fieldbus_Model.controlBitsOut)
 
   Script.notifyEvent("Fieldbus_OnNewStatusControlBitsOutTable", fieldbus_Model.boolControlBitsOut)
-  Script.notifyEvent("Fieldbus_OnNewStatusControlBitsInTable", fieldbus_Model.boolControlBitsIn)
+  Script.notifyEvent("Fieldbus_OnNewStatusControlBitsInTable", fieldbus_Model.boolControlBitsToWrite)
   Script.notifyEvent("Fieldbus_OnNewStatusControlBitsInBitMaskTable", fieldbus_Model.boolBitMask)
+  Script.notifyEvent("Fieldbus_OnNewStatusControlBitsInEvent", fieldbus_Model.parameters.registeredEventControlBitsIn)
 
   Script.notifyEvent("Fieldbus_OnNewStatusControlBitsInToWrite", fieldbus_Model.controlBitsToWrite)
   Script.notifyEvent("Fieldbus_OnNewStatusBitMask", fieldbus_Model.bitMask)
@@ -436,6 +436,21 @@ local function writeControlBitsInViaUI()
   fieldbus_Model.writeControlBitsIn(fieldbus_Model.controlBitsToWrite, fieldbus_Model.bitMask)
 end
 Script.serveFunction('CSK_Fieldbus.writeControlBitsInViaUI', writeControlBitsInViaUI)
+
+local function writeControlBitsIn(value)
+  setControlBitsIn(value)
+  writeControlBitsInViaUI()
+end
+Script.serveFunction('CSK_Fieldbus.writeControlBitsIn', writeControlBitsIn)
+
+local function setEventToRegisterControlBitsIn(event)
+  _G.logger:fine(nameOfModule .. ": Set event to set ControlBitsIn = " .. tostring(event))
+  Script.deregister(fieldbus_Model.parameters.registeredEventControlBitsIn, writeControlBitsIn)
+  fieldbus_Model.parameters.registeredEventControlBitsIn = event
+  Script.register(fieldbus_Model.parameters.registeredEventControlBitsIn, writeControlBitsIn)
+  Script.notifyEvent("Fieldbus_OnNewStatusControlBitsInEvent", fieldbus_Model.parameters.registeredEventControlBitsIn)
+end
+Script.serveFunction('CSK_Fieldbus.setEventToRegisterControlBitsIn', setEventToRegisterControlBitsIn)
 
 -- EtherNet/IP relevant
 local function setAddressingMode(mode)
@@ -1050,6 +1065,8 @@ local function loadParameters()
     if data then
       clearFlowConfigRelevantConfiguration()
 
+      setEventToRegisterControlBitsIn('')
+
       _G.logger:info(nameOfModule .. ": Loaded parameters from CSK_PersistentData module.")
       fieldbus_Model.parameters = fieldbus_Model.helperFuncs.convertContainer2Table(data)
 
@@ -1063,6 +1080,10 @@ local function loadParameters()
       end
 
       registerToEvents()
+
+      if fieldbus_Model.parameters.registeredEventControlBitsIn ~= '' then
+        setEventToRegisterControlBitsIn(fieldbus_Model.parameters.registeredEventControlBitsIn)
+      end
 
       fieldbus_Model.dataReceived = {}
       for key, value in ipairs(fieldbus_Model.parameters.dataNamesReceive) do

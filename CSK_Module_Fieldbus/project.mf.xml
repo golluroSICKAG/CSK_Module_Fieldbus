@@ -16,8 +16,8 @@ Select a fieldbus protocol to use via 'setProtocol' and trigger a device reboot 
 After the reboot open the connection via 'openCommunication'. +
 {empty} +
 **2) ControlBits** +
-To read the currently active ControlBits use 'refreshControlBits' and the events 'OnNewStatusControlBitsIn', 'OnNewStatusControlBitsInTable', 'OnNewStatusControlBitsOut', 'OnNewStatusControlBitsOut'. +
-It is possible to set the ControlBitsIn by presetting them via 'setControlBitsIn'/'setSpecificControlBit' and to send them via 'writeControlBitsInViaUI'. +
+To read the currently active ControlBits use 'refreshControlBits' and the events 'OnNewStatusControlBitsIn', 'OnNewStatusControlBitsInTable', 'OnNewStatusControlBitsOut', 'OnNewStatusControlBitsOutTable'. +
+It is possible to set the ControlBitsIn by presetting them via 'setControlBitsIn'/'setSpecificControlBit' and to send them via 'writeControlBitsInViaUI' or by setting them directly via 'writeControlBitsIn'. +
 To set a bitmask for the ControlBitsIn make use of 'setBitMask' or 'setSpecificBitMaskBit'. +
 {empty} +
 **3) Data to transmit** +
@@ -336,6 +336,10 @@ NAME will be replaced by data identifier (e.g. 'CSK_Fieldbus.OnNewData_Data1').<
                     <desc>Notify status if DHCP is active.</desc>
                     <param desc="Status" multiplicity="1" name="status" type="bool"/>
                 </event>
+                <event name="OnNewStatusControlBitsInEvent">
+                    <desc>Notify event to forward data as ControlBitsIn.</desc>
+                    <param desc="Name of event." multiplicity="1" name="event" type="string"/>
+                </event>
                 <function name="setParameterName">
                     <desc>Function to set the name of the parameters if saved/loaded via the CSK_PersistentData module.</desc>
                     <param desc="Name of the parameter." multiplicity="1" name="name" type="string"/>
@@ -594,6 +598,14 @@ After that it will transmit the full data to the fieldbus.</desc>
                     <param desc="Name of data." multiplicity="1" name="dataName" type="string"/>
                     <return desc="Success" multiplicity="1" name="success" type="bool"/>
                 </function>
+                <function name="setEventToRegisterControlBitsIn">
+                    <desc>Function to set event to set ControBitsIn.</desc>
+                    <param desc="Event providing value for ControlBitsIn." multiplicity="1" name="event" type="string"/>
+                </function>
+                <function name="writeControlBitsIn">
+                    <desc>Function to write ControlBitsIn.</desc>
+                    <param desc="Value for ControlBits." multiplicity="1" name="value" type="int"/>
+                </function>
             </serves>
         </crown>
         <crown name="Fieldbus_FC">
@@ -604,7 +616,7 @@ After that it will transmit the full data to the fieldbus.</desc>
             <enum name="DataMode" trait="released">
                 <desc>Mode of data to provide.</desc>
                 <item desc="Provide all received data." name="FULL">FULL</item>
-                <item desc="Only provided specific parameter out of received data." name="SELECTION">SELECTION</item>
+                <item desc="Only provide specific parameter out of received data." name="SELECTION">SELECTION</item>
             </enum>
             <serves/>
             <crown name="Transmit">
@@ -629,10 +641,10 @@ After that it will transmit the full data to the fieldbus.</desc>
                 <desc>Provide received fieldbus content.
 </desc>
                 <serves>
-                    <event name="OnReceive">
+                    <event name="OnNewData">
                         <include>data-flow</include>
                         <include>remote</include>
-                        <desc>Provide received MQTT content.</desc>
+                        <desc>Provide received data from PLC.</desc>
                         <param desc="Handle to internally used FlowConfig instance." multiplicity="1" name="handle" type="handle"/>
                         <param desc="'CSK_Fieldbus.OnNewStatusReceivedData' or 'CSK_Fieldbus.OnNewData_[DataName]' (depends on selected mode)&#10;&#10;Parameter:&#10;&#10;Mode = FULL&#10;1: Received data (binary).&#10;&#10;Mode = SELECTION&#10;1: Selected part of received data (auto)." multiplicity="1" name="OnNewData" type="string"/>
                     </event>
@@ -653,9 +665,51 @@ After that it will transmit the full data to the fieldbus.</desc>
                     </function>
                 </serves>
             </crown>
+            <crown name="OnNewControlBitsOut">
+                <trait>released</trait>
+                <include>data-flow</include>
+                <desc>Provide ControlBits received by PLC.</desc>
+                <serves>
+                    <event name="OnNewControlBitsOut">
+                        <include>data-flow</include>
+                        <include>remote</include>
+                        <desc>Provide ControlBits received by PLC.</desc>
+                        <param desc="Handle to internally used FlowConfig instance." multiplicity="1" name="handle" type="handle"/>
+                        <param desc="'CSK_Fieldbus.OnNewControlBitsOut'&#10;&#10;Parameter:&#10;&#10;1: ControlBit value (INT)." multiplicity="1" name="OnNewControlBitsOut" type="string"/>
+                    </event>
+                    <function name="create">
+                        <trait>released</trait>
+                        <desc>Internally used CSK_FlowConfig create function.</desc>
+                        <return desc="Handle to internally used FlowConfig instance." multiplicity="1" name="handle" type="handle"/>
+                    </function>
+                    <function name="register">
+                        <trait>released</trait>
+                        <desc>Internally used CSK_FlowConfig register function.</desc>
+                        <param desc="Handle to internally used FlowConfig instance." multiplicity="1" name="handle" type="handle"/>
+                        <param desc="Internal parameter (not used)." multiplicity="1" name="eventname" type="string"/>
+                        <param desc="Internally used callback function." multiplicity="1" name="callback" type="string"/>
+                        <return desc="Success of register process." multiplicity="1" name="success" type="bool"/>
+                    </function>
+                </serves>
+            </crown>
+            <crown name="WriteControlBitsIn">
+                <desc>Set source of incoming data to set ControlBitsIn on fieldbus.</desc>
+                <serves>
+                    <function name="create">
+                        <desc>Internally used CSK_FlowConfig create function.</desc>
+                        <return desc="Handle to internally used FlowConfig instance." multiplicity="1" name="handle" type="handle"/>
+                    </function>
+                    <function name="writeControlBitsIn">
+                        <include>data-flow</include>
+                        <desc>Set source of incoming data to set ControlBitsIn on fieldbus.</desc>
+                        <param desc="Handle to internally used FlowConfig instance." multiplicity="1" name="handle" type="handle"/>
+                        <param desc="Source of data to transmit.&#10;&#10;Parameter:&#10;1: Data content (INT)" multiplicity="1" name="source" type="string"/>
+                    </function>
+                </serves>
+            </crown>
         </crown>
         <meta key="author">SICK AG</meta>
-        <meta key="version">1.0.0b_2025091001</meta>
+        <meta key="version">1.0.0b_2025100701</meta>
         <meta key="priority">low</meta>
         <meta key="copy-protected">false</meta>
         <meta key="read-protected">false</meta>

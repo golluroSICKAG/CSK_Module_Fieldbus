@@ -3,8 +3,10 @@
 -- features of this module via the 'CSK FlowConfig'.
 --*****************************************************************
 
-require('Communication.Fieldbus.FlowConfig.Fieldbus_Transmit')
+require('Communication.Fieldbus.FlowConfig.Fieldbus_OnNewControlBitsIn')
 require('Communication.Fieldbus.FlowConfig.Fieldbus_OnNewData')
+require('Communication.Fieldbus.FlowConfig.Fieldbus_Transmit')
+require('Communication.Fieldbus.FlowConfig.Fieldbus_WriteControlBitsIn')
 
 --- Function to react if FlowConfig was updated
 local function handleOnClearOldFlow()

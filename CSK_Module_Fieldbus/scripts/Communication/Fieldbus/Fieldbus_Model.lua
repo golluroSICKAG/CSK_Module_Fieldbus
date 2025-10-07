@@ -118,6 +118,8 @@ fieldbus_Model.parameters.convertDataTypesTransmit = {} -- Status if received da
 fieldbus_Model.parameters.dataTypesTransmit = {} -- Data types of values to transmit
 fieldbus_Model.parameters.bigEndiansTransmit = {} -- Little endian per default
 
+fieldbus_Model.parameters.registeredEventControlBitsIn = '' -- Event to set ControlBitsIn
+
 fieldbus_Model.parameters.dataNamesReceive = {} -- List of names/identifiers of data entries to transmit
 fieldbus_Model.parameters.convertDataTypesReceive = {} -- Status if received data needs to be converted to binary or is already binary
 fieldbus_Model.parameters.dataTypesReceive = {} -- Data types of values to transmit

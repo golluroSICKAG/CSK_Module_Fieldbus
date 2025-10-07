@@ -1628,32 +1628,56 @@
                                                                         </davinci-checkbox>
                                                                     </layout-column>
                                                                 </layout-row>
-                                                                <layout-row id="RowLayout43"
-                                                                    style="justify-content: flex-end">
-                                                                    <davinci-button id="Button_WriteCtrlBits"
-                                                                        class="myCustomButton_CSK_Module_Fieldbus"
-                                                                        type="primary"
-                                                                        title="Write ControlBits IN by transmitting to PLC">
-                                                                        <davinci-icon icon="editor/border_color">
-                                                                        </davinci-icon>
-                                                                        <span></span>
-                                                                        <crown-binding event="submit"
-                                                                            name="CSK_Fieldbus/writeControlBitsInViaUI"
-                                                                            auto-commit>
-                                                                        </crown-binding>
-                                                                    </davinci-button>
-                                                                    <davinci-button id="Button_UpdateControlBits"
-                                                                        class="myCustomButton_CSK_Module_Fieldbus"
-                                                                        type="neutral"
-                                                                        title="Refresh ControlBit Status">
-                                                                        <davinci-icon icon="navigation/refresh">
-                                                                        </davinci-icon>
-                                                                        <span></span>
-                                                                        <crown-binding event="submit"
-                                                                            name="CSK_Fieldbus/refreshControlBits"
-                                                                            auto-commit>
-                                                                        </crown-binding>
-                                                                    </davinci-button>
+                                                                <layout-row id="RowLayout22"
+                                                                    style="justify-content: space-between">
+                                                                    <layout-column id="ColumnLayout6"
+                                                                        style="align-items: stretch">
+                                                                        <davinci-text-field id="TF_ControlBitsInEvent"
+                                                                            type="text"
+                                                                            label="Event to set ControlBitsIn"
+                                                                            title="Set event to receive data and set this data for the ControlBitsIn.">
+                                                                            <crown-binding event="change"
+                                                                                name="CSK_Fieldbus/setEventToRegisterControlBitsIn"
+                                                                                path="param/args/event" auto-commit>
+                                                                            </crown-binding>
+                                                                            <crown-edpws-binding property="value"
+                                                                                name="CSK_Fieldbus/OnNewStatusControlBitsInEvent"
+                                                                                update-on-resume>
+                                                                            </crown-edpws-binding>
+                                                                        </davinci-text-field>
+                                                                    </layout-column>
+                                                                    <layout-column id="ColumnLayout8"
+                                                                        style="align-items: stretch">
+                                                                        <layout-row id="RowLayout43"
+                                                                            style="justify-content: flex-end">
+                                                                            <davinci-button id="Button_WriteCtrlBits"
+                                                                                class="myCustomButton_CSK_Module_Fieldbus"
+                                                                                type="primary" icon-position="append"
+                                                                                title="Write ControlBits IN by transmitting to PLC">
+                                                                                <davinci-icon
+                                                                                    icon="editor/border_color">
+                                                                                </davinci-icon>
+                                                                                <span></span>
+                                                                                <crown-binding event="submit"
+                                                                                    name="CSK_Fieldbus/writeControlBitsInViaUI"
+                                                                                    auto-commit>
+                                                                                </crown-binding>
+                                                                            </davinci-button>
+                                                                            <davinci-button
+                                                                                id="Button_UpdateControlBits"
+                                                                                class="myCustomButton_CSK_Module_Fieldbus"
+                                                                                type="neutral" icon-position="append"
+                                                                                title="Refresh ControlBit Status">
+                                                                                <davinci-icon icon="navigation/refresh">
+                                                                                </davinci-icon>
+                                                                                <span></span>
+                                                                                <crown-binding event="submit"
+                                                                                    name="CSK_Fieldbus/refreshControlBits"
+                                                                                    auto-commit>
+                                                                                </crown-binding>
+                                                                            </davinci-button>
+                                                                        </layout-row>
+                                                                    </layout-column>
                                                                 </layout-row>
                                                             </layout-column>
                                                         </layout-row>
