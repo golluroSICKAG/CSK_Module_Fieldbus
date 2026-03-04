@@ -316,7 +316,7 @@ local function createJsonListTransmissionData(dataName, registerEvent, dataType,
 
   local list = {}
   if dataName == nil then
-    list = {{DTC_IDTransmit = '-', DTC_NameTransmit = '-', DTC_EventTransmit = '-', DTC_DataTypeTransmit = '-', DTC_ConvertTransmit = '-', DTC_BigEndianTransmit = '-', DTC_ValueTransmit = '-'},}
+    list = {{DTC_IDTransmit = '-', DTC_NameTransmit = '-', DTC_EventTransmit = '-', DTC_ConvertTransmit = '-', DTC_DataTypeTransmit = '-', DTC_BigEndianTransmit = '-', DTC_ValueTransmit = '-'},}
   else
 
     for key, value in ipairs(dataName) do
@@ -324,11 +324,15 @@ local function createJsonListTransmissionData(dataName, registerEvent, dataType,
       if tostring(key) == selectedParam then
         isSelected = true
       end
-      table.insert(list, {DTC_IDTransmit = tostring(key), DTC_NameTransmit = value, DTC_EventTransmit = registerEvent[value], DTC_DataTypeTransmit = dataType[value], DTC_ConvertTransmit = convertData[value], DTC_BigEndianTransmit = bigEndian[value], DTC_ValueTransmit = tostring(values[key]), selected = isSelected})
+      if convertData[value] == true then
+        table.insert(list, {DTC_IDTransmit = tostring(key), DTC_NameTransmit = value, DTC_EventTransmit = registerEvent[value], DTC_ConvertTransmit = convertData[value], DTC_DataTypeTransmit = dataType[value], DTC_BigEndianTransmit = bigEndian[value], DTC_ValueTransmit = tostring(values[key]), selected = isSelected})
+      else
+        table.insert(list, {DTC_IDTransmit = tostring(key), DTC_NameTransmit = value, DTC_EventTransmit = registerEvent[value], DTC_ConvertTransmit = convertData[value], DTC_DataTypeTransmit = dataType[value], DTC_BigEndianTransmit = '-', DTC_ValueTransmit = tostring(values[key]), selected = isSelected})
+      end
     end
 
     if #list == 0 then
-      list = {{DTC_IDTransmit = '-', DTC_NameTransmit = '-', DTC_EventTransmit = '-', DTC_DataTypeTransmit = '-', DTC_ConvertTransmit = '-', DTC_BigEndianTransmit = '-', DTC_ValueTransmit = '-'},}
+      list = {{DTC_IDTransmit = '-', DTC_NameTransmit = '-', DTC_EventTransmit = '-', DTC_ConvertTransmit = '-', DTC_DataTypeTransmit = '-', DTC_BigEndianTransmit = '-', DTC_ValueTransmit = '-'},}
     end
   end
 
@@ -349,7 +353,7 @@ local function createJsonListReceiveData(dataName, dataType, convertData, bigEnd
 
   local list = {}
   if dataName == nil then
-    list = {{DTC_IDReceive = '-', DTC_NameReceive = '-', DTC_DataTypeReceive = '-', DTC_ConvertReceive = '-', DTC_BigEndianReceive = '-', DTC_ValueReceive = '-'},}
+    list = {{DTC_IDReceive = '-', DTC_NameReceive = '-', DTC_ConvertReceive = '-', DTC_DataTypeReceive = '-', DTC_BigEndianReceive = '-', DTC_ValueReceive = '-'},}
   else
 
     for key, value in ipairs(dataName) do
@@ -357,11 +361,15 @@ local function createJsonListReceiveData(dataName, dataType, convertData, bigEnd
       if tostring(key) == selectedParam then
         isSelected = true
       end
-      table.insert(list, {DTC_IDReceive = tostring(key), DTC_NameReceive = value,  DTC_DataTypeReceive = dataType[value], DTC_ConvertReceive = convertData[value], DTC_BigEndianReceive = bigEndian[value], DTC_ValueReceive = tostring(values[value]), selected = isSelected})
+      if convertData[value] == true then
+        table.insert(list, {DTC_IDReceive = tostring(key), DTC_NameReceive = value, DTC_ConvertReceive = convertData[value],  DTC_DataTypeReceive = dataType[value], DTC_BigEndianReceive = bigEndian[value], DTC_ValueReceive = tostring(values[value]), selected = isSelected})
+      else
+        table.insert(list, {DTC_IDReceive = tostring(key), DTC_NameReceive = value, DTC_ConvertReceive = convertData[value],  DTC_DataTypeReceive = dataType[value], DTC_BigEndianReceive = '-', DTC_ValueReceive = tostring(values[value]), selected = isSelected})
+      end
     end
 
     if #list == 0 then
-      list = {{DTC_IDReceive = '-', DTC_NameReceive = '-', DTC_DataTypeReceive = '-', DTC_ConvertReceive = '-', DTC_BigEndianReceive = '-', DTC_ValueReceive = '-'},}
+      list = {{DTC_IDReceive = '-', DTC_NameReceive = '-', DTC_ConvertReceive = '-', DTC_DataTypeReceive = '-', DTC_BigEndianReceive = '-', DTC_ValueReceive = '-'},}
     end
   end
 
@@ -445,6 +453,9 @@ local function getDataSize(data)
       size = size + 2
     elseif value == 'CHAR' then
       size = size + 1
+    elseif value == 'RAW' then
+      size = 0
+      break
     --elseif value == 'STRING' then
     --  size = size + 16
     end

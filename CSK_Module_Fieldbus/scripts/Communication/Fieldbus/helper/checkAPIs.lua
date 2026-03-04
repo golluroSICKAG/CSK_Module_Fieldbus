@@ -43,11 +43,12 @@ local function loadSpecificAPIs()
   FieldBus.StorageRequest = require 'API.FieldBus.StorageRequest'
 end
 
--- Function to check for SIM2000ST devices
-local function checkIsSIM2000ST()
+-- Function to check if no reboot for FB setup is needed
+local function checkSetFBProtocol()
   local deviceName = Engine.getTypeCode()
   local isSIM2000ST = string.find(deviceName, 'SIM2000%-3')
-  if isSIM2000ST then
+  local isCDF800E1 = string.find(deviceName, 'SIM800-')
+  if isSIM2000ST or isCDF800E1 then
     return true
   else
     return false
@@ -56,7 +57,7 @@ end
 
 availableAPIs.default = xpcall(loadAPIs, debug.traceback) -- TRUE if all default APIs were loaded correctly
 availableAPIs.specific = xpcall(loadSpecificAPIs, debug.traceback) -- TRUE if all specific APIs were loaded correctly
-availableAPIs.isSIM2000ST = checkIsSIM2000ST() -- TRUE if device is e.g. of type SIM2000STE / SIM2000STC
+availableAPIs.setFBProtocol = checkSetFBProtocol() -- TRUE if device is e.g. of type SIM2000STE / SIM2000STC
 
 return availableAPIs
 --**************************************************************************

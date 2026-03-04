@@ -20,6 +20,11 @@ local tmrOpenCommunication = Timer.create()
 tmrOpenCommunication:setExpirationTime(3000)
 tmrOpenCommunication:setPeriodic(false)
 
+-- Timer to wait to setup fieldbus configuration
+local tmrSetFBConfig = Timer.create()
+tmrSetFBConfig:setExpirationTime(1000)
+tmrSetFBConfig:setPeriodic(false)
+
 -- Reference to global handle
 local fieldbus_Model
 
@@ -231,7 +236,7 @@ local function handleOnExpiredTmrFieldbus()
 
     if fieldbus_Model.fbMode == 'EtherNetIP' then
       Script.notifyEvent("Fieldbus_OnNewStatusEtherNetIPAddressingMode", fieldbus_Model.parameters.etherNetIP.addressingMode)
-      if fieldbus_Model.parameters.etherNetIP.addressingMode == 'DHCP' then
+      if fieldbus_Model.parameters.etherNetIP.addressingMode == 'DHCP' or fieldbus_Model.parameters.etherNetIP.addressingMode == 'BOOTP' then
         Script.notifyEvent("Fieldbus_OnNewStatusDHCPEnabled", true)
       else
         Script.notifyEvent("Fieldbus_OnNewStatusDHCPEnabled", false)
@@ -282,7 +287,7 @@ local function setProtocol(protocol)
   fieldbus_Model.parameters.protocol = protocol
   handleOnExpiredTmrFieldbus()
 
-  if not _G.availableAPIs.isSIM2000ST then
+  if not _G.availableAPIs.setFBProtocol then
     if (fieldbus_Model.parameters.protocol == 'ProfinetIO' and Parameters.get('FBmode') ~= 1) or (fieldbus_Model.parameters.protocol == 'EtherNetIP' and Parameters.get('FBmode') ~= 2) or (fieldbus_Model.parameters.protocol == 'DISABLED' and Parameters.get('FBmode') ~= 0) then
       Script.notifyEvent("Fieldbus_OnNewStatusRestartInfo", 'Device restart needed to activate new protocol!')
     else
@@ -313,16 +318,18 @@ end
 Script.serveFunction('CSK_Fieldbus.openCommunication', openCommunication)
 
 local function closeCommunication()
-  _G.logger:info(nameOfModule .. ": Close communication.")
-  fieldbus_Model.closeCommunication()
+  if fieldbus_Model.currentStatus ~= 'CLOSED' then
+    _G.logger:info(nameOfModule .. ": Close communication.")
+    fieldbus_Model.closeCommunication()
 
-  fieldbus_Model.info = 'No info available.'
-  Script.notifyEvent("Fieldbus_OnNewStatusFieldbusInfo", fieldbus_Model.info)
+    fieldbus_Model.info = 'No info available.'
+    Script.notifyEvent("Fieldbus_OnNewStatusFieldbusInfo", fieldbus_Model.info)
+  end
 end
 Script.serveFunction('CSK_Fieldbus.closeCommunication', closeCommunication)
 
 local function submitProtocol()
-  if not _G.availableAPIs.isSIM2000ST then
+  if not _G.availableAPIs.setFBProtocol then
     if fieldbus_Model.parameters.protocol == 'ProfinetIO' and Parameters.get('FBmode') ~= 1 then
       Parameters.set('FBmode', 1)
       restartDevice()
@@ -334,10 +341,9 @@ local function submitProtocol()
       restartDevice()
     end
   else
-    -- SIM2000ST-E
     closeCommunication()
     if fieldbus_Model.parameters.protocol ~= 'DISABLED' then
-      fieldbus_Model.openCommunication()
+      fieldbus_Model.create()
     end
     handleOnExpiredTmrFieldbus()
   end
@@ -387,6 +393,11 @@ local function transmitViaUI()
   fieldbus_Model.transmit(fieldbus_Model.dataToTransmit)
 end
 Script.serveFunction('CSK_Fieldbus.transmitViaUI', transmitViaUI)
+
+local function transmit(data)
+  fieldbus_Model.transmit(data)
+end
+Script.serveFunction('CSK_Fieldbus.transmit', transmit)
 
 local function setControlBitsIn(controlBits)
   _G.logger:fine(nameOfModule .. ": Set controlBits to: " .. tostring(controlBits))
@@ -454,19 +465,14 @@ Script.serveFunction('CSK_Fieldbus.setEventToRegisterControlBitsIn', setEventToR
 
 -- EtherNet/IP relevant
 local function setAddressingMode(mode)
-  if FieldBus.Config.EtherNetIP.setAddressingMode(mode) then
-    _G.logger:fine(string.format("ENIP: Setting addressing mode to '%s' succeeded", mode))
-  else
-    _G.logger:severe(string.format("ENIP: Setting addressing mode to '%s' failed", mode))
-  end
-  fieldbus_Model.parameters.etherNetIP.addressingMode = mode
+    fieldbus_Model.parameters.etherNetIP.addressingMode = mode
+
   Script.notifyEvent("Fieldbus_OnNewStatusEtherNetIPAddressingMode", fieldbus_Model.parameters.etherNetIP.addressingMode)
-  if mode == 'DHCP' then
+  if mode == 'DHCP' or mode == 'BOOTP' then
     Script.notifyEvent("Fieldbus_OnNewStatusDHCPEnabled", true)
   else
     Script.notifyEvent("Fieldbus_OnNewStatusDHCPEnabled", false)
   end
-  fieldbus_Model.getInfo()
 end
 Script.serveFunction('CSK_Fieldbus.setAddressingMode', setAddressingMode)
 
@@ -699,12 +705,14 @@ Script.serveFunction('CSK_Fieldbus.setRegisteredEventTransmit', setRegisteredEve
 local function setConvertDataTransmit(status)
   _G.logger:fine(nameOfModule .. ": Preset status to convert transmit data to: " .. tostring(status))
   fieldbus_Model.convertDataTransmit = status
+  Script.notifyEvent("Fieldbus_OnNewStatusConvertDataTransmit", fieldbus_Model.convertDataTransmit)
 end
 Script.serveFunction('CSK_Fieldbus.setConvertDataTransmit', setConvertDataTransmit)
 
 local function setConvertDataReceive(status)
   _G.logger:fine(nameOfModule .. ": Preset status to convert received data to: " .. tostring(status))
   fieldbus_Model.convertDataReceive = status
+  Script.notifyEvent("Fieldbus_OnNewStatusConvertDataReceive", fieldbus_Model.convertDataReceive)
 end
 Script.serveFunction('CSK_Fieldbus.setConvertDataReceive', setConvertDataReceive)
 
@@ -739,12 +747,21 @@ local function editDataToTransfer(dataName)
   fieldbus_Model.parameters.registeredEventsTransmit[dataName] = fieldbus_Model.registerEventTransmit
   fieldbus_Model.parameters.convertDataTypesTransmit[dataName] = fieldbus_Model.convertDataTransmit
   fieldbus_Model.parameters.bigEndiansTransmit[dataName] = fieldbus_Model.bigEndianTransmit
-  fieldbus_Model.parameters.dataTypesTransmit[dataName] = fieldbus_Model.dataTypeTransmit
+
+  if fieldbus_Model.convertDataTransmit == true then
+    fieldbus_Model.parameters.dataTypesTransmit[dataName] = fieldbus_Model.dataTypeTransmit
+  else
+    fieldbus_Model.parameters.dataTypesTransmit[dataName] = 'RAW'
+  end
 
   fieldbus_Model.registerToEvent(fieldbus_Model.parameters.registeredEventsTransmit[dataName], tonumber(fieldbus_Model.selectedDataTransmit), dataName)
 
   fieldbus_Model.totalDataSizeTransmit = fieldbus_Model.helperFuncs.getDataSize(fieldbus_Model.parameters.dataTypesTransmit)
-  Script.notifyEvent('Fieldbus_OnNewStatusLogMessage', "New transmit data size = " .. tostring(fieldbus_Model.totalDataSizeTransmit))
+  if fieldbus_Model.totalDataSizeTransmit == 0 then
+    Script.notifyEvent('Fieldbus_OnNewStatusLogMessage', "New transmit data size = 0 or unknwown.")
+  else
+    Script.notifyEvent('Fieldbus_OnNewStatusLogMessage', "New transmit data size = " .. tostring(fieldbus_Model.totalDataSizeTransmit))
+  end
 end
 
 local function addDataToTransmitViaUI()
@@ -767,7 +784,11 @@ local function addDataToTransmitViaUI()
     end
   end
   fieldbus_Model.totalDataSizeTransmit = fieldbus_Model.helperFuncs.getDataSize(fieldbus_Model.parameters.dataTypesTransmit)
-  Script.notifyEvent('Fieldbus_OnNewStatusLogMessage', "New transmit data size = " .. tostring(fieldbus_Model.totalDataSizeTransmit))
+  if fieldbus_Model.totalDataSizeTransmit == 0 then
+    Script.notifyEvent('Fieldbus_OnNewStatusLogMessage', "New transmit data size = 0 or unknwown.")
+  else
+    Script.notifyEvent('Fieldbus_OnNewStatusLogMessage', "New transmit data size = " .. tostring(fieldbus_Model.totalDataSizeTransmit))
+  end
   handleOnExpiredTmrFieldbus()
 end
 Script.serveFunction('CSK_Fieldbus.addDataToTransmitViaUI', addDataToTransmitViaUI)
@@ -779,7 +800,11 @@ local function deleteDataToTransmitViaUI()
     fieldbus_Model.selectedDataTransmit = ''
   end
   fieldbus_Model.totalDataSizeTransmit = fieldbus_Model.helperFuncs.getDataSize(fieldbus_Model.parameters.dataTypesTransmit)
-  Script.notifyEvent('Fieldbus_OnNewStatusLogMessage', "New transmit data size = " .. tostring(fieldbus_Model.totalDataSizeTransmit))
+  if fieldbus_Model.totalDataSizeTransmit == 0 then
+    Script.notifyEvent('Fieldbus_OnNewStatusLogMessage', "New transmit data size = 0 or unknwown.")
+  else
+    Script.notifyEvent('Fieldbus_OnNewStatusLogMessage', "New transmit data size = " .. tostring(fieldbus_Model.totalDataSizeTransmit))
+  end
   handleOnExpiredTmrFieldbus()
 end
 Script.serveFunction('CSK_Fieldbus.deleteDataToTransmitViaUI', deleteDataToTransmitViaUI)
@@ -806,10 +831,20 @@ local function editDataToReceive(dataName)
 
   fieldbus_Model.parameters.convertDataTypesReceive[dataName] = fieldbus_Model.convertDataReceive
   fieldbus_Model.parameters.bigEndiansReceive[dataName] = fieldbus_Model.bigEndianReceive
-  fieldbus_Model.parameters.dataTypesReceive[dataName] = fieldbus_Model.dataTypeReceive
+
+  if fieldbus_Model.convertDataReceive == true then
+    
+    fieldbus_Model.parameters.dataTypesReceive[dataName] = fieldbus_Model.dataTypeReceive
+  else
+    fieldbus_Model.parameters.dataTypesReceive[dataName] = 'RAW'
+  end
 
   fieldbus_Model.totalDataSizeReceive = fieldbus_Model.helperFuncs.getDataSize(fieldbus_Model.parameters.dataTypesReceive)
-  Script.notifyEvent('Fieldbus_OnNewStatusLogMessage', "New data size to receive = " .. tostring(fieldbus_Model.totalDataSizeReceive))
+  if fieldbus_Model.totalDataSizeReceive == 0 then
+    Script.notifyEvent('Fieldbus_OnNewStatusLogMessage', "New transmit data size = 0 or unknwown.")
+  else
+    Script.notifyEvent('Fieldbus_OnNewStatusLogMessage', "New data size to receive = " .. tostring(fieldbus_Model.totalDataSizeReceive))
+  end
 end
 
 local function addDataToReceiveViaUI()
@@ -832,7 +867,11 @@ local function addDataToReceiveViaUI()
     end
   end
   fieldbus_Model.totalDataSizeReceive = fieldbus_Model.helperFuncs.getDataSize(fieldbus_Model.parameters.dataTypesReceive)
-  Script.notifyEvent('Fieldbus_OnNewStatusLogMessage', "New data size to receive = " .. tostring(fieldbus_Model.totalDataSizeReceive))
+  if fieldbus_Model.totalDataSizeReceive == 0 then
+    Script.notifyEvent('Fieldbus_OnNewStatusLogMessage', "New transmit data size = 0 or unknwown.")
+  else
+    Script.notifyEvent('Fieldbus_OnNewStatusLogMessage', "New data size to receive = " .. tostring(fieldbus_Model.totalDataSizeReceive))
+  end
   handleOnExpiredTmrFieldbus()
 end
 Script.serveFunction('CSK_Fieldbus.addDataToReceiveViaUI', addDataToReceiveViaUI)
@@ -844,7 +883,11 @@ local function deleteDataToReceiveViaUI()
     fieldbus_Model.selectedDataReceive = ''
   end
   fieldbus_Model.totalDataSizeReceive = fieldbus_Model.helperFuncs.getDataSize(fieldbus_Model.parameters.dataTypesReceive)
-  Script.notifyEvent('Fieldbus_OnNewStatusLogMessage', "New data size to receive = " .. tostring(fieldbus_Model.totalDataSizeReceive))
+  if fieldbus_Model.totalDataSizeReceive == 0 then
+    Script.notifyEvent('Fieldbus_OnNewStatusLogMessage', "New transmit data size = 0 or unknwown.")
+  else
+    Script.notifyEvent('Fieldbus_OnNewStatusLogMessage', "New data size to receive = " .. tostring(fieldbus_Model.totalDataSizeReceive))
+  end
   handleOnExpiredTmrFieldbus()
 end
 Script.serveFunction('CSK_Fieldbus.deleteDataToReceiveViaUI', deleteDataToReceiveViaUI)
@@ -907,7 +950,11 @@ local function selectDataTransmit(dataName)
       Script.notifyEvent("Fieldbus_OnNewStatusRegisteredEventTransmit", fieldbus_Model.registerEventTransmit)
       Script.notifyEvent("Fieldbus_OnNewStatusConvertDataTransmit", fieldbus_Model.convertDataTransmit)
       Script.notifyEvent("Fieldbus_OnNewStatusBigEndianTransmit", fieldbus_Model.bigEndianTransmit)
-      Script.notifyEvent("Fieldbus_OnNewStatusDataTypeTransmit", fieldbus_Model.dataTypeTransmit)
+
+      if fieldbus_Model.convertDataTransmit == true then
+        
+        Script.notifyEvent("Fieldbus_OnNewStatusDataTypeTransmit", fieldbus_Model.dataTypeTransmit)
+      end
       return true
     end
   end
@@ -936,7 +983,10 @@ local function selectDataTransmitViaUI(selection)
       Script.notifyEvent("Fieldbus_OnNewStatusRegisteredEventTransmit", fieldbus_Model.registerEventTransmit)
       Script.notifyEvent("Fieldbus_OnNewStatusConvertDataTransmit", fieldbus_Model.convertDataTransmit)
       Script.notifyEvent("Fieldbus_OnNewStatusBigEndianTransmit", fieldbus_Model.bigEndianTransmit)
-      Script.notifyEvent("Fieldbus_OnNewStatusDataTypeTransmit", fieldbus_Model.dataTypeTransmit)
+      if fieldbus_Model.convertDataTransmit == true then
+        
+        Script.notifyEvent("Fieldbus_OnNewStatusDataTypeTransmit", fieldbus_Model.dataTypeTransmit)
+      end
     else
       fieldbus_Model.selectedDataTransmit = ''
     end
@@ -963,7 +1013,12 @@ local function selectDataReceiveViaUI(selection)
       Script.notifyEvent("Fieldbus_OnNewStatusDataNameReceive", fieldbus_Model.dataNameReceive)
       Script.notifyEvent("Fieldbus_OnNewStatusConvertDataReceive", fieldbus_Model.convertDataReceive)
       Script.notifyEvent("Fieldbus_OnNewStatusBigEndianReceive", fieldbus_Model.bigEndianReceive)
-      Script.notifyEvent("Fieldbus_OnNewStatusDataTypeReceive", fieldbus_Model.dataTypeReceive)
+
+      if fieldbus_Model.convertDataReceive == true then
+        
+        Script.notifyEvent("Fieldbus_OnNewStatusDataTypeReceive", fieldbus_Model.dataTypeReceive)
+      end
+
     else
       fieldbus_Model.selectedDataReceive = ''
     end
@@ -1056,8 +1111,10 @@ end
 local function handleOnExpiredOpenCommunication()
   Script.notifyEvent("Fieldbus_OnNewStatusFieldbusInfo", 'Setting up fieldbus protocol. Please be patient...')
   fieldbus_Model.openCommunication()
+  tmrSetFBConfig:start()
 end
 Timer.register(tmrOpenCommunication, 'OnExpired', handleOnExpiredOpenCommunication)
+Timer.register(tmrSetFBConfig, 'OnExpired', setEtherNetIPConfig)
 
 local function loadParameters()
   if fieldbus_Model.persistentModuleAvailable then
@@ -1071,7 +1128,7 @@ local function loadParameters()
       fieldbus_Model.parameters = fieldbus_Model.helperFuncs.convertContainer2Table(data)
 
       -- If something needs to be configured/activated with new loaded data, place this here
-      if not _G.availableAPIs.isSIM2000ST then
+      if not _G.availableAPIs.setFBProtocol then
         local fbMode = Parameters.get('FBmode')
         if (fbMode == 0 and fieldbus_Model.parameters.protocol ~= 'DISABLED') or (fbMode == 1 and fieldbus_Model.parameters.protocol ~= 'ProfinetIO') or ( fbMode == 2 and fieldbus_Model.parameters.protocol ~= 'EtherNetIP') then
           _G.logger:warning(nameOfModule .. ": Current fieldbus protocol of device differs from parameter setup. Please restart device.")
@@ -1092,15 +1149,16 @@ local function loadParameters()
       end
 
       if fieldbus_Model.parameters.active == true then
-        if _G.availableAPIs.isSIM2000ST then
-          closeCommunication() -- SIM2000ST-E is able to switch mode during runtime
+        if _G.availableAPIs.setFBProtocol then
+          closeCommunication() -- SIM2000ST-E and SIM800 are able to switch mode during runtime
           tmrOpenCommunication:start()
         else
           fieldbus_Model.openCommunication()
+          tmrSetFBConfig:start()
         end
       else
-        if _G.availableAPIs.isSIM2000ST then
-          closeCommunication() -- SIM2000ST-E is able to switch mode during runtime
+        if _G.availableAPIs.setFBProtocol then
+          closeCommunication() -- SIM2000ST-E and SIM800 are able to switch mode during runtime
         end
       end
 

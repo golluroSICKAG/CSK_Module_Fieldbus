@@ -606,6 +606,10 @@ After that it will transmit the full data to the fieldbus.</desc>
                     <desc>Function to write ControlBitsIn.</desc>
                     <param desc="Value for ControlBits." multiplicity="1" name="value" type="int"/>
                 </function>
+                <function name="transmit">
+                    <desc>Function to transmit binary data to fieldbus.</desc>
+                    <param desc="Binary data" multiplicity="1" name="data" type="binary"/>
+                </function>
             </serves>
         </crown>
         <crown name="Fieldbus_FC">
@@ -709,7 +713,7 @@ After that it will transmit the full data to the fieldbus.</desc>
             </crown>
         </crown>
         <meta key="author">SICK AG</meta>
-        <meta key="version">1.0.0b_2025100701</meta>
+        <meta key="version">1.0.0b_2026021201</meta>
         <meta key="priority">low</meta>
         <meta key="copy-protected">false</meta>
         <meta key="read-protected">false</meta>

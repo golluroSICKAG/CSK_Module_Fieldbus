@@ -345,12 +345,6 @@
                                                                                                 path="param/args/mode"
                                                                                                 auto-commit>
                                                                                             </crown-binding>
-                                                                                            <crown-edpws-binding
-                                                                                                property="disabled"
-                                                                                                name="CSK_Fieldbus/OnNewStatusFieldbusActive"
-                                                                                                update-on-resume
-                                                                                                converter="function(value) {return !value;}">
-                                                                                            </crown-edpws-binding>
                                                                                         </davinci-drop-down>
                                                                                     </layout-column>
                                                                                     <layout-column id="ColumnLayout226"
@@ -1771,7 +1765,8 @@
                                                                     </layout-column>
                                                                     <layout-column id="ColumnLayout38"
                                                                         style="align-items: stretch">
-                                                                        <davinci-checkbox id="CB_Convert">
+                                                                        <davinci-checkbox id="CB_Convert"
+                                                                            title="Before sending data as binary string to fieldbus, convert it to specific data type.">
                                                                             <span>Convert data</span>
                                                                             <crown-edpws-binding property="checked"
                                                                                 name="CSK_Fieldbus/OnNewStatusConvertDataTransmit"
@@ -1783,102 +1778,151 @@
                                                                             </crown-binding>
                                                                         </davinci-checkbox>
                                                                     </layout-column>
-                                                                    <layout-column id="ColumnLayout40"
-                                                                        style="align-items: stretch">
-                                                                        <davinci-checkbox id="CB_Endianess"
-                                                                            title="Little endian per default">
-                                                                            <span>Big Endian</span>
-                                                                            <crown-edpws-binding property="checked"
-                                                                                name="CSK_Fieldbus/OnNewStatusBigEndianTransmit"
-                                                                                update-on-resume>
-                                                                            </crown-edpws-binding>
-                                                                            <crown-binding event="change"
-                                                                                name="CSK_Fieldbus/setBigEndianTransmit"
-                                                                                path="param/args/status" auto-commit>
-                                                                            </crown-binding>
-                                                                        </davinci-checkbox>
-                                                                    </layout-column>
-                                                                    <layout-column id="ColumnLayout39"
-                                                                        style="align-items: stretch">
-                                                                        <davinci-drop-down id="DD_DataType"
-                                                                            label="Data type">
-                                                                            <davinci-option id="Option_CHAR"
-                                                                                value="CHAR">
-                                                                                <span>CHAR</span>
-                                                                            </davinci-option>
-                                                                            <davinci-option id="Option_DOUBLE"
-                                                                                value="DOUBLE">
-                                                                                <span>DOUBLE</span>
-                                                                            </davinci-option>
-                                                                            <davinci-option id="Option_FLOAT"
-                                                                                value="FLOAT">
-                                                                                <span>FLOAT</span>
-                                                                            </davinci-option>
-                                                                            <davinci-option id="Option_S_BYTE"
-                                                                                value="S_BYTE">
-                                                                                <span>S_BYTE</span>
-                                                                            </davinci-option>
-                                                                            <davinci-option id="Option_S_INT1"
-                                                                                value="S_INT1">
-                                                                                <span>S_INT1</span>
-                                                                            </davinci-option>
-                                                                            <davinci-option id="Option_S_INT2"
-                                                                                value="S_INT2">
-                                                                                <span>S_INT2</span>
-                                                                            </davinci-option>
-                                                                            <davinci-option id="Option_S_INT4"
-                                                                                value="S_INT4">
-                                                                                <span>S_INT4</span>
-                                                                            </davinci-option>
-                                                                            <davinci-option id="Option_S_INT8"
-                                                                                value="S_INT8">
-                                                                                <span>S_INT8</span>
-                                                                            </davinci-option>
-                                                                            <davinci-option id="Option_S_LONG"
-                                                                                value="S_LONG">
-                                                                                <span>S_LONG</span>
-                                                                            </davinci-option>
-                                                                            <davinci-option id="Option_S_SHORT"
-                                                                                value="S_SHORT">
-                                                                                <span>S_SHORT</span>
-                                                                            </davinci-option>
-                                                                            <davinci-option id="Option_U_BYTE"
-                                                                                value="U_BYTE">
-                                                                                <span>U_BYTE</span>
-                                                                            </davinci-option>
-                                                                            <davinci-option id="Option_U_INT1"
-                                                                                value="U_INT1">
-                                                                                <span>U_INT1</span>
-                                                                            </davinci-option>
-                                                                            <davinci-option id="Option_U_INT2"
-                                                                                value="U_INT2">
-                                                                                <span>U_INT2</span>
-                                                                            </davinci-option>
-                                                                            <davinci-option id="Option_U_INT4"
-                                                                                value="U_INT4">
-                                                                                <span>U_INT4</span>
-                                                                            </davinci-option>
-                                                                            <davinci-option id="Option_U_INT8"
-                                                                                value="U_INT8">
-                                                                                <span>U_INT8</span>
-                                                                            </davinci-option>
-                                                                            <davinci-option id="Option_U_LONG"
-                                                                                value="U_LONG">
-                                                                                <span>U_LONG</span>
-                                                                            </davinci-option>
-                                                                            <davinci-option id="Option_U_SHORT"
-                                                                                value="U_SHORT">
-                                                                                <span>U_SHORT</span>
-                                                                            </davinci-option>
+                                                                    <layout-column id="ColumnLayout13"
+                                                                        style="align-items: stretch; flex-grow: 2">
+                                                                        <stacked-view id="SV_ConvertTransmitData">
+                                                                            <stacked-pane id="SP_ConvertTrasnmitON"
+                                                                                value="true">
+                                                                                <layout-row id="RowLayout48"
+                                                                                    style="align-items: center">
+                                                                                    <layout-column id="ColumnLayout40"
+                                                                                        style="align-items: stretch">
+                                                                                        <davinci-checkbox
+                                                                                            id="CB_Endianess"
+                                                                                            title="Little endian per default">
+                                                                                            <span>Big Endian</span>
+                                                                                            <crown-edpws-binding
+                                                                                                property="checked"
+                                                                                                name="CSK_Fieldbus/OnNewStatusBigEndianTransmit"
+                                                                                                update-on-resume>
+                                                                                            </crown-edpws-binding>
+                                                                                            <crown-binding
+                                                                                                event="change"
+                                                                                                name="CSK_Fieldbus/setBigEndianTransmit"
+                                                                                                path="param/args/status"
+                                                                                                auto-commit>
+                                                                                            </crown-binding>
+                                                                                        </davinci-checkbox>
+                                                                                    </layout-column>
+                                                                                    <layout-column id="ColumnLayout39"
+                                                                                        style="align-items: stretch">
+                                                                                        <davinci-drop-down
+                                                                                            id="DD_DataType"
+                                                                                            label="Data type">
+                                                                                            <davinci-option
+                                                                                                id="Option_CHAR"
+                                                                                                value="CHAR">
+                                                                                                <span>CHAR</span>
+                                                                                            </davinci-option>
+                                                                                            <davinci-option
+                                                                                                id="Option_DOUBLE"
+                                                                                                value="DOUBLE">
+                                                                                                <span>DOUBLE</span>
+                                                                                            </davinci-option>
+                                                                                            <davinci-option
+                                                                                                id="Option_FLOAT"
+                                                                                                value="FLOAT">
+                                                                                                <span>FLOAT</span>
+                                                                                            </davinci-option>
+                                                                                            <davinci-option
+                                                                                                id="Option_S_BYTE"
+                                                                                                value="S_BYTE">
+                                                                                                <span>S_BYTE</span>
+                                                                                            </davinci-option>
+                                                                                            <davinci-option
+                                                                                                id="Option_S_INT1"
+                                                                                                value="S_INT1">
+                                                                                                <span>S_INT1</span>
+                                                                                            </davinci-option>
+                                                                                            <davinci-option
+                                                                                                id="Option_S_INT2"
+                                                                                                value="S_INT2">
+                                                                                                <span>S_INT2</span>
+                                                                                            </davinci-option>
+                                                                                            <davinci-option
+                                                                                                id="Option_S_INT4"
+                                                                                                value="S_INT4">
+                                                                                                <span>S_INT4</span>
+                                                                                            </davinci-option>
+                                                                                            <davinci-option
+                                                                                                id="Option_S_INT8"
+                                                                                                value="S_INT8">
+                                                                                                <span>S_INT8</span>
+                                                                                            </davinci-option>
+                                                                                            <davinci-option
+                                                                                                id="Option_S_LONG"
+                                                                                                value="S_LONG">
+                                                                                                <span>S_LONG</span>
+                                                                                            </davinci-option>
+                                                                                            <davinci-option
+                                                                                                id="Option_S_SHORT"
+                                                                                                value="S_SHORT">
+                                                                                                <span>S_SHORT</span>
+                                                                                            </davinci-option>
+                                                                                            <davinci-option
+                                                                                                id="Option_U_BYTE"
+                                                                                                value="U_BYTE">
+                                                                                                <span>U_BYTE</span>
+                                                                                            </davinci-option>
+                                                                                            <davinci-option
+                                                                                                id="Option_U_INT1"
+                                                                                                value="U_INT1">
+                                                                                                <span>U_INT1</span>
+                                                                                            </davinci-option>
+                                                                                            <davinci-option
+                                                                                                id="Option_U_INT2"
+                                                                                                value="U_INT2">
+                                                                                                <span>U_INT2</span>
+                                                                                            </davinci-option>
+                                                                                            <davinci-option
+                                                                                                id="Option_U_INT4"
+                                                                                                value="U_INT4">
+                                                                                                <span>U_INT4</span>
+                                                                                            </davinci-option>
+                                                                                            <davinci-option
+                                                                                                id="Option_U_INT8"
+                                                                                                value="U_INT8">
+                                                                                                <span>U_INT8</span>
+                                                                                            </davinci-option>
+                                                                                            <davinci-option
+                                                                                                id="Option_U_LONG"
+                                                                                                value="U_LONG">
+                                                                                                <span>U_LONG</span>
+                                                                                            </davinci-option>
+                                                                                            <davinci-option
+                                                                                                id="Option_U_SHORT"
+                                                                                                value="U_SHORT">
+                                                                                                <span>U_SHORT</span>
+                                                                                            </davinci-option>
+                                                                                            <crown-edpws-binding
+                                                                                                property="value"
+                                                                                                name="CSK_Fieldbus/OnNewStatusDataTypeTransmit"
+                                                                                                update-on-resume>
+                                                                                            </crown-edpws-binding>
+                                                                                            <crown-binding
+                                                                                                event="change"
+                                                                                                name="CSK_Fieldbus/setDataTypeTransmit"
+                                                                                                path="param/args/dataType"
+                                                                                                auto-commit>
+                                                                                            </crown-binding>
+                                                                                        </davinci-drop-down>
+                                                                                    </layout-column>
+                                                                                </layout-row>
+                                                                            </stacked-pane>
+                                                                            <stacked-pane id="StackedPane1"
+                                                                                value="false">
+                                                                                <layout-row id="RowLayout49">
+                                                                                    <layout-column id="ColumnLayout15"
+                                                                                        style="align-items: stretch">
+                                                                                    </layout-column>
+                                                                                </layout-row>
+                                                                            </stacked-pane>
                                                                             <crown-edpws-binding property="value"
-                                                                                name="CSK_Fieldbus/OnNewStatusDataTypeTransmit"
-                                                                                update-on-resume>
+                                                                                name="CSK_Fieldbus/OnNewStatusConvertDataTransmit"
+                                                                                update-on-resume
+                                                                                converter="function(value) {return value.toString();}">
                                                                             </crown-edpws-binding>
-                                                                            <crown-binding event="change"
-                                                                                name="CSK_Fieldbus/setDataTypeTransmit"
-                                                                                path="param/args/dataType" auto-commit>
-                                                                            </crown-binding>
-                                                                        </davinci-drop-down>
+                                                                        </stacked-view>
                                                                     </layout-column>
                                                                     <layout-column id="ColumnLayout41"
                                                                         style="align-items: stretch">
@@ -1921,11 +1965,11 @@
                                                                     <curie-table-column id="DTC_EventTransmit"
                                                                         header="Event">
                                                                     </curie-table-column>
-                                                                    <curie-table-column id="DTC_DataTypeTransmit"
-                                                                        header="DataType">
-                                                                    </curie-table-column>
                                                                     <curie-table-column id="DTC_ConvertTransmit"
                                                                         header="Convert">
+                                                                    </curie-table-column>
+                                                                    <curie-table-column id="DTC_DataTypeTransmit"
+                                                                        header="DataType">
                                                                     </curie-table-column>
                                                                     <curie-table-column id="DTC_BigEndianTransmit"
                                                                         header="Big Endian">
@@ -2111,7 +2155,9 @@
                                                                     </layout-column>
                                                                     <layout-column id="ColumnLayout99"
                                                                         style="align-items: stretch">
-                                                                        <davinci-checkbox id="Checkbox1">
+                                                                        <davinci-checkbox
+                                                                            id="Checkbox_ConvertReceivedData"
+                                                                            title="Convert received binary data to specific data type.">
                                                                             <span>Convert data</span>
                                                                             <crown-edpws-binding property="checked"
                                                                                 name="CSK_Fieldbus/OnNewStatusConvertDataReceive"
@@ -2123,100 +2169,151 @@
                                                                             </crown-binding>
                                                                         </davinci-checkbox>
                                                                     </layout-column>
-                                                                    <layout-column id="ColumnLayout100"
-                                                                        style="align-items: stretch">
-                                                                        <davinci-checkbox id="Checkbox2"
-                                                                            title="Little endian per default">
-                                                                            <span>Big Endian</span>
-                                                                            <crown-edpws-binding property="checked"
-                                                                                name="CSK_Fieldbus/OnNewStatusBigEndianReceive"
-                                                                                update-on-resume>
-                                                                            </crown-edpws-binding>
-                                                                            <crown-binding event="change"
-                                                                                name="CSK_Fieldbus/setBigEndianReceive"
-                                                                                path="param/args/status" auto-commit>
-                                                                            </crown-binding>
-                                                                        </davinci-checkbox>
-                                                                    </layout-column>
-                                                                    <layout-column id="ColumnLayout101"
-                                                                        style="align-items: stretch">
-                                                                        <davinci-drop-down id="DD_DataTypeReceive"
-                                                                            label="Data type">
-                                                                            <davinci-option id="OptionR_CHAR"
-                                                                                value="CHAR">
-                                                                                <span>CHAR</span>
-                                                                            </davinci-option>
-                                                                            <davinci-option id="Option8" value="DOUBLE">
-                                                                                <span>DOUBLE</span>
-                                                                            </davinci-option>
-                                                                            <davinci-option id="Option9" value="FLOAT">
-                                                                                <span>FLOAT</span>
-                                                                            </davinci-option>
-                                                                            <davinci-option id="Option10"
-                                                                                value="S_BYTE">
-                                                                                <span>S_BYTE</span>
-                                                                            </davinci-option>
-                                                                            <davinci-option id="Option11"
-                                                                                value="S_INT1">
-                                                                                <span>S_INT1</span>
-                                                                            </davinci-option>
-                                                                            <davinci-option id="Option12"
-                                                                                value="S_INT2">
-                                                                                <span>S_INT2</span>
-                                                                            </davinci-option>
-                                                                            <davinci-option id="Option13"
-                                                                                value="S_INT4">
-                                                                                <span>S_INT4</span>
-                                                                            </davinci-option>
-                                                                            <davinci-option id="Option14"
-                                                                                value="S_INT8">
-                                                                                <span>S_INT8</span>
-                                                                            </davinci-option>
-                                                                            <davinci-option id="Option15"
-                                                                                value="S_LONG">
-                                                                                <span>S_LONG</span>
-                                                                            </davinci-option>
-                                                                            <davinci-option id="Option16"
-                                                                                value="S_SHORT">
-                                                                                <span>S_SHORT</span>
-                                                                            </davinci-option>
-                                                                            <davinci-option id="Option17"
-                                                                                value="U_BYTE">
-                                                                                <span>U_BYTE</span>
-                                                                            </davinci-option>
-                                                                            <davinci-option id="Option18"
-                                                                                value="U_INT1">
-                                                                                <span>U_INT1</span>
-                                                                            </davinci-option>
-                                                                            <davinci-option id="Option19"
-                                                                                value="U_INT2">
-                                                                                <span>U_INT2</span>
-                                                                            </davinci-option>
-                                                                            <davinci-option id="Option20"
-                                                                                value="U_INT4">
-                                                                                <span>U_INT4</span>
-                                                                            </davinci-option>
-                                                                            <davinci-option id="Option21"
-                                                                                value="U_INT8">
-                                                                                <span>U_INT8</span>
-                                                                            </davinci-option>
-                                                                            <davinci-option id="Option22"
-                                                                                value="U_LONG">
-                                                                                <span>U_LONG</span>
-                                                                            </davinci-option>
-                                                                            <davinci-option id="Option23"
-                                                                                value="U_SHORT">
-                                                                                <span>U_SHORT</span>
-                                                                            </davinci-option>
-                                                                            <crown-binding event="change"
-                                                                                name="CSK_Fieldbus/setDataTypeReceive"
-                                                                                path="param/args/dataType" auto-commit>
-                                                                            </crown-binding>
+                                                                    <layout-column id="ColumnLayout3"
+                                                                        style="align-items: stretch; flex-grow: 2">
+                                                                        <stacked-view id="SV_ConvertReceivedData">
+                                                                            <stacked-pane id="SP_ReceiveConvertON"
+                                                                                value="true">
+                                                                                <layout-row id="RowLayout10"
+                                                                                    style="align-items: center">
+                                                                                    <layout-column id="ColumnLayout100"
+                                                                                        style="align-items: stretch">
+                                                                                        <davinci-checkbox id="Checkbox2"
+                                                                                            title="Little endian per default">
+                                                                                            <span>Big Endian</span>
+                                                                                            <crown-edpws-binding
+                                                                                                property="checked"
+                                                                                                name="CSK_Fieldbus/OnNewStatusBigEndianReceive"
+                                                                                                update-on-resume>
+                                                                                            </crown-edpws-binding>
+                                                                                            <crown-binding
+                                                                                                event="change"
+                                                                                                name="CSK_Fieldbus/setBigEndianReceive"
+                                                                                                path="param/args/status"
+                                                                                                auto-commit>
+                                                                                            </crown-binding>
+                                                                                        </davinci-checkbox>
+                                                                                    </layout-column>
+                                                                                    <layout-column id="ColumnLayout101"
+                                                                                        style="align-items: stretch">
+                                                                                        <davinci-drop-down
+                                                                                            id="DD_DataTypeReceive"
+                                                                                            label="Data type">
+                                                                                            <davinci-option
+                                                                                                id="OptionR_CHAR"
+                                                                                                value="CHAR">
+                                                                                                <span>CHAR</span>
+                                                                                            </davinci-option>
+                                                                                            <davinci-option id="Option8"
+                                                                                                value="DOUBLE">
+                                                                                                <span>DOUBLE</span>
+                                                                                            </davinci-option>
+                                                                                            <davinci-option id="Option9"
+                                                                                                value="FLOAT">
+                                                                                                <span>FLOAT</span>
+                                                                                            </davinci-option>
+                                                                                            <davinci-option
+                                                                                                id="Option10"
+                                                                                                value="S_BYTE">
+                                                                                                <span>S_BYTE</span>
+                                                                                            </davinci-option>
+                                                                                            <davinci-option
+                                                                                                id="Option11"
+                                                                                                value="S_INT1">
+                                                                                                <span>S_INT1</span>
+                                                                                            </davinci-option>
+                                                                                            <davinci-option
+                                                                                                id="Option12"
+                                                                                                value="S_INT2">
+                                                                                                <span>S_INT2</span>
+                                                                                            </davinci-option>
+                                                                                            <davinci-option
+                                                                                                id="Option13"
+                                                                                                value="S_INT4">
+                                                                                                <span>S_INT4</span>
+                                                                                            </davinci-option>
+                                                                                            <davinci-option
+                                                                                                id="Option14"
+                                                                                                value="S_INT8">
+                                                                                                <span>S_INT8</span>
+                                                                                            </davinci-option>
+                                                                                            <davinci-option
+                                                                                                id="Option15"
+                                                                                                value="S_LONG">
+                                                                                                <span>S_LONG</span>
+                                                                                            </davinci-option>
+                                                                                            <davinci-option
+                                                                                                id="Option16"
+                                                                                                value="S_SHORT">
+                                                                                                <span>S_SHORT</span>
+                                                                                            </davinci-option>
+                                                                                            <davinci-option
+                                                                                                id="Option17"
+                                                                                                value="U_BYTE">
+                                                                                                <span>U_BYTE</span>
+                                                                                            </davinci-option>
+                                                                                            <davinci-option
+                                                                                                id="Option18"
+                                                                                                value="U_INT1">
+                                                                                                <span>U_INT1</span>
+                                                                                            </davinci-option>
+                                                                                            <davinci-option
+                                                                                                id="Option19"
+                                                                                                value="U_INT2">
+                                                                                                <span>U_INT2</span>
+                                                                                            </davinci-option>
+                                                                                            <davinci-option
+                                                                                                id="Option20"
+                                                                                                value="U_INT4">
+                                                                                                <span>U_INT4</span>
+                                                                                            </davinci-option>
+                                                                                            <davinci-option
+                                                                                                id="Option21"
+                                                                                                value="U_INT8">
+                                                                                                <span>U_INT8</span>
+                                                                                            </davinci-option>
+                                                                                            <davinci-option
+                                                                                                id="Option22"
+                                                                                                value="U_LONG">
+                                                                                                <span>U_LONG</span>
+                                                                                            </davinci-option>
+                                                                                            <davinci-option
+                                                                                                id="Option23"
+                                                                                                value="U_SHORT">
+                                                                                                <span>U_SHORT</span>
+                                                                                            </davinci-option>
+                                                                                            <crown-binding
+                                                                                                event="change"
+                                                                                                name="CSK_Fieldbus/setDataTypeReceive"
+                                                                                                path="param/args/dataType"
+                                                                                                auto-commit>
+                                                                                            </crown-binding>
+                                                                                            <crown-edpws-binding
+                                                                                                property="value"
+                                                                                                name="CSK_Fieldbus/OnNewStatusDataTypeReceive"
+                                                                                                update-on-resume>
+                                                                                            </crown-edpws-binding>
+                                                                                        </davinci-drop-down>
+                                                                                    </layout-column>
+                                                                                </layout-row>
+                                                                            </stacked-pane>
+                                                                            <stacked-pane id="SP_ReceiveConvertOFF"
+                                                                                value="false">
+                                                                                <layout-row id="RowLayout25">
+                                                                                    <layout-column id="ColumnLayout4"
+                                                                                        style="align-items: stretch">
+                                                                                    </layout-column>
+                                                                                    <layout-column id="ColumnLayout5"
+                                                                                        style="align-items: stretch">
+                                                                                    </layout-column>
+                                                                                </layout-row>
+                                                                            </stacked-pane>
                                                                             <crown-edpws-binding property="value"
-                                                                                name="CSK_Fieldbus/OnNewStatusDataTypeReceive"
-                                                                                update-on-resume>
+                                                                                name="CSK_Fieldbus/OnNewStatusConvertDataReceive"
+                                                                                update-on-resume
+                                                                                converter="function(value) {return value.toString();}">
                                                                             </crown-edpws-binding>
-                                                                        </davinci-drop-down>
+                                                                        </stacked-view>
                                                                     </layout-column>
                                                                     <layout-column id="ColumnLayout103"
                                                                         style="align-items: stretch">
@@ -2256,11 +2353,11 @@
                                                                     <curie-table-column id="DTC_NameReceive"
                                                                         header="Name">
                                                                     </curie-table-column>
-                                                                    <curie-table-column id="DTC_DataTypeReceive"
-                                                                        header="DataType">
-                                                                    </curie-table-column>
                                                                     <curie-table-column id="DTC_ConvertReceive"
                                                                         header="Convert">
+                                                                    </curie-table-column>
+                                                                    <curie-table-column id="DTC_DataTypeReceive"
+                                                                        header="DataType">
                                                                     </curie-table-column>
                                                                     <curie-table-column id="DTC_BigEndianReceive"
                                                                         header="Big Endian">

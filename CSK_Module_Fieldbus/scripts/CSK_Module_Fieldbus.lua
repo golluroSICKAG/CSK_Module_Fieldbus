@@ -67,9 +67,6 @@ local function main()
   -- Can be used e.g. like this
   ----------------------------------------------------------------------------------------
 
-  -- ...
-  CSK_Fieldbus.pageCalled() -- Update UI
-
   --[[
   CSK_Fieldbus.setDataNameReceive('Data1')
   CSK_Fieldbus.setDataTypeReceive('U_INT2')
@@ -108,8 +105,10 @@ local function main()
     CSK_Fieldbus.setDataNameTransmit('Data' ..tostring(i))
     CSK_Fieldbus.addDataToTransmitViaUI()
   end
-]]
-  
+  ]]
+
+  CSK_Fieldbus.pageCalled() -- Update UI
+
 end
 Script.register("Engine.OnStarted", main)
 
