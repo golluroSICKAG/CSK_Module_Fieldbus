@@ -104,60 +104,10 @@ fieldbus_Model.totalDataSizeReceive = 0 -- Sum of data size to transmit
 
 -- Parameters to be saved permanently if wanted
 fieldbus_Model.parameters = {}
-fieldbus_Model.parameters.flowConfigPriority = CSK_FlowConfig ~= nil or false -- Status if FlowConfig should have priority for FlowConfig relevant configurations
+fieldbus_Model.parameters = fieldbus_Model.helperFuncs.defaultParameters.getParameters() -- Load default parameters
+
 fieldbus_Model.parameters.protocol = fieldbus_Model.fbMode -- Type of fieldbus communication, e.g. 'DISABLED' (0) / 'ProfinetIO' (1) / 'EtherNetIP' (2) / 'ETHERCAT' (not available yet)
-fieldbus_Model.parameters.createMode = 'EXPLICIT_OPEN' -- or 'EXPLICIT_OPEN', AUTOMATIC_OPEN
-fieldbus_Model.parameters.transmissionMode = 'RAW' -- or 'RAW', CONFIRMED_MESSAGING
-fieldbus_Model.parameters.active = false -- Status if fieldbus connection should be established
 
-fieldbus_Model.parameters.dataNamesTransmit = {} -- List of names/identifiers of data entries to transmit
-fieldbus_Model.parameters.registeredEventsTransmit = {} -- List of names of event to receive data to transmit
-fieldbus_Model.parameters.convertDataTypesTransmit = {} -- Status if received data needs to be converted to binary or is already binary
-fieldbus_Model.parameters.dataTypesTransmit = {} -- Data types of values to transmit
-fieldbus_Model.parameters.bigEndiansTransmit = {} -- Little endian per default
-
-fieldbus_Model.parameters.registeredEventControlBitsIn = '' -- Event to set ControlBitsIn
-
-fieldbus_Model.parameters.dataNamesReceive = {} -- List of names/identifiers of data entries to transmit
-fieldbus_Model.parameters.convertDataTypesReceive = {} -- Status if received data needs to be converted to binary or is already binary
-fieldbus_Model.parameters.dataTypesReceive = {} -- Data types of values to transmit
-fieldbus_Model.parameters.bigEndiansReceive = {} -- Little endian per default
-
-fieldbus_Model.parameters.etherNetIP = {}
-fieldbus_Model.parameters.etherNetIP.storageRequestDataPath = '/public/FieldBus/EtherNetIP/StorageData.dat' -- Path to store fieldbus storage data.
-fieldbus_Model.parameters.etherNetIP.addressingMode = 'STATIC' -- or 'DHCP' / 'BOOTP'
-fieldbus_Model.parameters.etherNetIP.ipAddress = '192.168.0.1' -- IP address
-fieldbus_Model.parameters.etherNetIP.ipAddress2 = '192.168.0.1' -- IP address
-fieldbus_Model.parameters.etherNetIP.netmask = '255.255.255.0' --  Subnet mask
-fieldbus_Model.parameters.etherNetIP.netmask2 = '255.255.255.0' --  Backup subnet mask --TODO never used?
-fieldbus_Model.parameters.etherNetIP.gateway = '0.0.0.0' -- Gateway address
-fieldbus_Model.parameters.etherNetIP.gateway2 = '0.0.0.0' -- Backup Gateway address --TODO never used?
-fieldbus_Model.parameters.etherNetIP.nameServer = '0.0.0.0' -- Primary name server
-fieldbus_Model.parameters.etherNetIP.nameServer2 = '0.0.0.0' -- Secondary name server
-fieldbus_Model.parameters.etherNetIP.domainName = '' -- Domain name
-fieldbus_Model.parameters.etherNetIP.macAddress = '' -- MAC address of fieldbus implementation.
-
-fieldbus_Model.parameters.profinetIO = {}
-fieldbus_Model.parameters.profinetIO.storageRequestDataPath = '/public/FieldBus/ProfinetIO/StorageData.dat' -- Path to store fieldbus storage data.
-fieldbus_Model.parameters.profinetIO.deviceName = '' -- Device name
-fieldbus_Model.parameters.profinetIO.remanent = false -- Status if the network configuration tool sets the current name of the device permanently (true), that is, it will be reloaded after a restart of the device.
-fieldbus_Model.parameters.profinetIO.ipAddress = '0.0.0.0' -- IP address
-fieldbus_Model.parameters.profinetIO.netmask = '255.255.255.0' --  Subnet mask
-fieldbus_Model.parameters.profinetIO.gateway = '0.0.0.0' -- Gateway address
-fieldbus_Model.parameters.profinetIO.macAddress = '' -- MAC address of fieldbus implementation.
-
-fieldbus_Model.parameters.profinetIO.dapImDescriptor = 'Descriptor' -- The descriptor (a.k.a. 'comment') as used for the DAP’s (device access point) I&M3 data.
-fieldbus_Model.parameters.profinetIO.dapImHardwareRev = 0 --  Hardware revision as used for the DAP (device access point) used in the I&M0 data.
-fieldbus_Model.parameters.profinetIO.dapImInstallDate = 'YYYY-MM-DD' -- Installation date as used for the DAP’s (device access point) I&M2 data.
-
--- Software revision for the DAP (device access point) used in the I&M0 data.
-fieldbus_Model.parameters.profinetIO.dapImSoftwareRevPrefix = 'Prefix' -- Prefix character of the software revision of this I&M0 data.
-fieldbus_Model.parameters.profinetIO.dapImSoftwareRevFuncEnhancement = 0 -- Functional enhancement identifier of the software revision of this I&M0 data.
-fieldbus_Model.parameters.profinetIO.dapImSoftwareRevBugFix = 0 -- Bug fix identifier of the software revision of this I&M0 data.
-fieldbus_Model.parameters.profinetIO.dapImSoftwareRevInternalChange = 0 -- Internal change identifier of the software revision of this I&M0 data.
-
-fieldbus_Model.parameters.profinetIO.dapImTagFunction = 'PlantDesignation' -- Function tag (a.k.a. 'plant designation') as used for the DAP’s (device access point) I&M1 data.
-fieldbus_Model.parameters.profinetIO.dapImTagLocation = 'LocationIdentifier' -- Location tag (a.k.a. 'location identifier') as used for the DAP’s (device access point) I&M1 data.
 
 --- Function to create folder if it does not exists
 ---@param folder string Name of folder to create if it does not exists already
@@ -244,7 +194,7 @@ local function getEtherNetIPConfig()
 
   fieldbus_Model.parameters.etherNetIP.macAddress = FieldBus.Config.EtherNetIP.getMACAddress()
   if nil == fieldbus_Model.parameters.etherNetIP.macAddress then
-    _G.logger:warning("ENIP: FieldBus.Config.EtherNetIP.getMACAddress returned NIL!!!")
+    _G.logger:info("ENIP: FieldBus.Config.EtherNetIP.getMACAddress returned NIL!!!")
     fieldbus_Model.parameters.etherNetIP.macAddress = ''
   end
   Script.notifyEvent("Fieldbus_OnNewStatusEtherNetIPMACAddress", fieldbus_Model.parameters.etherNetIP.macAddress)
@@ -253,9 +203,9 @@ local function getEtherNetIPConfig()
 end
 fieldbus_Model.getEtherNetIPConfig = getEtherNetIPConfig
 
-local function callSetInterfaceConfig(ip)
+local function callSetInterfaceConfig()
   FieldBus.Config.EtherNetIP.setInterfaceConfig(
-    ip,
+    fieldbus_Model.parameters.etherNetIP.ipAddress,
     fieldbus_Model.parameters.etherNetIP.netmask,
     fieldbus_Model.parameters.etherNetIP.gateway,
     fieldbus_Model.parameters.etherNetIP.nameServer,
@@ -267,54 +217,35 @@ local function callSetInterfaceConfig(ip)
     getStatus()
 end
 
-local function checkIPSetup(ip)
-  local a, b, c, d = ip:match("(%d+)%.(%d+)%.(%d+)%.(%d+)")
-  local ipNum = tonumber(a) * 256^3 + tonumber(b) * 256^2 + tonumber(c) * 256 + tonumber(d)
-  a, b, c, d = fieldbus_Model.parameters.etherNetIP.netmask:match("(%d+)%.(%d+)%.(%d+)%.(%d+)")
-  local nmNum = tonumber(a) * 256^3 + tonumber(b) * 256^2 + tonumber(c) * 256 + tonumber(d)
-  a, b, c, d = fieldbus_Model.parameters.etherNetIP.gateway:match("(%d+)%.(%d+)%.(%d+)%.(%d+)")
-  local gwNum = tonumber(a) * 256^3 + tonumber(b) * 256^2 + tonumber(c) * 256 + tonumber(d)
-
-  -- Perform bitwise AND between IP address and Netmask to get the network address
-  local networkAddress = ipNum & nmNum
-  local gwNetworkAddress = gwNum & nmNum
-
-  -- Check if IP address and GW address are in the same network
-  if networkAddress == gwNetworkAddress then
-    return true
-  else
-    _G.logger:warning("IP Address / NetMask = " .. tostring(fieldbus_Model.parameters.etherNetIP.ipAddress) .. " / " .. tostring(fieldbus_Model.parameters.etherNetIP.netmask))
-    fieldbus_Model.info = "Cannot set the Ethernet connection. IP Address / NetMask = " .. tostring(fieldbus_Model.parameters.etherNetIP.ipAddress) .. " / " .. tostring(fieldbus_Model.parameters.etherNetIP.netmask)
-    return false
-  end
-end
-
+--- Function to validate preconfigured setup of EtherNet/IP
 local function checkEtherNetIPConfig()
   if fieldbus_Model.parameters.etherNetIP.ipAddress ~= '0.0.0.0' and fieldbus_Model.parameters.etherNetIP.netmask ~= '0.0.0.0' then
     if fieldbus_Model.parameters.etherNetIP.gateway ~= '0.0.0.0' then
-      -- Convert IPs and netmask to numbers
-      local sucIPCheck = checkIPSetup(fieldbus_Model.parameters.etherNetIP.ipAddress)
-      if sucIPCheck then
-        callSetInterfaceConfig(fieldbus_Model.parameters.etherNetIP.ipAddress)
-      else
-        local sucIPCheck2 = checkIPSetup(fieldbus_Model.parameters.etherNetIP.ipAddress2)
-        if sucIPCheck2 then
-          callSetInterfaceConfig(fieldbus_Model.parameters.etherNetIP.ipAddress2)
-        end
+      local ipCheck = fieldbus_Model.helperFuncs.checkIPSetup(fieldbus_Model.parameters.etherNetIP.ipAddress, fieldbus_Model.parameters.etherNetIP.netmask, fieldbus_Model.parameters.etherNetIP.gateway)
+      if not ipCheck then
+        _G.logger:info("Make sure that EtherNet/IP setup is correct: IP=" .. tostring(fieldbus_Model.parameters.etherNetIP.ipAddress) .. ', Mask=' .. tostring(fieldbus_Model.parameters.etherNetIP.netmask) .. ', GW=' .. tostring(fieldbus_Model.parameters.etherNetIP.gateway))
       end
+      callSetInterfaceConfig()
     else
-      callSetInterfaceConfig(fieldbus_Model.parameters.etherNetIP.ipAddress)
+      if _G.availableAPIs.isSIM800 then
+        local newGW = fieldbus_Model.helperFuncs.getIPSameSubnet(fieldbus_Model.parameters.etherNetIP.ipAddress, fieldbus_Model.parameters.etherNetIP.netmask)
+        if newGW ~= nil then
+          fieldbus_Model.parameters.etherNetIP.gateway = newGW
+          _G.logger:info("Gateway '0.0.0.0' is not allowed. Will set it to " .. tostring(fieldbus_Model.parameters.etherNetIP.gateway))
+          callSetInterfaceConfig()
+        else
+          _G.logger:warning("Was not able to set EtherNet/IP configuration. Please check configuration.")
+          fieldbus_Model.info = "Was not able to set EtherNet/IP configuration. Please check configuration."
+        end
+      else
+        callSetInterfaceConfig()
+      end
     end
   else
-    _G.logger:warning("IP Address / NetMask = " .. tostring(fieldbus_Model.parameters.etherNetIP.ipAddress) .. " / " .. tostring(fieldbus_Model.parameters.etherNetIP.netmask))
-    fieldbus_Model.info = "Cannot set the Ethernet connection. IP Address / NetMask = " .. tostring(fieldbus_Model.parameters.etherNetIP.ipAddress) .. " / " .. tostring(fieldbus_Model.parameters.etherNetIP.netmask)
+    _G.logger:warning("EtherNet/IP IP Address / Mask not valid = " .. tostring(fieldbus_Model.parameters.etherNetIP.ipAddress) .. " / " .. tostring(fieldbus_Model.parameters.etherNetIP.netmask))
+    fieldbus_Model.info = "Cannot configure EtherNet/IP connection. IP Address / NetMask = " .. tostring(fieldbus_Model.parameters.etherNetIP.ipAddress) .. " / " .. tostring(fieldbus_Model.parameters.etherNetIP.netmask)
   end
 end
-
-local tempTmr = Timer.create()
-tempTmr:setExpirationTime(1000)
-tempTmr:setPeriodic(false)
-Timer.register(tempTmr, 'OnExpired', checkEtherNetIPConfig)
 
 -- Function to set EtherNet/IP config
 local function setEtherNetIPConfig()
@@ -336,8 +267,8 @@ local function handleOnAddressingModeChanged(addressingMode)
   _G.logger:fine("New EtherNet/IP AddressingMode = " .. tostring(addressingMode))
   getInfo()
   getStatus()
+  getEtherNetIPConfig()
 end
-Script.register('FieldBus.Config.EtherNetIP.OnAddressingModeChanged', handleOnAddressingModeChanged)
 
 -- Function to react on received EtherNet/IP interface config.
 ---@param ipAddress string IP address.
@@ -347,8 +278,10 @@ Script.register('FieldBus.Config.EtherNetIP.OnAddressingModeChanged', handleOnAd
 ---@param nameServer2? string Secondary name server.
 ---@param domainName? string Default domain name.
 local function handleOnEthernetIPInterfaceConfigChanged(ipAddress, netmask, gateway, nameServer, nameServer2, domainName)
+  _G.logger:fine("ENIP: OnEthernetIPInterfaceConfigChanged event received! IP: " .. tostring(ipAddress) .. ', Mask: ' .. tostring(netmask) .. ', GW: ' .. tostring(gateway) .. ', Nameserver: ' .. tostring(nameServer) .. ', Nameserver2: ' .. tostring(nameServer2) .. ', Domain: ' .. tostring(domainName))
   getInfo()
   getStatus()
+  getEtherNetIPConfig()
 end
 
 -- Function to react on FieldbusStoreRequest
@@ -382,6 +315,8 @@ local function handleOnEtherNetIPFieldbusStorageRequest(storageHandle)
       storageResult = FieldBus.StorageRequest.setData(storageHandle, dataFromFile)
       if storageResult == false then
         _G.logger:severe(string.format("Setting data at storage request failed"))
+      else
+        _G.logger:info(string.format("Setting data at storage request succeeded"))
       end
     else
       _G.logger:info(string.format("Failed to open file to load storage data (file might not exists yet)."))
@@ -619,9 +554,6 @@ local function handleOnStatusChanged(status)
 
   if status == 'OPENED' then
     fieldbus_Model.opened = true
-    if fieldbus_Model.fbMode ~= "ProfinetIO" then
-      setEtherNetIPConfig()
-    end
   elseif status == 'ONLINE' then
     fieldbus_Model.opened = true
   elseif status == 'OFFLINE' or status == 'ERROR' or status == 'CLOSED' then
@@ -895,7 +827,7 @@ local function addDataTransmit(dataName, eventName, convert, dataType, bigEndian
 
   if convert == true then
     fieldbus_Model.parameters.dataTypesTransmit[dataName] = dataType
-    
+
   else
     fieldbus_Model.parameters.dataTypesTransmit[dataName] = 'RAW'
     --fieldbus_Model.parameters.bigEndiansTransmit[dataName] = '-'

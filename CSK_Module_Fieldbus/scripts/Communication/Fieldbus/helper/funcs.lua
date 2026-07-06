@@ -7,9 +7,12 @@
 --**********************Start Global Scope *********************************
 --**************************************************************************
 
+local nameOfModule = 'CSK_Fieldbus'
+
 local funcs = {}
 -- Providing standard JSON functions
 funcs.json = require('Communication/Fieldbus/helper/Json')
+funcs.defaultParameters = require('Communication/Fieldbus/Fieldbus_Parameters')
 
 --**************************************************************************
 --********************** End Global Scope **********************************
@@ -569,6 +572,179 @@ local function jsonLine2Table(intiStr, startInd, tab, resStr)
   return resStr
 end
 funcs.jsonLine2Table = jsonLine2Table
+
+--- Function to compare table content. Optionally will fill missing values within content table with values of defaultTable
+---@param content auto Data to check
+---@param defaultTable auto Reference data
+---@return auto[] content Update of data
+local function checkParameters(content, defaultTable)
+  for key, value in pairs(defaultTable) do
+    if type(value) == 'table' then
+      if content[key] == nil then
+        _G.logger:info(nameOfModule .. ": Created missing parameters table '" .. tostring(key) .. "'")
+        content[key] = {}
+      end
+      content[key] = checkParameters(content[key], defaultTable[key])
+    elseif content[key] == nil then
+      _G.logger:info(nameOfModule .. ": Missing parameter '" .. tostring(key) .. "'. Adding default value '" .. tostring(defaultTable[key]) .. "'")
+      content[key] = defaultTable[key]
+    end
+  end
+  return content
+end
+funcs.checkParameters = checkParameters
+
+--- Function to check if IP is valid
+---@param ip string IP to check
+---@return bool success Success
+local function isValidIPv4(ip)
+  if type(ip) ~= "string" then
+    return false
+  end
+
+  -- Match 4 groups of 1–3 digits separated by dots
+  local a, b, c, d = ip:match("^(%d+)%.(%d+)%.(%d+)%.(%d+)$")
+  if not a then
+    return false
+  end
+
+  -- Convert to numbers and validate range 0–255
+  for _, octet in ipairs({a, b, c, d}) do
+    local num = tonumber(octet)
+    if not num or num < 0 or num > 255 then
+        return false
+    end
+    -- Prevent leading zeros like "01"
+    if tostring(num) ~= octet then
+        return false
+    end
+  end
+
+  return true
+end
+funcs.isValidIPv4 = isValidIPv4
+
+--- Function to check if IPs match in same subnet
+---@param ip1 string IP1 to check
+---@param mask string Subnetmask to use
+---@param ip2 string IP2 to check
+---@return bool success Success
+local function checkIPSetup(ip1, mask, ip2)
+  local a, b, c, d = ip1:match("(%d+)%.(%d+)%.(%d+)%.(%d+)")
+  local ipNum = tonumber(a) * 256^3 + tonumber(b) * 256^2 + tonumber(c) * 256 + tonumber(d)
+  a, b, c, d = mask:match("(%d+)%.(%d+)%.(%d+)%.(%d+)")
+  local nmNum = tonumber(a) * 256^3 + tonumber(b) * 256^2 + tonumber(c) * 256 + tonumber(d)
+  a, b, c, d = ip2:match("(%d+)%.(%d+)%.(%d+)%.(%d+)")
+  local gwNum = tonumber(a) * 256^3 + tonumber(b) * 256^2 + tonumber(c) * 256 + tonumber(d)
+
+  -- Perform bitwise AND between IP address and Netmask to get the network address
+  local networkAddress = ipNum & nmNum
+  local gwNetworkAddress = gwNum & nmNum
+
+  -- Check if IPs addresses are in the same network
+  if networkAddress == gwNetworkAddress then
+    return true
+  else
+    return false
+  end
+end
+funcs.checkIPSetup = checkIPSetup
+
+-- Parse dotted IP and validate octets
+---@param ip string IP to check
+---@return string[]? octets Seperated parts of IP
+local function parse_ip(ip)
+    local octets = {}
+    for o in ip:gmatch("(%d+)") do
+        o = tonumber(o)
+        if not o or o < 0 or o > 255 then
+            return nil
+        end
+        table.insert(octets, o)
+    end
+    if #octets ~= 4 then
+        return nil
+    end
+    return octets
+end
+
+-- Convert dotted IP to 32-bit integer
+---@param ip string IP to convert
+---@return int? o IP as int
+local function ip_to_int(ip)
+    local o, err = parse_ip(ip)
+    if not o then return nil, err end
+    return (o[1] << 24) | (o[2] << 16) | (o[3] << 8) | o[4]
+end
+
+-- Convert 32-bit integer to dotted IP
+---@param int int IP as int
+---@return string IP as string
+local function int_to_ip(int)
+    return string.format("%d.%d.%d.%d", (int >> 24) & 0xFF, (int >> 16) & 0xFF, (int >> 8) & 0xFF, int & 0xFF)
+end
+
+-- Check that subnet mask has contiguous 1-bits
+---@param mask_int int Mask as int
+---@return bool? Result if mask is valid
+local function is_valid_mask(mask_int)
+    if mask_int == 0 or mask_int == 0xFFFFFFFF then
+        return false
+    end
+
+    -- Valid mask property:
+    -- mask & (mask + 1) == 0 when inverted
+    local inverted = (~mask_int) & 0xFFFFFFFF
+    return (inverted & (inverted + 1)) == 0
+end
+
+-- Validate IP and subnet mask
+---@param ip string IP to check
+---@param mask string Mask to check
+---@return int? Checked IP as integer
+---@return int? Checked mask as integer
+local function validate_ip_and_mask(ip, mask)
+    local ip_i = ip_to_int(ip)
+    if not ip_i then
+        return nil
+    end
+
+    local mask_i = ip_to_int(mask)
+    if not mask_i then
+        return nil
+    end
+
+    if not is_valid_mask(mask_i) then
+        return nil
+    end
+
+    return ip_i, mask_i
+end
+
+-- Get valid IP in same subnet
+---@param ip string IP to check
+---@param mask string Mask to check
+---@return string? Valid IP in same subnet
+local function get_ip_in_same_subnet(ip, mask)
+    local ip_i, mask_i_or_err = validate_ip_and_mask(ip, mask)
+    if not ip_i then
+        return nil
+    end
+    local mask_i = mask_i_or_err
+
+    local network   = ip_i & mask_i
+    local broadcast = network | (~mask_i & 0xFFFFFFFF)
+
+    local host_ip -- = network + 1
+    if ip_i + 1 >= broadcast then
+      host_ip = ip_i - 1
+    else
+      host_ip = ip_i + 1
+    end
+
+    return int_to_ip(host_ip)
+end
+funcs.getIPSameSubnet = get_ip_in_same_subnet
 
 return funcs
 

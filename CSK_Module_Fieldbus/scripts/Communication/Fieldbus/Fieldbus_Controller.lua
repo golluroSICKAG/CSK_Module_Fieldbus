@@ -235,6 +235,7 @@ local function handleOnExpiredTmrFieldbus()
     Script.notifyEvent("Fieldbus_OnNewStatusTransmissionMode", fieldbus_Model.parameters.transmissionMode)
 
     if fieldbus_Model.fbMode == 'EtherNetIP' then
+      CSK_Fieldbus.getEtherNetIPConfig()
       Script.notifyEvent("Fieldbus_OnNewStatusEtherNetIPAddressingMode", fieldbus_Model.parameters.etherNetIP.addressingMode)
       if fieldbus_Model.parameters.etherNetIP.addressingMode == 'DHCP' or fieldbus_Model.parameters.etherNetIP.addressingMode == 'BOOTP' then
         Script.notifyEvent("Fieldbus_OnNewStatusDHCPEnabled", true)
@@ -307,7 +308,7 @@ end
 
 local function openCommunication()
   local success = false
-  if fieldbus_Model.currentStatus == 'CLOSED' then
+  if fieldbus_Model.currentStatus == 'CLOSED' or fieldbus_Model.currentStatus == 'ERROR' then
     _G.logger:info(nameOfModule .. ": Open communciation.")
     success = fieldbus_Model.openCommunication()
   else
@@ -478,27 +479,13 @@ Script.serveFunction('CSK_Fieldbus.setAddressingMode', setAddressingMode)
 
 local function setEtherNetIPIP(ip)
   if ip ~= "0.0.0.0" then
-    -- Convert IPs and netmask to numbers
-    local a, b, c, d = ip:match("(%d+)%.(%d+)%.(%d+)%.(%d+)")
-    local ipNum = tonumber(a) * 256^3 + tonumber(b) * 256^2 + tonumber(c) * 256 + tonumber(d)
-    a, b, c, d = fieldbus_Model.parameters.etherNetIP.netmask:match("(%d+)%.(%d+)%.(%d+)%.(%d+)")
-    local nmNum = tonumber(a) * 256^3 + tonumber(b) * 256^2 + tonumber(c) * 256 + tonumber(d)
-    a, b, c, d = fieldbus_Model.parameters.etherNetIP.gateway:match("(%d+)%.(%d+)%.(%d+)%.(%d+)")
-    local gwNum = tonumber(a) * 256^3 + tonumber(b) * 256^2 + tonumber(c) * 256 + tonumber(d)
-
-    -- Perform bitwise AND between IP address and netmask to get the network address
-    local networkAddress = ipNum & nmNum
-    local gwNetworkAddress = gwNum & nmNum
-
-    -- Check if IP address and gateway are in the same network
-    if networkAddress == gwNetworkAddress then
+    local isValidIP = fieldbus_Model.helperFuncs.isValidIPv4(ip)
+    if isValidIP then
       _G.logger:fine(nameOfModule .. ": Preset EtherNet/IP IP to: " .. tostring(ip))
+      fieldbus_Model.parameters.etherNetIP.ipAddress = ip
     else
-      _G.logger:fine(nameOfModule .. ": Store old valid EtherNet/IP IP address since current preset IP address is out of range with Gw address.")
-      fieldbus_Model.parameters.etherNetIP.ipAddress2 = fieldbus_Model.parameters.etherNetIP.ipAddress
+      _G.logger:info(nameOfModule .. ": No valid IP: " .. tostring(ip))
     end
-    fieldbus_Model.parameters.etherNetIP.ipAddress = ip
-    Script.notifyEvent("Fieldbus_OnNewStatusEtherNetIPIPAddress", fieldbus_Model.parameters.etherNetIP.ipAddress)
   else
     _G.logger:warning(nameOfModule .. ": Can't set EtherNet/IP IP address to '0.0.0.0'")
     fieldbus_Model.info ="Can't set EtherNet/IP IP to '0.0.0.0'"
@@ -510,27 +497,13 @@ Script.serveFunction('CSK_Fieldbus.setEtherNetIPIP', setEtherNetIPIP)
 
 local function setEtherNetIPSubnetMask(netmask)
   if netmask ~= "0.0.0.0" then
-    -- Convert IPs and netmask to numbers
-    local a, b, c, d = fieldbus_Model.parameters.etherNetIP.ipAddress:match("(%d+)%.(%d+)%.(%d+)%.(%d+)")
-    local ipNum = tonumber(a) * 256^3 + tonumber(b) * 256^2 + tonumber(c) * 256 + tonumber(d)
-    a, b, c, d = netmask:match("(%d+)%.(%d+)%.(%d+)%.(%d+)")
-    local nmNum = tonumber(a) * 256^3 + tonumber(b) * 256^2 + tonumber(c) * 256 + tonumber(d)
-    a, b, c, d = fieldbus_Model.parameters.etherNetIP.gateway:match("(%d+)%.(%d+)%.(%d+)%.(%d+)")
-    local gwNum = tonumber(a) * 256^3 + tonumber(b) * 256^2 + tonumber(c) * 256 + tonumber(d)
-
-    -- Perform bitwise AND between IP address and netmask to get the network address
-    local networkAddress = ipNum & nmNum
-    local gwNetworkAddress = gwNum & nmNum
-
-    -- Check if IP address and gateway are in the same network
-    if networkAddress == gwNetworkAddress then
-      _G.logger:fine(nameOfModule .. ": Preset EtherNet/IP Netmask: " .. tostring(netmask))
+    local isValidIP = fieldbus_Model.helperFuncs.isValidIPv4(netmask)
+    if isValidIP then
+      _G.logger:fine(nameOfModule .. ": Preset EtherNet/IP Netmask to: " .. tostring(netmask))
+      fieldbus_Model.parameters.etherNetIP.netmask = netmask
     else
-      _G.logger:fine(nameOfModule .. ": Store old valid EtherNet/IP Netmask since current preset IP address is out of range with Gw address.")
-      fieldbus_Model.parameters.etherNetIP.netmask2 = fieldbus_Model.parameters.etherNetIP.netmask -- TODO, never used?
+      _G.logger:info(nameOfModule .. ": No valid netmask: " .. tostring(netmask))
     end
-    fieldbus_Model.parameters.etherNetIP.netmask = netmask
-    Script.notifyEvent("Fieldbus_OnNewStatusEtherNetIPSubnetMask", fieldbus_Model.parameters.etherNetIP.netmask)
   else
     _G.logger:warning(nameOfModule .. ": Can't set EtherNet/IP Netmask to '0.0.0.0'")
     fieldbus_Model.info ="Can't set EtherNet/IP Netmask to '0.0.0.0'"
@@ -541,40 +514,43 @@ end
 Script.serveFunction('CSK_Fieldbus.setEtherNetIPSubnetMask', setEtherNetIPSubnetMask)
 
 local function setEtherNetIPGateway(gateway)
-    -- Convert IPs and netmask to numbers
-    local a, b, c, d = fieldbus_Model.parameters.etherNetIP.ipAddress:match("(%d+)%.(%d+)%.(%d+)%.(%d+)")
-    local ipNum = tonumber(a) * 256^3 + tonumber(b) * 256^2 + tonumber(c) * 256 + tonumber(d)
-    a, b, c, d = fieldbus_Model.parameters.etherNetIP.netmask:match("(%d+)%.(%d+)%.(%d+)%.(%d+)")
-    local nmNum = tonumber(a) * 256^3 + tonumber(b) * 256^2 + tonumber(c) * 256 + tonumber(d)
-    a, b, c, d = gateway:match("(%d+)%.(%d+)%.(%d+)%.(%d+)")
-    local gwNum = tonumber(a) * 256^3 + tonumber(b) * 256^2 + tonumber(c) * 256 + tonumber(d)
-
-    -- Perform bitwise AND between IP address and netmask to get the network address
-    local networkAddress = ipNum & nmNum
-    local gwNetworkAddress = gwNum & nmNum
-
-    -- Check if IP address and gateway are in the same network
-    if networkAddress == gwNetworkAddress then
-      _G.logger:fine(nameOfModule .. ": Preset EtherNet/IP GW address: " .. tostring(gateway))
+  if gateway ~= "0.0.0.0" then
+    local isValidIP = fieldbus_Model.helperFuncs.isValidIPv4(gateway)
+    if isValidIP then
+      _G.logger:fine(nameOfModule .. ": Preset EtherNet/IP gateway to: " .. tostring(gateway))
+      fieldbus_Model.parameters.etherNetIP.gateway = gateway
     else
-      _G.logger:fine(nameOfModule .. ": Store old valid EtherNet/IP GW address since current preset IP address is out of range with Gw address.")
-      fieldbus_Model.parameters.etherNetIP.gateway2 = fieldbus_Model.parameters.etherNetIP.gateway -- TODO, never used?
+      _G.logger:info(nameOfModule .. ": No valid gateway: " .. tostring(gateway))
     end
-    fieldbus_Model.parameters.etherNetIP.gateway = gateway
-    Script.notifyEvent("Fieldbus_OnNewStatusEtherNetIPGateway", fieldbus_Model.parameters.etherNetIP.gateway)
+  else
+    _G.logger:warning(nameOfModule .. ": Can't set EtherNet/IP gateway to '0.0.0.0'")
+    fieldbus_Model.info ="Can't set EtherNet/IP gateway to '0.0.0.0'"
+    Script.notifyEvent("Fieldbus_OnNewStatusFieldbusInfo", fieldbus_Model.info)
+  end
+  Script.notifyEvent("Fieldbus_OnNewStatusEtherNetIPGateway", fieldbus_Model.parameters.etherNetIP.gateway)
 end
 Script.serveFunction('CSK_Fieldbus.setEtherNetIPGateway', setEtherNetIPGateway)
 
 local function setEtherNetIPNameServer(nameServer)
-  _G.logger:fine(nameOfModule .. ": Preset EtherNet/IP Primary name server: " .. tostring(nameServer))
-  fieldbus_Model.parameters.etherNetIP.nameServer = nameServer
+  local isValidIP = fieldbus_Model.helperFuncs.isValidIPv4(nameServer)
+  if isValidIP then
+    _G.logger:fine(nameOfModule .. ": Preset EtherNet/IP primary name server to: " .. tostring(nameServer))
+    fieldbus_Model.parameters.etherNetIP.nameServer = nameServer
+  else
+    _G.logger:info(nameOfModule .. ": No valid nameserver IP: " .. tostring(nameServer))
+  end
   Script.notifyEvent("Fieldbus_OnNewStatusEtherNetIPNameServer", fieldbus_Model.parameters.etherNetIP.nameServer)
 end
 Script.serveFunction('CSK_Fieldbus.setEtherNetIPNameServer', setEtherNetIPNameServer)
 
 local function setEtherNetIPNameServer2(nameServer)
-  _G.logger:fine(nameOfModule .. ": Preset EtherNet/IP secondary name server: " .. tostring(nameServer))
-  fieldbus_Model.parameters.etherNetIP.nameServer2 = nameServer
+  local isValidIP = fieldbus_Model.helperFuncs.isValidIPv4(nameServer)
+  if isValidIP then
+    _G.logger:fine(nameOfModule .. ": Preset EtherNet/IP secondary name server to: " .. tostring(nameServer))
+    fieldbus_Model.parameters.etherNetIP.nameServer2 = nameServer
+  else
+    _G.logger:info(nameOfModule .. ": No valid nameserver IP: " .. tostring(nameServer))
+  end
   Script.notifyEvent("Fieldbus_OnNewStatusEtherNetIPNameServer2", fieldbus_Model.parameters.etherNetIP.nameServer2)
 end
 Script.serveFunction('CSK_Fieldbus.setEtherNetIPNameServer2', setEtherNetIPNameServer2)
@@ -595,6 +571,7 @@ Script.serveFunction('CSK_Fieldbus.getEtherNetIPConfig', getEtherNetIPConfig)
 local function setEtherNetIPConfig()
   _G.logger:fine(nameOfModule .. ": Activate preset EtherNet/IP configuration.")
   fieldbus_Model.setEtherNetIPConfig()
+  fieldbus_Model.getEtherNetIPConfig()
 end
 Script.serveFunction('CSK_Fieldbus.setEtherNetIPConfig', setEtherNetIPConfig)
 
@@ -1111,7 +1088,9 @@ end
 local function handleOnExpiredOpenCommunication()
   Script.notifyEvent("Fieldbus_OnNewStatusFieldbusInfo", 'Setting up fieldbus protocol. Please be patient...')
   fieldbus_Model.openCommunication()
-  tmrSetFBConfig:start()
+  if fieldbus_Model.parameters.forceIPSetup then
+    tmrSetFBConfig:start()
+  end
 end
 Timer.register(tmrOpenCommunication, 'OnExpired', handleOnExpiredOpenCommunication)
 Timer.register(tmrSetFBConfig, 'OnExpired', setEtherNetIPConfig)
@@ -1126,6 +1105,7 @@ local function loadParameters()
 
       _G.logger:info(nameOfModule .. ": Loaded parameters from CSK_PersistentData module.")
       fieldbus_Model.parameters = fieldbus_Model.helperFuncs.convertContainer2Table(data)
+      fieldbus_Model.parameters = fieldbus_Model.helperFuncs.checkParameters(fieldbus_Model.parameters, fieldbus_Model.helperFuncs.defaultParameters.getParameters())
 
       -- If something needs to be configured/activated with new loaded data, place this here
       if not _G.availableAPIs.setFBProtocol then
@@ -1154,7 +1134,9 @@ local function loadParameters()
           tmrOpenCommunication:start()
         else
           fieldbus_Model.openCommunication()
-          tmrSetFBConfig:start()
+          if fieldbus_Model.parameters.forceIPSetup then
+            tmrSetFBConfig:start()
+          end
         end
       else
         if _G.availableAPIs.setFBProtocol then

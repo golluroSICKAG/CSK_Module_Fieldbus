@@ -55,9 +55,21 @@ local function checkSetFBProtocol()
   end
 end
 
+-- Function to check if device is SIM800
+local function checkIsSIM800()
+  local deviceName = Engine.getTypeCode()
+  local isCDF800E1 = string.find(deviceName, 'SIM800-')
+  if isCDF800E1 then
+    return true
+  else
+    return false
+  end
+end
+
 availableAPIs.default = xpcall(loadAPIs, debug.traceback) -- TRUE if all default APIs were loaded correctly
 availableAPIs.specific = xpcall(loadSpecificAPIs, debug.traceback) -- TRUE if all specific APIs were loaded correctly
 availableAPIs.setFBProtocol = checkSetFBProtocol() -- TRUE if device is e.g. of type SIM2000STE / SIM2000STC
+availableAPIs.isSIM800 = checkIsSIM800() -- TRUE if device is of type SIM800
 
 return availableAPIs
 --**************************************************************************
